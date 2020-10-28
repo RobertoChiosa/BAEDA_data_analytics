@@ -1,3 +1,8 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
 <!--
 *** Thanks for checking out this README Template. If you have a suggestion that would
 *** make this better, please fork the repo and create a pull request or simply open
@@ -18,24 +23,27 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
+<center>
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
+<!-- [![LinkedIn][linkedin-shield]][linkedin-url] -->
+</center>
 
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
   <a href="https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli">
-    <img src="README_images/BAEDA-logo.png" alt="Logo" width="206.6667" height="81">
+    <img src="www/BAEDA-logo-dashboard.png" alt="Logo" width="254" height="60">
   </a>
 
-  <h3 align="center">BAEDA Data Analytics</h3>
+  <h3 align="center">Energy Data Analytics Dashboard</h3>
 
   <p align="center">
-    Provides an easy R data analytics tool to inspect data frames and perform complex analysis
+    A data analytics tool to inspect energy data frames and perform complex analysis
     <br />
     <a href="https://github.com/RobertoChiosa/BAEDA_data_analytics"><strong>Explore the docs »</strong></a>
     <br />
@@ -56,8 +64,6 @@
 * [About the Project](#about-the-project)
   * [Built With](#built-with)
 * [Getting Started](#getting-started)
-  * [Prerequisites](#prerequisites)
-  * [Installation](#installation)
 * [Usage](#usage)
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
@@ -70,46 +76,27 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+This project consists in the design and development of interactive dashboards for the visualization of energy data. In particular, we propose the creation of the "Energy data analytics dashboard" that allows to interact with the data in a deeper way by modifying the hyperparameters of the code, giving the user great flexibility in the exploration. In addition, we introduced ad hoc interactive apps that can perform advanced data analysis workflows, ranging from automatic Anomaly Detection and Diagnosis (ADD), Fault Detection and Diagnosis (FDD) and Automated System Optimization (ASO).
 
-Here's a blank template to get started:
-**To avoid retyping too much info. Do a search and replace with your text editor for the following:**
-`RobertoChiosa`, `BAEDA_data_analytics`, `twitter_handle`, `roberto.chiosa@gmail.com`
-
+[![Product Name Screen Shot][product-screenshot]](https://example.com){height=36px, width=36px}
 
 ### Built With
 
-* []()
-* []()
-* []()
-
-
+* [RStudio](https://rstudio.com/)
+* [Shiny](https://shiny.rstudio.com/)
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running follow these simple steps.
+First of all you need to have RStudio installed on your computer. Then to get a local copy up and running the dashboard follow these simple steps.
 
-### Prerequisites
+Clone the guithub repository on your computer:
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-```sh
-npm install npm@latest -g
-```
-
-### Installation
-
-1. Clone the repo
-```sh
-git clone https://github.com/RobertoChiosa/BAEDA_data_analytics.git
-```
-2. Install NPM packages
-```sh
-npm install
-```
-
-
+1. In RStudio, start a new Project by following this path _File > New Project > Version Control > Git_;
+2. In "Repository URL"", paste this URL `https://github.com/RobertoChiosa/BAEDA_data_analytics`;
+3. Accept the default project directory name which coincides with the GitHub repo name;
+4. Chose a local path to save the repository on computer;
+4. Click "Create Project".
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -144,14 +131,14 @@ Contributions are what make the open source community such an amazing place to b
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See  for more information.
 
 
 
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - roberto.chiosa@gmail.com
+Roberto Chiosa - roberto.chiosa@gmail.com
 
 Project Link: [https://github.com/RobertoChiosa/BAEDA_data_analytics](https://github.com/RobertoChiosa/BAEDA_data_analytics)
 
@@ -165,21 +152,18 @@ Project Link: [https://github.com/RobertoChiosa/BAEDA_data_analytics](https://gi
 * []()
 
 
-
-
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/RobertoChiosa/repo.svg?style=flat-square
-[contributors-url]: https://github.com/RobertoChiosa/repo/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/RobertoChiosa/repo.svg?style=flat-square
-[forks-url]: https://github.com/RobertoChiosa/repo/network/members
-[stars-shield]: https://img.shields.io/github/stars/RobertoChiosa/repo.svg?style=flat-square
-[stars-url]: https://github.com/RobertoChiosa/repo/stargazers
-[issues-shield]: https://img.shields.io/github/issues/RobertoChiosa/repo.svg?style=flat-square
-[issues-url]: https://github.com/RobertoChiosa/repo/issues
-[license-shield]: https://img.shields.io/github/license/RobertoChiosa/repo.svg?style=flat-square
-[license-url]: https://github.com/RobertoChiosa/repo/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
+[contributors-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
+[forks-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/network/members
+[stars-shield]: https://img.shields.io/github/stars/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
+[stars-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/stargazers
+[issues-shield]: https://img.shields.io/github/issues/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
+[issues-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/issues
+[license-shield]: https://img.shields.io/github/license/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
+[license-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/RobertoChiosa
 [product-screenshot]: README_images/screenshot.png

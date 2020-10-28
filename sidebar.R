@@ -1,5 +1,5 @@
 #################################################################################
-###############                 © BAEDA Lab, 2020                 ###############
+###############            Copyright © BAEDA Lab 2020             ###############
 #################################################################################
 
 sidebar <- dashboardSidebar(
@@ -21,4 +21,5 @@ sidebar <- dashboardSidebar(
   ),
   textOutput("selected_sidebar_tab"),           # print the selected tab in the sidebar to keep track
   textOutput("selected_tabBox_tab")             # print the selected tab in the output tabbox
+  
 )

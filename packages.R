@@ -1,5 +1,5 @@
 #################################################################################
-###############                 © BAEDA Lab, 2020                 ###############
+###############            Copyright © BAEDA Lab 2020             ###############
 #################################################################################
 
 # LOAD ----------------------------------------------------------------------
@@ -12,6 +12,8 @@ library(readtext)
 library(shinycssloaders)        # enable cool loaders when loading graphs
 library(dashboardthemes)        # extend classic themed with cool themes
 library(tidyverse)              # data manipulation 
+library(readxl)                 # read and import excel files
+library(DT)                 # to use output datatable
 
 # library(ggplot2)              # data visualization
 # library(dplyr)                # can be avoided loading tidyverse
