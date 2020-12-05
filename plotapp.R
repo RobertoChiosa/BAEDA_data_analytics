@@ -1,6 +1,6 @@
 chartTypes <- c("","Bar Plot") # add here more chart types as we go on adding
 # dataframe <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/data.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
-dataframe <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
+#dataframe <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
 dataframe <- dataframe %>%
   mutate(
     Date_Time = as.POSIXct(`Date/Time` , format = "%m/%d  %H:%M:%S" , tz = "Etc/GMT+12"),

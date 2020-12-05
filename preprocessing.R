@@ -1,16 +1,38 @@
-df.power <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/data.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
+# preprocessing del file data.csv
+#df.power <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
+#df.power <- read.csv("/Users/robi/Downloads/final.csv", header = T, sep = ";", dec = ".", check.names = FALSE)
+
+skim(df.power)
+summary(df.power)
+
+t <- sapply(df.power,class)
+dateFormats <- c("%Y-%m-%d %H:%M:%S",
+                 "%m/%d %H:%M:%S", 
+                 "%d/%m/%y %H:%M")
 
 # function to automatically find date column
-coldate <- sapply(df.power,   function(x) !all(is.na(as.Date(as.character(x),format = "%Y-%m-%d %H:%M:%S"))))
+coldate <- sapply(df.power,   function(x) !all(is.na(as.Date(as.character(x),format = dateFormats))))
 
 df.power <- df.power %>%
   mutate(
-    Date_Time = as.POSIXct(df.power[,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = "Etc/GMT+12"),
-    Day_Type = wday(Date_Time, label = TRUE, locale = Sys.setlocale("LC_TIME","en_US.UTF-8")),
-    Day_Type = factor(Day_Type, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
+    Date_Time = as.POSIXct(df.power[,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = "Europe/Rome"),
+    Week_Day = wday(Date_Time, label = TRUE, locale = Sys.setlocale("LC_TIME","en_US.UTF-8")),
+    Week_Day = factor(Week_Day, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")),
     Month = month(Date_Time, label = TRUE, locale = Sys.setlocale("LC_TIME","en_US.UTF-8")),
-    Year = year(Date_Time)
-  )
+    Month_Day = mday(Date_Time),
+    Year = year(Date_Time),
+    Year_Day = mday(Date_Time),
+    Hour = hour(Date_Time),
+    Minute = minute(Date_Time),
+    Holiday = if_else(festivo == "S", "Yes", "No"),
+    Tair = TempARIA,
+    Hglobal = RadGLOBale
+  ) %>%
+  select(-Date, -Time, -Day_Type, -min_dec, -festivo, -TempARIA, -RadGLOBale) %>%
+  select(Date_Time, Year, Year_Day, Month, Month_Day, Week_Day, Hour, Minute, Holiday, everything() ) %>%
+  filter(Year >= 2018)
+
+  
 
 
 

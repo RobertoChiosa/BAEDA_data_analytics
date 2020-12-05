@@ -6,7 +6,6 @@ header <- dashboardHeader(
   disable = FALSE,                # if you want to hide the header set to TRUE    
    title = tags$a(href = "https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli",
                   tags$img(src = 'BAEDA-logo-dashboard.png', heigth = '200', width = '200')),   
-  
   # title = "BAEDA Lab Analytics", # title displayed over the sidebar
   # MESSAGE MENU ----------------------------------------------------------------------
   dropdownMenu(type = "messages",
