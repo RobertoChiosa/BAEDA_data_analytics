@@ -78,6 +78,8 @@ output:
 
 This project consists in the design and development of interactive dashboards for the visualization of energy data. In particular, we propose the creation of the "Energy data analytics dashboard" that allows to interact with the data in a deeper way by modifying the hyperparameters of the code, giving the user great flexibility in the exploration. In addition, we introduced ad hoc interactive apps that can perform advanced data analysis workflows, ranging from automatic Anomaly Detection and Diagnosis (ADD), Fault Detection and Diagnosis (FDD) and Automated System Optimization (ASO).
 
+ciao
+
 [![Product Name Screen Shot][product-screenshot]](https://example.com){height=36px, width=36px}
 
 ### Built With
