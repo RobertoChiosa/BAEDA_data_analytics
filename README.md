@@ -156,16 +156,16 @@ Project Link: [https://github.com/RobertoChiosa/BAEDA_data_analytics](https://gi
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
-[contributors-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
-[forks-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/network/members
-[stars-shield]: https://img.shields.io/github/stars/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
-[stars-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/stargazers
-[issues-shield]: https://img.shields.io/github/issues/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
-[issues-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/issues
-[license-shield]: https://img.shields.io/github/license/RobertoChiosa/BAEDA_data_analytics.svg?style=flat-square
-[license-url]: https://github.com/RobertoChiosa/BAEDA_data_analytics/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS.svg?style=flat-square
+[contributors-url]: https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS.svg?style=flat-square
+[forks-url]: https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS/network/members
+[stars-shield]: https://img.shields.io/github/stars/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS.svg?style=flat-square
+[stars-url]: https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS/stargazers
+[issues-shield]: https://img.shields.io/github/issues/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS.svg?style=flat-square
+[issues-url]: https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS/issues
+[license-shield]: https://img.shields.io/github/license/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS.svg?style=flat-square
+[license-url]: https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/RobertoChiosa
 [product-screenshot]: README_images/screenshot.png
