@@ -5,7 +5,7 @@
     <img src="www/BAEDA-logo-dashboard.png" alt="Logo" width="508" height="120">
   </a>
 
-  <h3 align="center"> <i > Student Version <i /> </h3>
+  <h3 align="center"> <i> Student Version </i> </h3>
   
  
 
