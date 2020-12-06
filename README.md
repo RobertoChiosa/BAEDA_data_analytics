@@ -2,10 +2,12 @@
 <br />
 <p align="center">
   <a href="https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli">
-    <img src="www/BAEDA-logo-dashboard.png" alt="Logo" width="254" height="60">
+    <img src="www/BAEDA-logo-dashboard.png" alt="Logo" width="508" height="120">
   </a>
 
-  <h3 align="center">Energy Data Analytics Dashboard</h3>
+  <h3 align="center"> <i > Student Version <i /> </h3>
+  
+ 
 
   <p align="center">
     A data analytics tool to inspect energy data frames and perform complex analysis
