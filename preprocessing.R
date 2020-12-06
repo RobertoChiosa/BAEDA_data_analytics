@@ -1,6 +1,6 @@
 # preprocessing del file data.csv
 #df.power <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
-#df.power <- read.csv("/Users/robi/Downloads/final.csv", header = T, sep = ";", dec = ".", check.names = FALSE)
+df.power <- read.csv("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
 
 skim(df.power)
 summary(df.power)

@@ -1,58 +1,39 @@
-# Display a modal that requires valid input before continuing.
-shinyApp(
-  ui = basicPage(
-    actionButton("show", "Show modal dialog"),
-    verbatimTextOutput("dataInfo")
-  ),
+# Example 1: Simple modal
+if (interactive()) {
+  library(shiny)
+  library(shinyalert)
   
-  server = function(input, output) {
-    # reactiveValues object for storing current data set.
-    vals <- reactiveValues(data = NULL)
-    
-    # Return the UI for a modal dialog with data selection input. If 'failed' is
-    # TRUE, then display a message that the previous value was invalid.
-    dataModal <- function(failed = FALSE) {
-      modalDialog(
-        textInput("dataset", "Choose data set",
-                  placeholder = 'Try "mtcars" or "abc"'
-        ),
-        span('(Try the name of a valid data object like "mtcars", ',
-             'then a name of a non-existent object like "abc")'),
-        if (failed)
-          div(tags$b("Invalid name of data object", style = "color: red;")),
-        
-        footer = tagList(
-          modalButton("Cancel"),
-          actionButton("ok", "OK")
-        )
-      )
+  shinyApp(
+    ui = fluidPage(
+      useShinyalert(),  # Set up shinyalert
+      actionButton("btn", "Click me")
+    ),
+    server = function(input, output) {
+      observeEvent(input$btn, {
+        # Show a simple modal
+        shinyalert(title = "You did it!", type = "success")
+      })
     }
-    
-    # Show modal when button is clicked.
-    observeEvent(input$show, {
-      showModal(dataModal())
-    })
-    
-    # When OK button is pressed, attempt to load the data set. If successful,
-    # remove the modal. If not show another modal, but this time with a failure
-    # message.
-    observeEvent(input$ok, {
-      # Check that data object exists and is data frame.
-      if (!is.null(input$dataset) && nzchar(input$dataset) &&
-          exists(input$dataset) && is.data.frame(get(input$dataset))) {
-        vals$data <- get(input$dataset)
-        removeModal()
-      } else {
-        showModal(dataModal(failed = TRUE))
-      }
-    })
-    
-    # Display information about selected data
-    output$dataInfo <- renderPrint({
-      if (is.null(vals$data))
-        "No data selected"
-      else
-        summary(vals$data)
-    })
-  }
-)
+  )
+}
+
+# Example 2: Input modal calling another modal in its callback
+if (interactive()) {
+  library(shiny)
+  library(shinyalert)
+  
+  shinyApp(
+    ui = fluidPage(
+      useShinyalert(),  # Set up shinyalert
+      actionButton("btn", "Greet")
+    ),
+    server = function(input, output) {
+      observeEvent(input$btn, {
+        shinyalert(
+          title = "What is your name?", type = "input",
+          callbackR = function(value) { shinyalert(paste("Welcome", value)) }
+        )
+      })
+    }
+  )
+}

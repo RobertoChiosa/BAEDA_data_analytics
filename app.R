@@ -9,7 +9,11 @@ rm(list = ls())         # remove all variables of the workspace
 # global variables
 unitsMeasure <- read.csv("./data/units.csv", header = TRUE, sep = ",", check.names = FALSE) # available units of measure
 unitsMeasure[-1,]
-dateFormats <- c("%Y-%m-%d %H:%M:%S", "%m/%d %H:%M:%S", "%m/%d  %H:%M:%S", "%d/%m/%y %H:%M") # accepted date formats
+dateFormats <- c("%Y-%m-%d %H:%M:%S", 
+                 "%m/%d %H:%M:%S", # energy+
+                 "%m/%d  %H:%M:%S",  # energy+ 2 spazi
+                 " %m/%d    %H:%M:%S",  # energy+ 2 spazi +1
+                 "%d/%m/%y %H:%M") # accepted date formats
 
 source("packages.R")    # load necessary packages
 source("functions.R")   # load user defined functions
@@ -32,14 +36,15 @@ server <- function(input, output, session) {
     paste("You've selected:", input$tabs)
   })
   
-  # showModal(modalDialog(
-  #   title = "Important message",
-  #   "This is an important message!",
-  #   easyClose = TRUE
-  # ))
+  showModal(modalDialog(
+    title = "Important message",
+    "This is an important message!",
+    easyClose = TRUE
+  ))
   
-  shinyalert("Welcome!", "Now you can perform advanced data analytics tasks on your energy data. Simply add a new file in the Manage tab ans start exploring.",
-             imageUrl = "BAEDA-logo-dashboard.png", imageWidth = 400)
+  # shinyalert("Welcome!", "Now you can perform advanced data analytics tasks on your energy data. Simply upload a new file in the Manage tab ans start exploring.",
+  #            imageUrl = "BAEDA-logo-dashboard.png", imageWidth = 400)
+  # 
   
   # 3rd (SUB)TAB "Manage" ----------------------------------------------------------------------
   
@@ -75,13 +80,6 @@ server <- function(input, output, session) {
       # function to automatically find date column
       coldate <- sapply(data[[nome]],   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
       
-      # shinyalert(
-      #   html = TRUE,
-      #   text = tagList("Looks like your dataset has a timestamp column",
-      #                  selectInput("num", "Number", c("",colnames(data[[nome]]) )),
-      #   )
-      # )
-        
       # create date time columns
       data[[nome]] <- data[[nome]] %>%
         mutate(
@@ -96,8 +94,8 @@ server <- function(input, output, session) {
         ) 
     }
     
-    data[[nome]] <- data[[nome]] %>%
-      mutate_if(is.numeric, ~round(., input$decimalDigits))
+    # round to selected decimal digits
+    data[[nome]] <- data[[nome]] %>% mutate_if(is.numeric, ~round(., input$decimalDigits))
     
   })
   
@@ -133,6 +131,7 @@ server <- function(input, output, session) {
     data[[input$dataframe]]
   }) 
   
+  
   # box output function
   output$manage_outputBox <- renderPrint({
     req(input$file) # waits to print unti a file is loaded
@@ -155,16 +154,30 @@ server <- function(input, output, session) {
       output_df(),
       filter = 'top',
       # style = "foundation",
-      extensions = c('Buttons'),
+      extensions = c('FixedHeader'),
       options = list(autoWidth = TRUE,
                      scrollX = 500,
                      deferRender = TRUE,
                      scroller = TRUE,
-                     dom = 'lBfrtip', buttons = I('colvis'),
-                     fixedColumns = TRUE),
+                     dom = 'lBfrtip',
+                     fixedColumns = list(leftColumns = 2),
+                     fixedHeader = TRUE
+      ),
       rownames = FALSE
     )
   )
+  
+  
+  # keep column ----------------------------------------------------------------------
+  output$keepColumns <- renderUI({
+    req(input$file)
+    tagList(
+      pickerInput("keepColumnName", label = "Select column to keep:",
+                  choices = colnames( output_df()),
+                  selected = colnames( output_df()),
+                  options = list(`actions-box` = TRUE),multiple = T)
+    )
+  })
   
   # Rename column ----------------------------------------------------------------------
   output$modifyColumns <- renderUI({
@@ -231,6 +244,7 @@ server <- function(input, output, session) {
     data[[input$dataframe]] <-  mutate_if(data[[input$dataframe]], is.numeric, ~round(., input$decimalDigitsPivot)) %>% # round the pivotted table
       select(input$variablePivot, input$columnsPivot)
   })
+  
   # Download filtered ----------------------------------------------------------------------
   output$download_filtered <- downloadHandler(
     filename = function() {  paste('data-', Sys.Date(), '.csv', sep='') },
@@ -362,7 +376,7 @@ server <- function(input, output, session) {
   })
   # output box - plot - TIME SERIES
   plotTimeSeries <- eventReactive(input$plotButton,{
-  
+    
     qxts <- xts( output_df()[,c(input$variableY_TimeSeries) ] , order.by = (output_df()$Date_Time), tzone = input$timezone)
     
     hc <- highchart( type = "stock")
@@ -400,7 +414,6 @@ server <- function(input, output, session) {
       )# end buttons
   })
   output$outBoxTimeSeries <- renderHighchart({plotTimeSeries()})
-  
 }
 
 
