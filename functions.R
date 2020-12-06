@@ -43,6 +43,8 @@ manage_inbox <- function() {
 
 view_inbox <- function() {
   tagList(
+
+    uiOutput("keepColumns"),
     # Rename column ----------------------------------------------------------------------
     awesomeCheckbox("modifyColumns_chackbox", "Rename column:", value = FALSE),
     conditionalPanel("input.modifyColumns_chackbox == true", # if we want to rename 
