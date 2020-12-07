@@ -1,3 +1,10 @@
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
+
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
@@ -27,30 +34,25 @@
 * [Getting Started](#getting-started)
   * [Online](#online)
   * [Local](#local)
-* [Usage](#usage)
 * [Contributing](#contributing)
 * [License](#license)
-* [Contact](#contact)
 * [Acknowledgements](#acknowledgements)
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
 This project consists in the design and development of interactive dashboards for the visualization of energy data. In particular, we propose the creation of the "Energy data analytics dashboard" that allows to interact with the data in a deeper way by modifying the hyperparameters of the code, giving the user great flexibility in the exploration. In addition, we introduced ad hoc interactive apps that can perform advanced data analysis workflows, ranging from automatic Anomaly Detection and Diagnosis (ADD), Fault Detection and Diagnosis (FDD) and Automated System Optimization (ASO).
 
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-### :earth_africa: Online
+### Online
 From this [link]() it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [shinyapps.io](https://www.shinyapps.io/) the whole shiny app is hosted online and accessible without any requirements other than an internet connection.
 
-> :warning: **Warning**: Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. This means that if this limit is exceded the app will not be available untill the next month cycle. For this reason, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
+> :warning: **Warning**: Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. If this limit is exceded the app will not be available untill the next month cycle. Therefore, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
 
-### :computer: Local
-First of all, be sure to have the latest version of [RStudio](https://rstudio.com/products/rstudio/) installed. 
-
-To run the dashboard locally you need to clone the GitHub repository on your computer. Follow these steps:
+### Local
+First of all, be sure to have the latest version of [RStudio](https://rstudio.com/products/rstudio/) installed. To run the dashboard locally you need to clone the GitHub repository on your computer. Follow these steps:
 
 1. In RStudio, start a new Project by following this path _File > New Project > Version Control > Git_;
 2. In "Repository URL"", paste this URL `https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS`;
@@ -58,12 +60,9 @@ To run the dashboard locally you need to clone the GitHub repository on your com
 4. Chose a local path to save the repository on computer;
 4. Click "Create Project".
 
-
 <!-- CONTRIBUTING -->
 ## Contributing
-
-If you
-Any contributions you make are **greatly appreciated**. To contribute, follow these steps:
+Any contributions you make are **greatly appreciated**. If you want to propose a feature or report a bug please open a new [issue](https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS/issues). If you want to contribute to the code, follow these steps:
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -74,20 +73,14 @@ Any contributions you make are **greatly appreciated**. To contribute, follow th
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See  for more information.
-
-
-<!-- CONTACT -->
-## Contact
-
+Distributed under the MIT License. See for more information.
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
-* []()
-* []()
-* []()
-
+* [RStudio](https://rstudio.com/)
+* [Shiny](https://shiny.rstudio.com/)
+* [shinyapps.io](https://www.shinyapps.io/)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
@@ -105,3 +98,6 @@ Distributed under the MIT License. See  for more information.
 [linkedin-url]: https://linkedin.com/in/RobertoChiosa
 [product-screenshot]: README_images/screenshot.png
 [product-roadmap]: README_images/roadmap.png
+
+
+
