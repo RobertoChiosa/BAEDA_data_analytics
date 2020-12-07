@@ -25,6 +25,8 @@
 
 * [About the Project](#about-the-project)
 * [Getting Started](#getting-started)
+  * [Online](#online)
+  * [Local](#local)
 * [Usage](#usage)
 * [Contributing](#contributing)
 * [License](#license)
@@ -36,13 +38,9 @@
 
 This project consists in the design and development of interactive dashboards for the visualization of energy data. In particular, we propose the creation of the "Energy data analytics dashboard" that allows to interact with the data in a deeper way by modifying the hyperparameters of the code, giving the user great flexibility in the exploration. In addition, we introduced ad hoc interactive apps that can perform advanced data analysis workflows, ranging from automatic Anomaly Detection and Diagnosis (ADD), Fault Detection and Diagnosis (FDD) and Automated System Optimization (ASO).
 
-![grab-landing-page](https://github.com/winnie1312/grab/blob/master/grab-landingpage-winnie.gif)
 
 <!-- GETTING STARTED -->
 ## Getting Started
-
-
-@fas-globe
 
 ### :earth_africa: Online
 From this [link]() it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [shinyapps.io](https://www.shinyapps.io/) the whole shiny app is hosted online and accessible without any requirements other than an internet connection.
@@ -60,12 +58,6 @@ To run the dashboard locally you need to clone the GitHub repository on your com
 4. Chose a local path to save the repository on computer;
 4. Click "Create Project".
 
-<!-- USAGE EXAMPLES -->
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -78,8 +70,6 @@ Any contributions you make are **greatly appreciated**. To contribute, follow th
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-
 
 <!-- LICENSE -->
 ## License
