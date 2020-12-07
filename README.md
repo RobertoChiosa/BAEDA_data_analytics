@@ -58,6 +58,16 @@ ciao
 ### Online
 From this [link]() it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [shinyapps.io](https://www.shinyapps.io/) the whole shiny app is hosted online and accessible without any requirements other than an internet connection.
 
+<div class="panel panel-warning">
+**Warning**
+{: .panel-heading}
+<div class="panel-body">
+
+WARNING DESCRIPTION
+
+</div>
+</div>
+
 Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. This means that if this limit is exceded the app will not be available untill the next month cycle. For this reason, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
 
 ### Local
