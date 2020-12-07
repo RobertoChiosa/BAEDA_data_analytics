@@ -24,30 +24,19 @@
 ## Table of Contents
 
 * [About the Project](#about-the-project)
-  * [Built With](#built-with)
 * [Getting Started](#getting-started)
 * [Usage](#usage)
-* [Roadmap](#roadmap)
 * [Contributing](#contributing)
 * [License](#license)
 * [Contact](#contact)
 * [Acknowledgements](#acknowledgements)
-
-
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
 This project consists in the design and development of interactive dashboards for the visualization of energy data. In particular, we propose the creation of the "Energy data analytics dashboard" that allows to interact with the data in a deeper way by modifying the hyperparameters of the code, giving the user great flexibility in the exploration. In addition, we introduced ad hoc interactive apps that can perform advanced data analysis workflows, ranging from automatic Anomaly Detection and Diagnosis (ADD), Fault Detection and Diagnosis (FDD) and Automated System Optimization (ASO).
 
-ciao
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com){height=36px, width=36px}
-
-### Built With
-
-* [RStudio](https://rstudio.com/)
-* [Shiny](https://shiny.rstudio.com/)
+![grab-landing-page](https://github.com/winnie1312/grab/blob/master/grab-landingpage-winnie.gif)
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -55,22 +44,12 @@ ciao
 
 @fas-globe
 
-### Online
+### :earth_africa: Online
 From this [link]() it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [shinyapps.io](https://www.shinyapps.io/) the whole shiny app is hosted online and accessible without any requirements other than an internet connection.
 
-<div class="panel panel-warning">
-**Warning**
-{: .panel-heading}
-<div class="panel-body">
+> :warning: **Warning**: Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. This means that if this limit is exceded the app will not be available untill the next month cycle. For this reason, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
 
-WARNING DESCRIPTION
-
-</div>
-</div>
-
-Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. This means that if this limit is exceded the app will not be available untill the next month cycle. For this reason, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
-
-### Local
+### :computer: Local
 First of all, be sure to have the latest version of [RStudio](https://rstudio.com/products/rstudio/) installed. 
 
 To run the dashboard locally you need to clone the GitHub repository on your computer. Follow these steps:
@@ -88,20 +67,11 @@ Use this space to show useful examples of how a project can be used. Additional 
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
-
-
-<!-- ROADMAP -->
-## Roadmap
-
-See the [open issues](https://github.com/RobertoChiosa/BAEDA_data_analytics/issues) for a list of proposed features (and known issues).
-
-[![Product Name Roadmap][product-roadmap]](https://example.com)
-
-
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+If you
+Any contributions you make are **greatly appreciated**. To contribute, follow these steps:
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -117,14 +87,8 @@ Contributions are what make the open source community such an amazing place to b
 Distributed under the MIT License. See  for more information.
 
 
-
 <!-- CONTACT -->
 ## Contact
-
-Roberto Chiosa - roberto.chiosa@gmail.com
-
-Project Link: [https://github.com/RobertoChiosa/BAEDA_data_analytics](https://github.com/RobertoChiosa/BAEDA_data_analytics)
-
 
 
 <!-- ACKNOWLEDGEMENTS -->
