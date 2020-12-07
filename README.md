@@ -6,12 +6,7 @@
   </a>
 
   <h3 align="center"> <i> Student Version </i> </h3>
-  
- 
-
   <p align="center">
-    A data analytics tool to inspect energy data frames and perform complex analysis
-    <br />
     <a href="https://github.com/RobertoChiosa/BAEDA_data_analytics"><strong>Explore the docs »</strong></a>
     <br />
     <br />
@@ -57,13 +52,19 @@ ciao
 <!-- GETTING STARTED -->
 ## Getting Started
 
-First of all you need to have RStudio installed on your computer. Then to get a local copy up and running the dashboard follow these simple steps.
+### Online
+From this [link]() it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [shinyapps.io](https://www.shinyapps.io/) the whole shiny app is hosted online and accessible without any requirements other than an internet connection.
 
-Clone the guithub repository on your computer:
+Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. This means that if this limit is exceded the app will not be available untill the next month cycle. For this reason, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
+
+### Local
+First of all, be sure to have the latest version of [RStudio](https://rstudio.com/products/rstudio/) installed. 
+
+To run the dashboard locally you need to clone the GitHub repository on your computer. Follow these steps:
 
 1. In RStudio, start a new Project by following this path _File > New Project > Version Control > Git_;
-2. In "Repository URL"", paste this URL `https://github.com/RobertoChiosa/BAEDA_data_analytics`;
-3. Accept the default project directory name which coincides with the GitHub repo name;
+2. In "Repository URL"", paste this URL `https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS`;
+3. Accept the default ""Project directory name"" which coincides with the GitHub repo name;
 4. Chose a local path to save the repository on computer;
 4. Click "Create Project".
 
