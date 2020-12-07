@@ -52,6 +52,9 @@ ciao
 <!-- GETTING STARTED -->
 ## Getting Started
 
+
+@fas-globe
+
 ### Online
 From this [link]() it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [shinyapps.io](https://www.shinyapps.io/) the whole shiny app is hosted online and accessible without any requirements other than an internet connection.
 
