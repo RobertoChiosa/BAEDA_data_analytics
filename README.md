@@ -2,7 +2,7 @@
 <br />
 <p align="center">
   <a href="https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli">
-    <img src="www/BAEDA-logo-dashboard.png" alt="Logo" width="508" height="120">
+    <img src="docs/readme/BAEDA-logo-dashboard.png" alt="Logo" width="508" height="120">
   </a>
 
   <h3 align="center"> <i> Student Version </i> </h3>
@@ -89,8 +89,7 @@ Distributed under the MIT License. See for more information.
 [license-url]: https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENTS/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/RobertoChiosa
-[product-screenshot]: README_images/screenshot.png
-[product-roadmap]: README_images/roadmap.png
+[product-screenshot]: docs/readme/screenshot.png
 
 
 
