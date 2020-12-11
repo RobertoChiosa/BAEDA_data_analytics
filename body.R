@@ -9,6 +9,10 @@ body <- dashboardBody(
   tags$style(".fa-plus {color:green}"),           # change plus icon color
   tags$style(".fa-backspace {color:red}"),        # change backspace icon color
   # shinyDashboardThemes(theme = "purple_gradient"), # cool dashboard theme
+  
+  # modal dialog window that permits the input of file
+  load_file_modal(),
+  
   tabItems(
     # # 1st TAB "Welcome" ----------------------------------------------------------------------
     # tabItem(tabName = "welcome", includeMarkdown("README.md")), # END # 1st TAB "Welcome"
@@ -17,11 +21,11 @@ body <- dashboardBody(
     tabItem(tabName = "manage",
             fluidRow(
               # INPUT BOX
-              box( title = "Upload a new file", width = 4, manage_inbox() ),
+              # box( title = "Upload a new file", width = 4, manage_inbox() ),
               # OUTPUT BOX
               box( title = "File preview",  width = 8, 
-                radioButtons("display_buttons","", c("str", "summary","skim"), inline = T),
-                verbatimTextOutput("manage_outputBox") # see server function
+                   radioButtons("display_buttons","", c("str", "summary","skim"), inline = T),
+                   verbatimTextOutput("manage_outputBox") # see server function
               ) 
             )
     ), # END 3rd (SUB)TAB "Manage"

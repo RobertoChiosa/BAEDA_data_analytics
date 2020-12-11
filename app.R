@@ -8,7 +8,6 @@ rm(list = ls())         # remove all variables of the workspace
 
 # global variables
 unitsMeasure <- read.csv("./data/units.csv", header = TRUE, sep = ",", check.names = FALSE) # available units of measure
-unitsMeasure[-1,]
 dateFormats <- c("%Y-%m-%d %H:%M:%S", 
                  "%m/%d %H:%M:%S", # energy+
                  "%m/%d  %H:%M:%S",  # energy+ 2 spazi
@@ -36,15 +35,12 @@ server <- function(input, output, session) {
     paste("You've selected:", input$tabs)
   })
   
-  showModal(modalDialog(
-    title = "Important message",
-    "This is an important message!",
-    easyClose = TRUE
-  ))
-  
-  # shinyalert("Welcome!", "Now you can perform advanced data analytics tasks on your energy data. Simply upload a new file in the Manage tab ans start exploring.",
-  #            imageUrl = "BAEDA-logo-dashboard.png", imageWidth = 400)
-  # 
+  # forces startup modal dialog to open when the application starts
+  toggleModal(session, "startupModal", toggle = "open")
+  # when clicked a the upload modal is sown again
+  observeEvent(input$upload,{
+    toggleModal(session, "startupModal", toggle = "open")
+  })
   
   # 3rd (SUB)TAB "Manage" ----------------------------------------------------------------------
   
@@ -56,54 +52,73 @@ server <- function(input, output, session) {
   
   # create a reactive dataframe df when the file is loaded and add
   observeEvent(input$file,{
-    inFile <- input$file                                    # input file loaded
-    nome <- inFile$name                                     # input file name
-    # validate that the file is in the rigth format
-    admitted <- gsub( " ", "", paste("\\.", c("", "csv", "xls"), "$" ))
-    # validated_file has TRUE if the value is acceptable FALSE if not accepted
-    validated <- grepl(admitted[1], nome) | grepl(admitted[2], nome) | grepl(admitted[3], nome)
+    inFile <- input$file   # input file loaded
+    nome <- inFile$name    # input file name
     
-    shinyFeedback::feedbackDanger("file", !validated, "Format not accepted")
-    req(validated)
+    # validate that the file is in the right format
+    # this is the only accepted file given the one chosen
+    admitted <- gsub( " ", "", paste("\\.", input$type, "$" )) 
+    
+    # validated is TRUE if the value is acceptable FALSE if not acceptable
+    validated <- grepl(admitted, nome) 
+    
+    # gives error feedback if the file is not in the format required/selected and STOPS the execution
+    shinyFeedback::hideFeedback("file")
+    if (validated == TRUE) {
+      shinyFeedback::feedbackSuccess("file", TRUE, "Format accepted")
+    } else { 
+      shinyFeedback::feedbackDanger("file", TRUE, "Format not accepted")
+    }
+    
+    # the execution CONTINUES only if the file is accepted
+    req(validated, cancelOutput = TRUE)
     
     # reads the input file and assigms it to the reactive value data
     data[[nome]] <- switch(input$type, # condition on the file type
-                           csv = read.csv(file = inFile$datapath, 
-                                          header = input$header, 
-                                          sep = input$separator, 
-                                          dec = input$decomal, 
-                                          stringsAsFactors = input$strAsFact,
-                                          check.names = FALSE)
+                           csv = read.csv(file = inFile$datapath, header = input$header, sep = input$separator, 
+                                          dec = input$decomal, stringsAsFactors = input$strAsFact, check.names = FALSE),
+                           rds = readRDS(file = inFile$datapath)
+                           # xls = read_excel(path = inFile$datapath)
     )
     
     if (input$timestamp == T) {
       # function to automatically find date column
       coldate <- sapply(data[[nome]],   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
       
-      # create date time columns
-      data[[nome]] <- data[[nome]] %>%
-        mutate(
-          Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input$timezone), # depend on selected timezone
-          Week_Day = wday(Date_Time, label = TRUE, locale = "en_US", week_start = getOption("lubridate.week.start", 1)), # week start on monday
-          Month = month(Date_Time, label = TRUE, locale = "en_US"),
-          Month_Day = mday(Date_Time),
-          Year = year(Date_Time),
-          Year_Day = mday(Date_Time),
-          Hour = hour(Date_Time),
-          Minute = minute(Date_Time)
-        ) 
+      # in no timestamp column can be found notify the user
+      if (any(coldate)==FALSE) {
+        shinyalert(title = "No timestamp column found!", 
+                   paste("However, you can find ''", nome, "'' in the dataframe dropdown"),
+                   type = "warning")
+      } else {
+        # if timestamp columns found create date time columns
+        data[[nome]] <- data[[nome]] %>%
+          mutate(
+            Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input$timezone), # depend on selected timezone
+            Week_Day = wday(Date_Time, label = TRUE, locale = "en_US", week_start = getOption("lubridate.week.start", 1)), # week start on monday
+            Month = month(Date_Time, label = TRUE, locale = "en_US"),
+            Month_Day = mday(Date_Time),
+            Year = year(Date_Time),
+            Year_Day = mday(Date_Time),
+            Hour = hour(Date_Time),
+            Minute = minute(Date_Time)
+          ) 
+        shinyalert(title = "Dataframe successfully added",
+                   text = paste("We created some useful new variables...", "You can find ''", nome, "'' in the dataframe dropdown"), 
+                   type = "success")
+      }
+    } else {
+      shinyalert(title = "Dataframe successfully added",
+                 text = paste("You can find ''", nome, "'' in the dataframe dropdown"), 
+                 type = "success")
     }
-    
-    # round to selected decimal digits
-    data[[nome]] <- data[[nome]] %>% mutate_if(is.numeric, ~round(., input$decimalDigits))
-    
   })
   
   # change dataframe name by adding another dataframe 
   observeEvent(input$new_dataframe_name_search,{
     data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input[["dataframe_table_rows_all"]], ]
     shinyalert(title = "Dataframe successfully renamed",
-               text = paste("You can find ''", input$new_dataframe_name, "'' in the dataset dropdown"), type = "success")
+               text = paste("You can find ''", input$new_dataframe_name, "'' in the dataframe dropdown"), type = "success")
   })
   
   # create a reactive list of loaded dataframes
@@ -166,8 +181,6 @@ server <- function(input, output, session) {
       rownames = FALSE
     )
   )
-  
-  
   # keep column ----------------------------------------------------------------------
   output$keepColumns <- renderUI({
     req(input$file)

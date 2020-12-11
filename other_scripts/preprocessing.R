@@ -13,6 +13,7 @@ dateFormats <- c("%Y-%m-%d %H:%M:%S",
 # function to automatically find date column
 coldate <- sapply(df.power,   function(x) !all(is.na(as.Date(as.character(x),format = dateFormats))))
 
+
 df.power <- df.power %>%
   mutate(
     Date_Time = as.POSIXct(df.power[,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = "Europe/Rome"),
@@ -115,5 +116,16 @@ library("readxl")
 my_data <- read_excel("./data/units.xls")
 my_data[1,] <-  ""
 
-write.csv(my_data,"./data/units.csv", row.names = FALSE)
+write.csv(tt,"./data/units.csv", row.names = FALSE)
+
+# units of measure
+ud_units
+df_units <- data.frame(name = NULL)
+for (i in 1:3248) {
+  df_units[i,1] <- units(tt[[i]])$numerator 
+}
+
+colnames(df_units) <- "Symbol"
+write.csv(df_units,"./data/units.csv", row.names = FALSE)
+
 
