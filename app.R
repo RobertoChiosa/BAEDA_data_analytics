@@ -21,7 +21,7 @@ source("sidebar.R")     # load sidebar
 source("body.R")        # load body
 
 # USER INTERFACE ----------------------------------------------------------------------
-ui <- dashboardPage(skin = "black",
+ui <- dashboardPage(skin = "black",     # sets overall appearance 
                     header,             # loaded from scripts
                     sidebar,            # loaded from scripts
                     body                # loaded from scripts
@@ -30,10 +30,7 @@ ui <- dashboardPage(skin = "black",
 # SERVER FUNCTION ----------------------------------------------------------------------
 server <- function(input, output, session) {
   
-  # Sidebar functions ----------------------------------------------------------------------
-  output$selected_sidebar_tab <- renderText({
-    paste("You've selected:", input$tabs)
-  })
+  ###### SIDEBAR functions ----------------------------------------------------------------------
   
   # forces startup modal dialog to open when the application starts
   toggleModal(session, "startupModal", toggle = "open")
@@ -42,7 +39,7 @@ server <- function(input, output, session) {
     toggleModal(session, "startupModal", toggle = "open")
   })
   
-  # 3rd (SUB)TAB "Manage" ----------------------------------------------------------------------
+  ###### TAB "Manage" ----------------------------------------------------------------------
   
   # this option permits to read larger files than shiny default
   options(shiny.maxRequestSize = 100*1024^2)
@@ -50,6 +47,7 @@ server <- function(input, output, session) {
   # reactive value where we will store all the loaded dataframes
   data <- reactiveValues()
   
+  # load file ----------------------------------------------------------------------
   # create a reactive dataframe df when the file is loaded and add
   observeEvent(input$file,{
     inFile <- input$file   # input file loaded
@@ -114,13 +112,26 @@ server <- function(input, output, session) {
     }
   })
   
+  # value boxes ----------------------------------------------------------------------
+  output$valueBox1 <- renderValueBox({
+    req(input$file) # requires that a file is loaded
+    valueBox(dim(output_df())[1], "Number of rows", icon = icon("arrows-alt-v"), color = "orange")
+  })
+  
+  output$valueBox2 <- renderValueBox({
+    req(input$file) # requires that a file is loaded
+    valueBox(dim(output_df())[2], "Number of columns", icon = icon("arrows-alt-h"), color = "blue")
+  })
+
+  # Rename dataframe ----------------------------------------------------------------------
   # change dataframe name by adding another dataframe 
   observeEvent(input$new_dataframe_name_search,{
-    data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input[["dataframe_table_rows_all"]], ]
+    data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input[["dataframe_table_rows_all"]], input$keepColumnName]
     shinyalert(title = "Dataframe successfully renamed",
                text = paste("You can find ''", input$new_dataframe_name, "'' in the dataframe dropdown"), type = "success")
   })
   
+  # Dataframe dropdown creation ----------------------------------------------------------------------
   # create a reactive list of loaded dataframes
   reactive_list <- reactive({ 
     req(input$file) # when new file loaded the list is updated
@@ -146,18 +157,6 @@ server <- function(input, output, session) {
     data[[input$dataframe]]
   }) 
   
-  
-  # box output function
-  output$manage_outputBox <- renderPrint({
-    req(input$file) # waits to print unti a file is loaded
-    switch (input$display_buttons,
-            str = str(output_df()),
-            summary = summary(output_df()),
-            skim = skim(output_df()),
-    )
-  })
-  
-  # 4th (SUB)TAB "View" ----------------------------------------------------------------------
   # Display datatable ----------------------------------------------------------------------
   output$dataframe_table <- renderDataTable(
     datatable(
@@ -183,7 +182,7 @@ server <- function(input, output, session) {
   )
   # keep column ----------------------------------------------------------------------
   output$keepColumns <- renderUI({
-    req(input$file)
+    req(input$file) # requires that a file is loaded
     tagList(
       pickerInput("keepColumnName", label = "Select column to keep:",
                   choices = colnames( output_df()),
@@ -191,10 +190,9 @@ server <- function(input, output, session) {
                   options = list(`actions-box` = TRUE),multiple = T)
     )
   })
-  
+
   # Rename column ----------------------------------------------------------------------
   output$modifyColumns <- renderUI({
-    req(input$file)
     tagList(
       selectInput("columnName", label = "Select column to modify:",
                   choices = c("", colnames( output_df() )),
@@ -268,7 +266,8 @@ server <- function(input, output, session) {
     }
   )
   
-  # 5th (SUB)TAB "Visualize" ----------------------------------------------------------------------
+  
+  ###### TAB "Visualize" ----------------------------------------------------------------------
   output$downloadplotButton <- downloadHandler(
     filename = function() { 
       paste(input$chart, "plot", Sys.Date(), ".png", sep="")
@@ -427,6 +426,8 @@ server <- function(input, output, session) {
       )# end buttons
   })
   output$outBoxTimeSeries <- renderHighchart({plotTimeSeries()})
+  
+  
 }
 
 

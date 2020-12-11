@@ -2,6 +2,7 @@
 ###############            Copyright © BAEDA Lab 2020             ###############
 #################################################################################
 
+###### SIDEBAR functions ----------------------------------------------------------------------
 selection_dataframe <- function() {
   tagList(
     # select the dataset you want to use for the analysis - default none
@@ -14,6 +15,7 @@ selection_dataframe <- function() {
   )
 }
 
+###### TAB "Manage" ----------------------------------------------------------------------
 load_file_modal <- function(failed = FALSE) {
   bsModal(id = 'startupModal',
           trigger = 'open',
@@ -29,16 +31,10 @@ load_file_modal <- function(failed = FALSE) {
 <p align="center">
    Now you can perform advanced data analytics tasks on your energy data.
    <br />
-   <a href="https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENT">Explore the docs</a>
-   ·
-   <a href="https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENT">View Demo</a>
-   ·
-   <a href="https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENT/issues">Report Bug</a>
-   ·
-   <a href="https://github.com/RobertoChiosa/BAEDA_DASHBOARD_STUDENT/issues">Request Feature</a>
+    <a href="https://www.denerg.polito.it/"><strong>Department of Energy of Politecnico di Torino »</strong></a>
 </p>
 </p>
-<br />
+<br /> 
 '),
           column(width = 12, align = 'center', 
                  # type of files that can be loaded
@@ -85,37 +81,6 @@ load_file_modal <- function(failed = FALSE) {
 
 manage_inbox <- function() {
   tagList(
-    # type of files that can be loaded
-    selectInput("type", "Chose file type:", c("", "csv", "xls"), selected = NULL),
-    # the user wants to load a csv file
-    conditionalPanel("input.type == 'csv'",
-                     column(width = 6, checkboxInput("header", "Header?", value = TRUE) ),
-                     column(width = 6, checkboxInput("strAsFact", "String as Factor?", value = TRUE) ),
-                     column(width = 6, selectInput("separator", "Separator;:", c("Comma (,)" = ",", "Semicolon (;)" = ";")) ),
-                     column(width = 6, selectInput("decimal", "Decimal:", c("Point (.)" = ".","Comma (,)" = ",")) ),
-                     numericInput("decimalDigits", label = "Decimal digits:", value = 2, step = 1, min = 0), # add condition on variable
-                     checkboxInput("timestamp", "Timestamp column?", value = TRUE),
-                     conditionalPanel("input.timestamp == true",
-                                      selectInput("timezone", "Timezone:", choices = OlsonNames(), selected = Sys.timezone()),
-                     )
-    ), # end conditional csv
-    # the user wants to load a xlm file
-    conditionalPanel("input.type == 'xlm'",
-                     p("WARNING: file not supported")
-    ), # end conditional csv
-    conditionalPanel("input.type != ''",
-                     fileInput("file",paste("Upload file:"), multiple = TRUE, 
-                               accept = c("text/csv",
-                                          "text/comma-separated-values,text/plain",
-                                          ".csv")
-                     )
-    )
-  )
-}
-
-view_inbox <- function() {
-  tagList(
-    
     uiOutput("keepColumns"),
     # Rename column ----------------------------------------------------------------------
     awesomeCheckbox("modifyColumns_chackbox", "Rename column:", value = FALSE),
