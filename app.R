@@ -62,14 +62,18 @@ server <- function(input, output, session) {
     
     # gives error feedback if the file is not in the format required/selected and STOPS the execution
     shinyFeedback::hideFeedback("file")
-    if (validated == TRUE) {
+    if (validated == TRUE) { 
       shinyFeedback::feedbackSuccess("file", TRUE, "Format accepted")
     } else { 
-      shinyFeedback::feedbackDanger("file", TRUE, "Format not accepted")
+      shinyFeedback::feedbackDanger("file", TRUE, "Format not accepted") 
     }
     
     # the execution CONTINUES only if the file is accepted
     req(validated, cancelOutput = TRUE)
+    
+    id <- showNotification("Reading data...", duration = NULL, closeButton = FALSE)
+    on.exit(removeNotification(id), add = TRUE)
+    
     
     # reads the input file and assigms it to the reactive value data
     data[[nome]] <- switch(input$type, # condition on the file type
@@ -79,20 +83,23 @@ server <- function(input, output, session) {
                            # xls = read_excel(path = inFile$datapath)
     )
     
-    if (input$timestamp == T) {
+    # create the correct timestamp and timezone input to validate the following condition
+    timestamp <- gsub(" ", "", paste("timestamp_", input$type))
+    timezone <- gsub(" ", "", paste("timezone_", input$type))
+    
+    if (input[[timestamp]] == T) {
       # function to automatically find date column
       coldate <- sapply(data[[nome]],   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
       
       # in no timestamp column can be found notify the user
-      if (any(coldate)==FALSE) {
+      if (any(coldate) == FALSE) {
         shinyalert(title = "No timestamp column found!", 
                    paste("However, you can find ''", nome, "'' in the dataframe dropdown"),
                    type = "warning")
-      } else {
-        # if timestamp columns found create date time columns
+      } else { # if timestamp columns found create date time columns
         data[[nome]] <- data[[nome]] %>%
           mutate(
-            Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input$timezone), # depend on selected timezone
+            Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input[[timezone]]), # depend on selected timezone
             Week_Day = wday(Date_Time, label = TRUE, locale = "en_US", week_start = getOption("lubridate.week.start", 1)), # week start on monday
             Month = month(Date_Time, label = TRUE, locale = "en_US"),
             Month_Day = mday(Date_Time),
@@ -105,30 +112,11 @@ server <- function(input, output, session) {
                    text = paste("We created some useful new variables...", "You can find ''", nome, "'' in the dataframe dropdown"), 
                    type = "success")
       }
-    } else {
+    } else { # no timestamp check box selected
       shinyalert(title = "Dataframe successfully added",
                  text = paste("You can find ''", nome, "'' in the dataframe dropdown"), 
                  type = "success")
     }
-  })
-  
-  # value boxes ----------------------------------------------------------------------
-  output$valueBox1 <- renderValueBox({
-    req(input$file) # requires that a file is loaded
-    valueBox(dim(output_df())[1], "Number of rows", icon = icon("arrows-alt-v"), color = "orange")
-  })
-  
-  output$valueBox2 <- renderValueBox({
-    req(input$file) # requires that a file is loaded
-    valueBox(dim(output_df())[2], "Number of columns", icon = icon("arrows-alt-h"), color = "blue")
-  })
-
-  # Rename dataframe ----------------------------------------------------------------------
-  # change dataframe name by adding another dataframe 
-  observeEvent(input$new_dataframe_name_search,{
-    data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input[["dataframe_table_rows_all"]], input$keepColumnName]
-    shinyalert(title = "Dataframe successfully renamed",
-               text = paste("You can find ''", input$new_dataframe_name, "'' in the dataframe dropdown"), type = "success")
   })
   
   # Dataframe dropdown creation ----------------------------------------------------------------------
@@ -152,54 +140,64 @@ server <- function(input, output, session) {
     )
   })
   
-  # sets the output dataframe to the one selected 
-  output_df <- reactive({
-    data[[input$dataframe]]
-  }) 
+  # value boxes ----------------------------------------------------------------------
+  output$valueBox1 <- renderValueBox({
+    req(input$file) # requires that a file is loaded
+    valueBox(length(input$dataframe_table_rows_all), "Number of rows", icon = icon("arrows-alt-v"), color = "orange")
+  })
+  
+  output$valueBox2 <- renderValueBox({
+    req(input$file) # requires that a file is loaded
+    valueBox(length(input$keepColumnName), "Number of columns", icon = icon("arrows-alt-h"), color = "blue")
+  })
+  
+  # Rename dataframe ----------------------------------------------------------------------
+  # change dataframe name by adding another dataframe 
+  observeEvent(input$new_dataframe_name_search,{
+    data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input[["dataframe_table_rows_all"]], input$keepColumnName]
+    shinyalert(title = "Dataframe successfully renamed",
+               text = paste("You can find ''", input$new_dataframe_name, "'' in the dataframe dropdown"), type = "success")
+  })
+  
   
   # Display datatable ----------------------------------------------------------------------
-  output$dataframe_table <- renderDataTable(
-    datatable(
-      # input$file1 will be NULL initially. After the user selects
-      # and uploads a file, it will be a data frame with 'name',
-      # 'size', 'type', and 'datapath' columns. The 'datapath'
-      # column will contain the local filenames where the data can
-      # be found.
-      output_df(),
-      filter = 'top',
-      # style = "foundation",
-      extensions = c('FixedHeader'),
-      options = list(autoWidth = TRUE,
-                     scrollX = 500,
-                     deferRender = TRUE,
-                     scroller = TRUE,
-                     dom = 'lBfrtip',
-                     fixedColumns = list(leftColumns = 2),
-                     fixedHeader = TRUE
-      ),
-      rownames = FALSE
-    )
+  output$dataframe_table <- renderDT(
+    data[[input$dataframe]][,input$keepColumnName],
+    filter = 'top',
+    # style = "foundation",
+    extensions = c('FixedHeader'),
+    options = list(
+      autoWidth = TRUE, # permits to adapt the columns to the width of the box
+      scrollX = 500, # permits to scroll along x
+      deferRender = TRUE,
+      scroller = TRUE,
+      dom = 'lBfrtip',
+      fixedColumns = list(leftColumns = 2),
+      fixedHeader = TRUE
+    ),
+    # rownames = FALSE
   )
   # keep column ----------------------------------------------------------------------
   output$keepColumns <- renderUI({
     req(input$file) # requires that a file is loaded
     tagList(
       pickerInput("keepColumnName", label = "Select column to keep:",
-                  choices = colnames( output_df()),
-                  selected = colnames( output_df()),
+                  choices = colnames( data[[input$dataframe]]  ),
+                  selected = colnames( data[[input$dataframe]] ),
                   options = list(`actions-box` = TRUE),multiple = T)
     )
   })
-
+  
   # Rename column ----------------------------------------------------------------------
   output$modifyColumns <- renderUI({
+    req(input$file)
     tagList(
       selectInput("columnName", label = "Select column to modify:",
-                  choices = c("", colnames( output_df() )),
+                  choices = c("", input$keepColumnName),
                   selected = NULL), # chose numerical variable
       conditionalPanel("input.columnName != '' ",
                        selectizeInput("units", label = "Units of measurements:",
-                                      choices = unitsMeasure$Symbol, # all admitted unit
+                                      choices = c("",unitsMeasure$Symbol), # all admitted unit
                                       selected = NULL,
                                       multiple = FALSE,
                                       options = list(maxOptions = 5)
@@ -228,30 +226,32 @@ server <- function(input, output, session) {
     req(input$file)
     tagList(
       selectInput("variablePivot", label = "Select categorical variable:",
-                  choices = c("", colnames(dplyr::select_if( output_df() , is.factor))),
+                  choices = c("", colnames(dplyr::select_if( data[[input$dataframe]][,input$keepColumnName] , is.factor))),
                   selected = NULL,
                   multiple = TRUE), # chose numerical variable
       selectInput("columnsPivot", label = "Select columns to keep:",
-                  choices = c("", colnames(dplyr::select_if( output_df() , is.numeric))),
+                  choices = c("", colnames(dplyr::select_if( data[[input$dataframe]][,input$keepColumnName] , is.numeric))),
                   selected = NULL,
                   multiple = TRUE), # chose numerical variable
-      selectInput("functionPivot", label = "Select summary function:",
-                  choices = c("", "mean","min","max", "sd"),
-                  selected = NULL), # chose numerical variable
-      numericInput("decimalDigitsPivot", label = "Decimal digits", value = 2, step = 1, min = 0), # add condition on variable
-      
+      column(width = 8, style = "padding-left:0px; padding-right:0px;",
+             selectInput("functionPivot", label = "Select summary function:",
+                         choices = c("", "mean","min","max", "sd"),
+                         selected = NULL), # chose numerical variable
+      ),
+      column(width = 4,  style = "padding-left:10px; padding-right:0px;",
+             numericInput("decimalDigitsPivot", label = "Digits", value = 2, step = 1, min = 0), # add condition on variable
+      ),
+      actionButton("pivotTableButton", "Pivot!", width = '100%')
     )
   })
   
   observeEvent(input$pivotTableButton,{ 
-    # create summary table
-    if (!is.null(input$variablePivot)) {
+    req(input$variablePivot, input$columnsPivot, input$functionPivot)
       switch (input$functionPivot,
               mean = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(mean, na.rm = TRUE)),
               min = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(min, na.rm = TRUE)),
               max = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(max, na.rm = TRUE))
       )
-    }
     data[[input$dataframe]] <-  mutate_if(data[[input$dataframe]], is.numeric, ~round(., input$decimalDigitsPivot)) %>% # round the pivotted table
       select(input$variablePivot, input$columnsPivot)
   })
@@ -279,154 +279,112 @@ server <- function(input, output, session) {
   # Histogram ----------------------------------------------------------------------
   # input box - select variables - HISTOGRAM
   output$inBoxHistogram <- renderUI({
-    if (!is.null(input$file)) {# risolve errore nel caso non ci sia un file di input
-      tagList(
-        selectInput("variable", label = "Variable:", choices = colnames(dplyr::select_if( output_df(), is.numeric))), # chose numerical variable
-        sliderInput(inputId = "bins", label = "Number of bins:", min = 1, max = 100, value = 30),
-        selectInput("fillvariable", label = "Fill Variable:", choices = c("None", colnames(dplyr::select_if( output_df(), is.factor))) ),
-        selectInput("facetvariable", label = "Facet Variable:", choices = c("None", colnames(dplyr::select_if( output_df(), is.factor))) ),
-        tags$hr(),
-        column("Style", width = 6,
-               checkboxInput("checkbox_flip", label = "Flip", value = FALSE),
-               checkboxInput("checkbox_density", label = "Density", value = FALSE)
-        ),
-        column("Scale", width = 6,
-               checkboxInput("checkbox_logx", label = "Log-X", value = FALSE),
-               checkboxInput("checkbox_logy", label = "Log-Y", value = FALSE)
-        )
-      )}
-  })
-  # output box - plot - HISTOGRAM
-  output$outBoxHistogram <- renderPlot({
-    if (is.null(input$file)) {NULL} else {# risolve errore nel caso non ci sia un file di input
-      #shiny::req(input$variable)
-      #validate(need(input$variable %in% colnames(myData),message="Incorrect column name."))
-      plot <- ggplot(data =  output_df(),
-                     mapping =  aes(x =  output_df()[,input$variable],
-                                    fill = if (input$fillvariable == "None") {NULL} else { output_df()[,input$fillvariable]} ),
-      ) + theme_bw()
-      
-      # densità
-      if (input$checkbox_density == TRUE) {
-        plot <- plot + geom_density(aes(y = ..density..,
-                                        fill = if (input$fillvariable == "None") {NULL} else { output_df()[,input$fillvariable]}),
-                                    alpha = 0.4,
-                                    bw = input$bins/5,
-                                    na.rm = TRUE)  # aggiungo distribuzione
-      } else{plot <- plot + geom_histogram(bins = input$bins,
-                                           na.rm = TRUE)} #
-      # flip
-      if (input$checkbox_flip == TRUE) {plot <- plot + coord_flip()}
-      # tema
-      plot <- plot + labs( x = input$variable, fill = input$fillvariable ) + theme(legend.position = "bottom")
-      # add wrap
-      if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  output_df()[,input$facetvariable])}
-      # log
-      # flip
-      if (input$checkbox_logx == TRUE) {plot <- plot + scale_x_continuous(trans = 'log10') }
-      if (input$checkbox_logy == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
-      
-      plot
-    } # end else
-  })
-  
-  # input box - select variables - BAR BLOT
-  output$inBoxBar <- renderUI({
+    req(input$file)
     tagList(
-      selectInput("variableX_Box", label = "X:", choices = colnames( output_df())), # chose numerical variable
-      selectInput("variableY_Box", label = "Y:", choices = colnames( output_df())), # chose numerical variable
-      selectInput("fillvariable_Box", label = "Fill:", choices = c("NULL", colnames(dplyr::select_if( output_df(), is.factor)))),
-      # radioButtons("positionMultipleBar","Position:", c("staked", "dodge"), inline = T, selected = NULL),
-      selectInput("facetvariable_Box", label = "Facet:", choices = c("NULL", colnames(dplyr::select_if( output_df(), is.factor)))),
-      sliderInput("width_Box", label = "Bar width:", min = 0.1, max = 1, value = 0.9),
-      
-      tags$hr(),
-      column("", width = 6,
-             checkboxInput("checkbox_flip_Box", label = "Flip", value = FALSE)
+      selectInput("variable", label = "Variable:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
+      sliderInput(inputId = "bins", label = "Number of bins:", min = 1, max = 100, value = 30),
+      column(width = 6,  style = "padding-left:0px; padding-right:5px;",
+             selectInput("fillvariable", label = "Fill Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
       ),
-      column("", width = 6,
-             checkboxInput("checkbox_logy_Box", label = "Log-Y", value = FALSE),
-             checkboxInput("polar_Box", label = "Polar", value = FALSE)
+      column(width = 6,  style = "padding-left:5px; padding-right:0px;",
+             selectInput("facetvariable", label = "Facet Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
+      ),
+      conditionalPanel("input.facetvariable != 'None'", numericInput("nrowvariable", "Number of facet rows", value = 3, min = 1)), 
+      tags$hr(),
+      column("Style", width = 6,
+             checkboxInput("checkbox_flip", label = "Flip", value = FALSE),
+             checkboxInput("checkbox_density", label = "Density", value = FALSE)
+      ),
+      column("Scale", width = 6,
+             checkboxInput("checkbox_logx", label = "Log-X", value = FALSE),
+             checkboxInput("checkbox_logy", label = "Log-Y", value = FALSE)
       )
     )
   })
-  # output box - plot - BAR BLOT
-  plotBar <- eventReactive(input$plotButton,{
-    aes_x <- input$variableX_Box
-    aes_y <- input$variableY_Box
-    aes_fill <- input$fillvariable_Box
+  # output box - plot - HISTOGRAM
+  output$outBoxHistogram <- renderPlot({
+    req(input$file)
     
-    arg_stat <- "identity"
-    plot <- ggplot(data =  output_df(), mapping =  aes_string(x = aes_x, y = aes_y, fill = aes_fill)) + 
-      geom_bar(stat = arg_stat, width = input$width_Box ) +  # position = input$positionMultipleBar
-      theme_bw()
+    plot <- ggplot(data =  data[[input$dataframe]],
+                   mapping =  aes(x =  data[[input$dataframe]][,input$variable],
+                                  fill = if (input$fillvariable == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable]} ),
+    ) + theme_bw()
+    
+    # densità
+    if (input$checkbox_density == TRUE) {
+      plot <- plot + geom_density(aes(y = ..density..,
+                                      fill = if (input$fillvariable == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable]}),
+                                  alpha = 0.4,
+                                  bw = input$bins/5,
+                                  na.rm = TRUE)  # aggiungo distribuzione
+    } else{plot <- plot + geom_histogram(bins = input$bins, na.rm = TRUE)} #
+    # flip
+    if (input$checkbox_flip == TRUE) {plot <- plot + coord_flip()}
+    # tema
+    plot <- plot + labs( x = input$variable, fill = input$fillvariable ) + theme(legend.position = "bottom")
+    # add wrap
+    if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  data[[input$dataframe]][,input$facetvariable], nrow = input$nrowvariable)}
+    # log
+    # flip
+    if (input$checkbox_logx == TRUE) {plot <- plot + scale_x_continuous(trans = 'log10') }
+    if (input$checkbox_logy == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
+    
+    plot
+  })
+  
+  # Boxplot ----------------------------------------------------------------------
+  # input box - select variables - BOXPLOT
+  output$inBoxBoxplot <- renderUI({
+    req(input$file)
+    tagList(
+      column(width = 6,  style = "padding-left:0px; padding-right:5px;",
+             selectInput("variableX_Box", label = "Variable X:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ), # chose numerical variable
+             selectInput("fillvariable_Box", label = "Fill Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
+      ),
+      column(width = 6,  style = "padding-left:5px; padding-right:0px;",
+             selectInput("variableY_Box", label = "Variable Y:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
+             selectInput("facetvariable_Box", label = "Facet Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
+      ),
+      conditionalPanel("input.facetvariable_Box != 'None'", numericInput("nrowvariable_Box", "Number of facet rows", value = 3, min = 1)), 
+      tags$hr(),
+      column("Style", width = 6,
+             checkboxInput("checkbox_flip_Box", label = "Flip", value = FALSE)
+      ),
+      column("Scale", width = 6,
+             checkboxInput("checkbox_logy_Box", label = "Log-Y", value = FALSE)
+      )
+    )
+  })
+  # output box - plot - BOXPLOT
+  output$outBoxBoxplot <- renderPlot({
+    req(input$file)
+    
+    if (input$variableX_Box == "None") {
+      plot <- ggplot(data =  data[[input$dataframe]],
+                     mapping =  aes(y =  data[[input$dataframe]][,input$variableY_Box],
+                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable_Box]} ),
+      ) + labs( y = input$variableY_Box, fill = input$fillvariable_Box ) 
+    } else {
+      plot <- ggplot(data =  data[[input$dataframe]],
+                     mapping =  aes(x =  data[[input$dataframe]][,input$variableX_Box], y =  data[[input$dataframe]][,input$variableY_Box],
+                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable_Box]} ),
+      ) + labs( x = input$variableX_Box, y = input$variableY_Box, fill = input$fillvariable_Box ) 
+    }
+    
+    
+    plot <- plot + theme_bw() + geom_boxplot(na.rm = TRUE)
     
     # flip
     if (input$checkbox_flip_Box == TRUE) {plot <- plot + coord_flip()}
     # tema
-    plot <- plot + labs( x = input$variableX_Box, y = input$variableY_Box, fill = input$fillvariable_Box ) + theme(legend.position = "bottom")
+    plot <- plot + theme(legend.position = "bottom")
     # add wrap
-    if (input$facetvariable_Box == "NULL") {NULL} else {plot <- plot + facet_wrap(~  output_df()[,input$facetvariable_Box])}
+    if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data[[input$dataframe]][,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
     # log
     if (input$checkbox_logy_Box == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
-    # log
-    if (input$polar_Box == TRUE) {plot <- plot + coord_polar(start = 0) }
     
     plot
   })
-  output$outBoxBar <- renderPlot({plotBar()})
-  
-  # Time Series ----------------------------------------------------------------------
-  # input box - select variables - TIME SERIES
-  output$inBoxTimeSeries <- renderUI({
-    tagList(
-      selectInput("variableY_TimeSeries", label = "Y variables:", 
-                  choices = c("", colnames(dplyr::select_if( output_df(), is.numeric))),
-                  multiple = TRUE
-      )
-    )
-  })
-  # output box - plot - TIME SERIES
-  plotTimeSeries <- eventReactive(input$plotButton,{
-    
-    qxts <- xts( output_df()[,c(input$variableY_TimeSeries) ] , order.by = (output_df()$Date_Time), tzone = input$timezone)
-    
-    hc <- highchart( type = "stock")
-    for (i in c(1:length(input$variableY_TimeSeries))) {
-      hc <-  hc %>% hc_add_series(qxts[,i],  type = "spline", name = input$variableY_TimeSeries[i]) 
-    }
-    
-    hc %>%
-      hc_legend( enabled = TRUE, align = "bottom", verticalAlign = "top", layout = "horizontal", x = 0, y = 0) %>%
-      hc_tooltip(shared = TRUE, split = FALSE, pointFormat = paste('{point.series.name}= {point.y:.2f}<br>'))  %>%
-      hc_rangeSelector( verticalAlign = "top", selected = 4,
-                        buttons = list(
-                          list(count = 1,
-                               text = 'All',
-                               type = 'all'),
-                          list(count = 1,
-                               text = '1yr',
-                               type = 'year'),
-                          list(count = 6,
-                               text='6mo',
-                               type='month'),
-                          list(count = 1,
-                               text='1mo',
-                               type='month'),
-                          list(count = 7,
-                               text='1w',
-                               type='day'),
-                          list(count = 1,
-                               text='1d',
-                               type='day'),
-                          list(count = 6,
-                               text='6h',
-                               type='hour')
-                        )
-      )# end buttons
-  })
-  output$outBoxTimeSeries <- renderHighchart({plotTimeSeries()})
-  
   
 }
 

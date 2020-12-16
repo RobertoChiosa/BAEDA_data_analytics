@@ -2,12 +2,25 @@
 #df.power <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
 df.power <- read.csv("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_1.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
 
+
+
+library(plotly)
+fig <- plot_ly(data = df.power, x = df.power$festivo,  y = df.power$power_mech_room, 
+               type = "box", color = ~df.power$festivo)
+
+
+fig <- fig %>% add_trace(y = ~rnorm(50, 1))
+
+fig
+
+
+
 skim(df.power)
 summary(df.power)
 
 t <- sapply(df.power,class)
 dateFormats <- c("%Y-%m-%d %H:%M:%S",
-                 "%m/%d %H:%M:%S", 
+                 "%m/%d %H:%M:%S",
                  "%d/%m/%y %H:%M")
 
 # function to automatically find date column
@@ -33,12 +46,12 @@ df.power <- df.power %>%
   select(Date_Time, Year, Year_Day, Month, Month_Day, Week_Day, Hour, Minute, Holiday, everything() ) %>%
   filter(Year >= 2018)
 
-  
 
 
 
-#Date      AE Percent 
-#TRUE   FALSE   FALSE 
+
+#Date      AE Percent
+#TRUE   FALSE   FALSE
 
 
 
@@ -67,8 +80,8 @@ aes_x <- data$Day_Type
 aes_y <- data$Total_Power
 arg_stat <- "identity"
 
-plot <- ggplot(data = dataframe, mapping =  aes_string(x = aes_x, y = aes_y, fill = NULL)) + 
-  geom_bar(stat = arg_stat) + 
+plot <- ggplot(data = dataframe, mapping =  aes_string(x = aes_x, y = aes_y, fill = NULL)) +
+  geom_bar(stat = arg_stat) +
   theme_bw()
 
 plot
@@ -86,7 +99,7 @@ comment(data) <- seq(1,length(colnames(data)))
 
 library(dplyr)
 data %>%
-  group_by(Year) %>% 
+  group_by(Year) %>%
   summarise(across(.cols = everything(), mean))
 
 iris %>%
@@ -122,7 +135,7 @@ write.csv(tt,"./data/units.csv", row.names = FALSE)
 ud_units
 df_units <- data.frame(name = NULL)
 for (i in 1:3248) {
-  df_units[i,1] <- units(tt[[i]])$numerator 
+  df_units[i,1] <- units(tt[[i]])$numerator
 }
 
 colnames(df_units) <- "Symbol"

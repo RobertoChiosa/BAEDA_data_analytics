@@ -1,0 +1,13 @@
+name: BAEDA_DASHBOARD_STUDENTS
+title: BAEDA_DASHBOARD_STUDENTS
+username:
+account: roberto-chiosa
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3390458
+bundleId: 3977119
+url: https://roberto-chiosa.shinyapps.io/BAEDA_DASHBOARD_STUDENTS/
+when: 1607723833.8378
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: other_scripts/plotapp.R|other_scripts/preprocessing.R|other_scripts/shiny-job.R|other_scripts/tutorials.R

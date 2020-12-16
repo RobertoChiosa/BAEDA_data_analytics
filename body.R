@@ -2,7 +2,7 @@
 ###############            Copyright © BAEDA Lab 2020             ###############
 #################################################################################
 
-chartTypes <- c("", "Time Series") # add here more chart types as we go on adding
+chartTypes <- c("","Box Plot","Histogram") # add here more chart types as we go on adding
 loadingGifColor <- "#0dc5c1"
 body <- dashboardBody(
   useShinyalert(),                                   # use html popups
@@ -18,11 +18,16 @@ body <- dashboardBody(
             fluidRow( 
               box( title = "Table options", width = 4, manage_inbox() ), # INPUT BOX
               box( width = 8, 
-                   #fluidRow(
+                   fluidRow(
                      valueBoxOutput("valueBox1", width = 6), 
-                     valueBoxOutput("valueBox2", width = 6),
-                   dataTableOutput("dataframe_table") %>% withSpinner(color = loadingGifColor) 
-                   #)
+                     valueBoxOutput("valueBox2", width = 6)
+                   ),
+                   fluidRow(
+                     column(width = 12, 
+                            DTOutput("dataframe_table") %>% withSpinner(color = loadingGifColor) 
+                     )
+                   )
+                   
               ) # end box
             )
     ),
@@ -33,20 +38,14 @@ body <- dashboardBody(
               box( title = "Chart options", width = 4,
                    selectInput("chart", label = "Chart Type:", choices = chartTypes,
                                selected = NULL),
-                   conditionalPanel("input.chart == 'Time Series'", uiOutput("inBoxTimeSeries")), # 
                    conditionalPanel("input.chart == 'Histogram'", uiOutput("inBoxHistogram")), # histogram
-                   conditionalPanel("input.chart == 'Bar Plot'", uiOutput("inBoxBar")), # bar plot
-                   conditionalPanel("input.chart == 'Carpet'", uiOutput("inBoxCarpet")), # carpet plot
-                   conditionalPanel("input.chart == 'Scatter'", uiOutput("inBoxScatter")), # scatter plot
+                   conditionalPanel("input.chart == 'Box Plot'", uiOutput("inBoxBoxplot")), # Boxplot
                    actionButton("plotButton", "Plot", width = '100%', style = "color: #fff; background-color: red; border-color: #red"),
                    downloadButton('downloadplotButton', 'Download', style = "width:100%;"),
               ), # END INPUT BOX
               box(width = 8, # OUTPUT BOX
-                  conditionalPanel("input.chart == 'Time Series'", highchartOutput("outBoxTimeSeries")), # histogram
                   conditionalPanel("input.chart == 'Histogram'", plotOutput("outBoxHistogram") %>% withSpinner(color = loadingGifColor)), # histogram
-                  conditionalPanel("input.chart == 'Bar Plot'", plotOutput("outBoxBar") %>% withSpinner(color = loadingGifColor)), # bar plot
-                  conditionalPanel("input.chart == 'Carpet'", plotOutput("outBoxCarpet") %>% withSpinner(color = loadingGifColor)), # carpet plot
-                  conditionalPanel("input.chart == 'Scatter'", plotOutput("outBoxScatter")) # scatter plot
+                  conditionalPanel("input.chart == 'Box Plot'", plotOutput("outBoxBoxplot") %>% withSpinner(color = loadingGifColor)), # Boxplot
                   
               ), # END OUTPUT BOX
             )

@@ -4,7 +4,8 @@
 
 # Package names
 packages <- c(
-  'units',
+  'units', # units of measurements
+  'plotly', # interactive graphs
   'shiny',                  # construct shiny apps
   'shinydashboard',         # construct shiny dashboards
   'markdown',               # create markdown reports

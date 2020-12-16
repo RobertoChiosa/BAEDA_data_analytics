@@ -42,21 +42,21 @@ load_file_modal <- function(failed = FALSE) {
                  
                  # the user wants to load a csv file
                  conditionalPanel("input.type == 'csv'",
-                                  column(width = 6, selectInput("separator", "Separator;:", c("Comma (,)" = ",", "Semicolon (;)" = ";")) ),
+                                  column(width = 6, selectInput("separator", "Separator:", c("Comma (,)" = ",", "Semicolon (;)" = ";")) ),
                                   column(width = 6, selectInput("decimal", "Decimal:", c("Point (.)" = ".","Comma (,)" = ",")) ),
                                   column(width = 4, checkboxInput("header", "Header?", value = TRUE) ),
-                                  column(width = 4, checkboxInput("timestamp", "Timestamp column?", value = TRUE) ),
+                                  column(width = 4, checkboxInput("timestamp_csv", "Timestamp column?", value = TRUE) ),
                                   column(width = 4, checkboxInput("strAsFact", "String as Factor?", value = TRUE) ),
-                                  conditionalPanel("input.timestamp == true", 
-                                                   selectInput("timezone", "Timezone:", choices = OlsonNames(), selected = Sys.timezone()),
+                                  conditionalPanel("input.timestamp_csv == true", 
+                                                   selectInput("timezone_csv", "Timezone:", choices = OlsonNames(), selected = Sys.timezone()),
                                   ),
                  ),
                  
                  # the user wants to load a rds file
                  conditionalPanel("input.type == 'rds'",
-                                  checkboxInput("timestamp", "Timestamp column?", value = TRUE),
-                                  conditionalPanel("input.timestamp == true", 
-                                                   selectInput("timezone", "Timezone:", choices = OlsonNames(), selected = Sys.timezone()),
+                                  checkboxInput("timestamp_rds", "Timestamp column?", value = TRUE),
+                                  conditionalPanel("input.timestamp_rds == true", 
+                                                   selectInput("timezone_rds", "Timezone:", choices = OlsonNames(), selected = Sys.timezone()),
                                   ),
                  ),
                  
@@ -91,7 +91,6 @@ manage_inbox <- function() {
     awesomeCheckbox("pivotTable_chackbox", "Pivot table:", value = FALSE),
     conditionalPanel("input.pivotTable_chackbox == true", # if we want to rename 
                      uiOutput("pivotTable"),
-                     actionButton("pivotTableButton", "Pivot!", width = '100%'),
                      br()
     ),
     # Rename dataframe ----------------------------------------------------------------------
