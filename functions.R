@@ -30,8 +30,6 @@ load_file_modal <- function(failed = FALSE) {
 <h3 align="center"> <i> Student Version </i> </h3>
 <p align="center">
    Now you can perform advanced data analytics tasks on your energy data.
-   <br />
-    <a href="https://www.denerg.polito.it/"><strong>Department of Energy of Politecnico di Torino »</strong></a>
 </p>
 </p>
 <br /> 
@@ -48,7 +46,7 @@ load_file_modal <- function(failed = FALSE) {
                                   column(width = 4, checkboxInput("timestamp_csv", "Timestamp column?", value = TRUE) ),
                                   column(width = 4, checkboxInput("strAsFact", "String as Factor?", value = TRUE) ),
                                   conditionalPanel("input.timestamp_csv == true", 
-                                                   selectInput("timezone_csv", "Timezone:", choices = OlsonNames(), selected = Sys.timezone()),
+                                                   selectInput("timezone_csv", "Timezone:", choices = OlsonNames(), selected = "Europe/Rome"),
                                   ),
                  ),
                  
@@ -56,7 +54,7 @@ load_file_modal <- function(failed = FALSE) {
                  conditionalPanel("input.type == 'rds'",
                                   checkboxInput("timestamp_rds", "Timestamp column?", value = TRUE),
                                   conditionalPanel("input.timestamp_rds == true", 
-                                                   selectInput("timezone_rds", "Timezone:", choices = OlsonNames(), selected = Sys.timezone()),
+                                                   selectInput("timezone_rds", "Timezone:", choices = OlsonNames(), selected = "Europe/Rome"),
                                   ),
                  ),
                  

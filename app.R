@@ -94,28 +94,41 @@ server <- function(input, output, session) {
       # in no timestamp column can be found notify the user
       if (any(coldate) == FALSE) {
         shinyalert(title = "No timestamp column found!", 
-                   paste("However, you can find ''", nome, "'' in the dataframe dropdown"),
-                   type = "warning")
+                   paste("However, you can find <b>", nome, "</b> in the dataframe dropdown"),
+                   type = "warning",
+                   closeOnEsc = TRUE,
+                   closeOnClickOutside = TRUE,
+                   html = TRUE
+        )
       } else { # if timestamp columns found create date time columns
         data[[nome]] <- data[[nome]] %>%
           mutate(
             Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input[[timezone]]), # depend on selected timezone
-            Week_Day = wday(Date_Time, label = TRUE, locale = "en_US", week_start = getOption("lubridate.week.start", 1)), # week start on monday
-            Month = month(Date_Time, label = TRUE, locale = "en_US"),
+            Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
+            Month = as.ordered(month(Date_Time, label = TRUE)),
             Month_Day = mday(Date_Time),
             Year = year(Date_Time),
             Year_Day = mday(Date_Time),
             Hour = hour(Date_Time),
-            Minute = minute(Date_Time)
+            Minute = minute(Date_Time),
+            min_dec = as.numeric(paste(Hour, Minute*100/60, sep = "."))
           ) 
         shinyalert(title = "Dataframe successfully added",
-                   text = paste("We created some useful new variables...", "You can find ''", nome, "'' in the dataframe dropdown"), 
-                   type = "success")
+                   text = paste("You can find <b>", nome, "</b> in the dataframe dropdown <br> We created some useful new variables..."), 
+                   type = "success",
+                   closeOnEsc = TRUE,
+                   closeOnClickOutside = TRUE,
+                   html = TRUE
+        )
       }
     } else { # no timestamp check box selected
       shinyalert(title = "Dataframe successfully added",
-                 text = paste("You can find ''", nome, "'' in the dataframe dropdown"), 
-                 type = "success")
+                 text = paste("You can find <b>", nome, "</b> in the dataframe dropdown"), 
+                 type = "success",
+                 closeOnEsc = TRUE,
+                 closeOnClickOutside = TRUE,
+                 html = TRUE
+      )
     }
   })
   
@@ -156,9 +169,13 @@ server <- function(input, output, session) {
   observeEvent(input$new_dataframe_name_search,{
     data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input[["dataframe_table_rows_all"]], input$keepColumnName]
     shinyalert(title = "Dataframe successfully renamed",
-               text = paste("You can find ''", input$new_dataframe_name, "'' in the dataframe dropdown"), type = "success")
+               text = paste("You can find <b>", input$new_dataframe_name, "</b> in the dataframe dropdown"), 
+               type = "success",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE
+    )
   })
-  
   
   # Display datatable ----------------------------------------------------------------------
   output$dataframe_table <- renderDT(
@@ -218,7 +235,12 @@ server <- function(input, output, session) {
     # change column name
     if (!is_empty(columnString)) { colnames( data[[input$dataframe]])[colnames( data[[input$dataframe]]) == input$columnName] <- columnString}
     shinyalert(title = "Column successfully renamed",
-               text = paste("Name ''", input$new_columnName, "''assigned to ''", input$columnName, "''"), type = "success")
+               text = paste("Name <b>", input$new_columnName, "</b> assigned to <b>", input$columnName, "</b>"), 
+               type = "success",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE
+    )
   })
   
   # Pivot table ----------------------------------------------------------------------
@@ -247,11 +269,11 @@ server <- function(input, output, session) {
   
   observeEvent(input$pivotTableButton,{ 
     req(input$variablePivot, input$columnsPivot, input$functionPivot)
-      switch (input$functionPivot,
-              mean = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(mean, na.rm = TRUE)),
-              min = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(min, na.rm = TRUE)),
-              max = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(max, na.rm = TRUE))
-      )
+    switch (input$functionPivot,
+            mean = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(mean, na.rm = TRUE)),
+            min = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(min, na.rm = TRUE)),
+            max = data[[input$dataframe]] <-  data[[input$dataframe]] %>% ddply(input$variablePivot, numcolwise(max, na.rm = TRUE))
+    )
     data[[input$dataframe]] <-  mutate_if(data[[input$dataframe]], is.numeric, ~round(., input$decimalDigitsPivot)) %>% # round the pivotted table
       select(input$variablePivot, input$columnsPivot)
   })
@@ -283,6 +305,13 @@ server <- function(input, output, session) {
     tagList(
       selectInput("variable", label = "Variable:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
       sliderInput(inputId = "bins", label = "Number of bins:", min = 1, max = 100, value = 30),
+      sliderInput(inputId = "hours_slider_hist", label = "Hours:", min = 0, max = 24, value = c(0, 24) ),
+      sliderTextInput(
+        inputId = "month_slider_hist",
+        label = "Month:",
+        choices = unique(data[[input$dataframe]][,"Month"]),
+        selected = unique(data[[input$dataframe]][,"Month"])[c(1,length(unique(data[[input$dataframe]][,"Month"])))]
+      ),
       column(width = 6,  style = "padding-left:0px; padding-right:5px;",
              selectInput("fillvariable", label = "Fill Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
       ),
@@ -305,15 +334,22 @@ server <- function(input, output, session) {
   output$outBoxHistogram <- renderPlot({
     req(input$file)
     
-    plot <- ggplot(data =  data[[input$dataframe]],
-                   mapping =  aes(x =  data[[input$dataframe]][,input$variable],
-                                  fill = if (input$fillvariable == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable]} ),
+    data_plot <- data[[input$dataframe]] %>%
+      filter( min_dec >= input$hours_slider_hist[1], 
+              min_dec <= input$hours_slider_hist[2],
+              Month >= input$month_slider_hist[1], 
+              Month <= input$month_slider_hist[2]
+              )
+    
+    plot <- ggplot(data =  data_plot,
+                   mapping =  aes(x =  data_plot[,input$variable],
+                                  fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]} ),
     ) + theme_bw()
     
     # densità
     if (input$checkbox_density == TRUE) {
       plot <- plot + geom_density(aes(y = ..density..,
-                                      fill = if (input$fillvariable == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable]}),
+                                      fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]}),
                                   alpha = 0.4,
                                   bw = input$bins/5,
                                   na.rm = TRUE)  # aggiungo distribuzione
@@ -323,7 +359,7 @@ server <- function(input, output, session) {
     # tema
     plot <- plot + labs( x = input$variable, fill = input$fillvariable ) + theme(legend.position = "bottom")
     # add wrap
-    if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  data[[input$dataframe]][,input$facetvariable], nrow = input$nrowvariable)}
+    if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable], nrow = input$nrowvariable)}
     # log
     # flip
     if (input$checkbox_logx == TRUE) {plot <- plot + scale_x_continuous(trans = 'log10') }
@@ -382,6 +418,41 @@ server <- function(input, output, session) {
     if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data[[input$dataframe]][,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
     # log
     if (input$checkbox_logy_Box == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
+    
+    plot
+  })
+  
+  # Carpet ----------------------------------------------------------------------
+  # input box - select variables - Carpet
+  output$inBoxCarpet <- renderUI({
+    req(input$file)
+    tagList(
+      selectInput("variable_Carpet", label = "Variable:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ) # chose numerical variable
+    )
+  })
+  # output box - plot - Carpet
+  output$outBoxCarpet <- renderPlot({
+    req(input$file)
+    timezone <- gsub(" ", "", paste("timezone_", input$type))
+    plot <- ggplot(data =  data[[input$dataframe]], 
+                   mapping =  aes(x =  as.POSIXct(format(ymd_hms(data[[input$dataframe]][,"Date_Time"]), "%H:%M:%S"),"%H:%M:%S", tz = input[[timezone]]), 
+                                  y =  date(data[[input$dataframe]][,"Date_Time"]),
+                                  fill = data[[input$dataframe]][,input$variable_Carpet]
+                   )
+    ) + 
+      geom_tile() +
+      scale_y_date(
+        breaks = scales::date_breaks("1 month"),                    # specify breaks every two months
+        labels = scales::date_format("%b" , tz = input[[timezone]]),  # specify format of labels anno mese
+        expand = c(0,0)                                     # espande l'asse y affinche riempia tutto il box in verticale
+      ) +
+      scale_x_datetime(
+        breaks = scales::date_breaks("4 hour"),                     # specify breaks every 4 hours
+        labels = scales::date_format(("%H:%M") , tz = input[[timezone]]),# specify format of labels ora minuti
+        expand = c(0,0)                                     # espande l'asse x affinche riempia tutto il box in orizzontale
+      ) +
+      theme_bw() + labs( x = "Hour" , y = "Date", fill = input$variable_Carpet) + 
+      facet_wrap(~year(data[[input$dataframe]][,"Date_Time"]), scales = "free", nrow = 1)
     
     plot
   })

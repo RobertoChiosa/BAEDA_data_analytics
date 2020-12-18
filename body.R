@@ -2,7 +2,7 @@
 ###############            Copyright © BAEDA Lab 2020             ###############
 #################################################################################
 
-chartTypes <- c("","Box Plot","Histogram") # add here more chart types as we go on adding
+chartTypes <- c("","Carpet","Box Plot","Histogram") # add here more chart types as we go on adding
 loadingGifColor <- "#0dc5c1"
 body <- dashboardBody(
   useShinyalert(),                                   # use html popups
@@ -40,19 +40,33 @@ body <- dashboardBody(
                                selected = NULL),
                    conditionalPanel("input.chart == 'Histogram'", uiOutput("inBoxHistogram")), # histogram
                    conditionalPanel("input.chart == 'Box Plot'", uiOutput("inBoxBoxplot")), # Boxplot
-                   actionButton("plotButton", "Plot", width = '100%', style = "color: #fff; background-color: red; border-color: #red"),
+                   conditionalPanel("input.chart == 'Carpet'", uiOutput("inBoxCarpet")), # Carpet
+                   # actionButton("plotButton", "Plot", width = '100%', style = "color: #fff; background-color: red; border-color: #red"),
                    downloadButton('downloadplotButton', 'Download', style = "width:100%;"),
               ), # END INPUT BOX
               box(width = 8, # OUTPUT BOX
-                  conditionalPanel("input.chart == 'Histogram'", plotOutput("outBoxHistogram") %>% withSpinner(color = loadingGifColor)), # histogram
+                  conditionalPanel("input.chart == 'Histogram'", plotOutput("outBoxHistogram", height = "600px",) %>% withSpinner(color = loadingGifColor)), # histogram
                   conditionalPanel("input.chart == 'Box Plot'", plotOutput("outBoxBoxplot") %>% withSpinner(color = loadingGifColor)), # Boxplot
-                  
+                  conditionalPanel("input.chart == 'Carpet'", plotOutput("outBoxCarpet") %>% withSpinner(color = loadingGifColor)), # Carpet
               ), # END OUTPUT BOX
             )
     ), # END 5th (SUB)TAB "Visualize"
     
     # documentation
-    tabItem(tabName = "help", includeMarkdown("docs/wiki/complete.md")
-    )
-  )
+    tabItem(tabName = "help", includeMarkdown("docs/wiki/complete.md") )
+  ),
+  # © e link alle istituzioni
+  absolutePanel(
+    HTML(
+      "© 2020 
+      <a href='https://www.denerg.polito.it/'>BAEDA Lab</a> | 
+      <a href='https://www.denerg.polito.it/'>Dipartimento Energia</a> | 
+      <a href='https://www.denerg.polito.it/'>Politecnico di Torino</a>
+      "
+    ),
+                bottom = "1%", 
+                right = "1%", 
+                fixed = TRUE,
+                color = "#3c4c54"
+                )
 )
