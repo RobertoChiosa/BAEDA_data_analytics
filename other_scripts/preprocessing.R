@@ -1,17 +1,46 @@
-# # preprocessing del file data.csv
-# #df.power <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
-# df.power <- read.csv("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_1.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
-# 
-# boxplot(df.power$power_mech_room)
-# 
-# df.power$power_mech_room[ df.power$power_mech_room<0 ] <- NA
-# df.power$power_mech_room[ df.power$power_mech_room > 2000 ] <- NA
-# 
-# df.power$power_mech_room <- na_interpolation(df.power$power_mech_room, option = "linear") 
-# 
-# summary(df.power)
-# 
+# preprocessing del file data.csv
+#df.power <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
+df.power <- read.csv("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_1.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
+
+boxplot(df.power$power_mech_room)
+
+df.power$power_mech_room[ df.power$power_mech_room<0 ] <- NA
+df.power$power_mech_room[ df.power$power_mech_room > 2000 ] <- NA
+
+df.power$power_mech_room <- na_interpolation(df.power$power_mech_room, option = "linear")
+
+summary(df.power)
+
 write_rds(df.power,"/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_clean.rds")
+
+
+
+df.power <- read_rds("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_clean.rds")
+dim(df.power)
+summary(df.power)
+
+df.power <- 
+  
+  df.power %>%
+  mutate(
+    Date_Time = as.POSIXct(date_time , format = "%Y-%m-%d %H:%M:%S" , tz = "Europe/Rome"), # depend on selected timezone
+    Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
+    Month = month(Date_Time, label = TRUE), # ordered factor
+    Month_Day = mday(Date_Time), # numeric
+    Year = as.ordered(year(Date_Time)), # ordered factor
+    Year_Day = mday(Date_Time), # numeric
+    Hour = hour(Date_Time), # numeric
+    Minute = minute(Date_Time), # numeric
+    min_dec = paste(Hour, Minute*100/60, sep = ".") # numeric
+  ) %>%
+  na.omit(df.power)
+
+
+dim(na.omit(df.power))
+
+df.power$date_time[is.na(df.power$Date_Time)]
+
+summary(df.power)
 # 
 # 
 # df.power$power_mech_room[df.power$power_mech_room>2000  df.power$power_mech_room<0] <- NA

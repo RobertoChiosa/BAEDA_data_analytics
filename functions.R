@@ -81,18 +81,23 @@ manage_inbox <- function() {
   tagList(
     uiOutput("keepColumns"),
     # Rename column ----------------------------------------------------------------------
-    awesomeCheckbox("modifyColumns_chackbox", "Rename column:", value = FALSE),
+    awesomeCheckbox("modifyColumns_chackbox", "Rename column?", value = FALSE),
     conditionalPanel("input.modifyColumns_chackbox == true", # if we want to rename 
                      uiOutput("modifyColumns"),
     ),
+    # Add column ----------------------------------------------------------------------
+    awesomeCheckbox("addColumns_chackbox", "Add column?", value = FALSE),
+    conditionalPanel("input.addColumns_chackbox == true", # if we want to rename 
+                     uiOutput("addColumn"),
+    ),
     # Pivot ----------------------------------------------------------------------
-    awesomeCheckbox("pivotTable_chackbox", "Pivot table:", value = FALSE),
+    awesomeCheckbox("pivotTable_chackbox", "Pivot table?", value = FALSE),
     conditionalPanel("input.pivotTable_chackbox == true", # if we want to rename 
                      uiOutput("pivotTable"),
                      br()
     ),
     # Rename dataframe ----------------------------------------------------------------------
-    awesomeCheckbox("new_dataframe_name_chackbox", "Save current dataframe:", value = FALSE),
+    awesomeCheckbox("new_dataframe_name_chackbox", "Save current dataframe?", value = FALSE),
     conditionalPanel("input.new_dataframe_name_chackbox == true", # if we want to rename 
                      searchInput(inputId = "new_dataframe_name", label = NULL, 
                                  placeholder = "New name..", 
@@ -104,4 +109,3 @@ manage_inbox <- function() {
     downloadButton("download_filtered", "Download Filtered Data", style = "width:100%;"),   
   )
 }
-

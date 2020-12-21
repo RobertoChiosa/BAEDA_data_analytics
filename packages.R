@@ -4,11 +4,13 @@
 
 library('units')                  # units of measurements
 library('plotly')                 # interactive graphs
+library('scales')                 # date breaks and plot scales
 library('shiny')                  # construct shiny apps
 library('shinydashboard')         # construct shiny dashboards
 library('markdown')               # create markdown reports
 library('rmarkdown')              # create R markdown reports
 library('readtext')
+library('RColorBrewer')           # Pacchetto per creare palette di colori più accattivanti
 library('imputeTS')               # NA interpolations
 library('shinycssloaders')        # enable cool loaders when loading graphs
 library('dashboardthemes')        # extend classic themed with cool themes
@@ -60,6 +62,7 @@ library('shinyhelper')            # add help feature
 library('reactlog')               # construct a reactive graph
 library('highcharter')            # time series plot
 library('quantmod')               # xts series
+library('stats')               # clustering and dissimily matrix
 library('shinyalert')             # required to create alarms popups and welcome page
 library('shinyBS')                # required to create modal dialogs in user interface
 # 

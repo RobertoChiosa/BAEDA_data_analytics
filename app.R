@@ -71,9 +71,9 @@ server <- function(input, output, session) {
     # the execution CONTINUES only if the file is accepted
     req(validated, cancelOutput = TRUE)
     
+    # notification that the file has beening loaded
     id <- showNotification("Reading data...", duration = NULL, closeButton = FALSE)
     on.exit(removeNotification(id), add = TRUE)
-    
     
     # reads the input file and assigms it to the reactive value data
     data[[nome]] <- switch(input$type, # condition on the file type
@@ -93,6 +93,7 @@ server <- function(input, output, session) {
       
       # in no timestamp column can be found notify the user
       if (any(coldate) == FALSE) {
+        # warning notification
         shinyalert(title = "No timestamp column found!", 
                    paste("However, you can find <b>", nome, "</b> in the dataframe dropdown"),
                    type = "warning",
@@ -105,14 +106,16 @@ server <- function(input, output, session) {
           mutate(
             Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input[[timezone]]), # depend on selected timezone
             Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
-            Month = as.ordered(month(Date_Time, label = TRUE)),
-            Month_Day = mday(Date_Time),
-            Year = year(Date_Time),
-            Year_Day = mday(Date_Time),
-            Hour = hour(Date_Time),
-            Minute = minute(Date_Time),
-            min_dec = as.numeric(paste(Hour, Minute*100/60, sep = "."))
-          ) 
+            Month = month(Date_Time, label = TRUE), # ordered factor
+            Month_Day = mday(Date_Time), # numeric
+            Year = as.ordered(year(Date_Time)), # ordered factor
+            Year_Day = mday(Date_Time), # numeric
+            Hour = hour(Date_Time), # numeric
+            Minute = minute(Date_Time), # numeric
+            min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
+          ) %>%
+          na.omit() # omits na when coercing
+        # success notification
         shinyalert(title = "Dataframe successfully added",
                    text = paste("You can find <b>", nome, "</b> in the dataframe dropdown <br> We created some useful new variables..."), 
                    type = "success",
@@ -122,6 +125,7 @@ server <- function(input, output, session) {
         )
       }
     } else { # no timestamp check box selected
+      # success notification
       shinyalert(title = "Dataframe successfully added",
                  text = paste("You can find <b>", nome, "</b> in the dataframe dropdown"), 
                  type = "success",
@@ -143,22 +147,18 @@ server <- function(input, output, session) {
   observeEvent(reactive_list(),{
     # when new file loaded and new name given the select is updated
     updateSelectInput(session, "dataframe",
-                      choices = reactive_list(),        # update choiches with all loaded data
-                      selected = reactive_list()[length(reactive_list())]    # selected the last loaded file
-    )
-    #  when new file loaded new name given the remove select is updated
-    updateSelectInput(session, "dataframe_remove",
-                      choices = reactive_list(),        # update choiches with all loaded data
+                      choices = reactive_list(),                             # update choiches with all loaded data
                       selected = reactive_list()[length(reactive_list())]    # selected the last loaded file
     )
   })
   
   # value boxes ----------------------------------------------------------------------
+  # number of rows value box
   output$valueBox1 <- renderValueBox({
     req(input$file) # requires that a file is loaded
     valueBox(length(input$dataframe_table_rows_all), "Number of rows", icon = icon("arrows-alt-v"), color = "orange")
   })
-  
+  # number of columns value box
   output$valueBox2 <- renderValueBox({
     req(input$file) # requires that a file is loaded
     valueBox(length(input$keepColumnName), "Number of columns", icon = icon("arrows-alt-h"), color = "blue")
@@ -167,7 +167,8 @@ server <- function(input, output, session) {
   # Rename dataframe ----------------------------------------------------------------------
   # change dataframe name by adding another dataframe 
   observeEvent(input$new_dataframe_name_search,{
-    data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input[["dataframe_table_rows_all"]], input$keepColumnName]
+    data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input$dataframe_table_rows_all, input$keepColumnName]
+    # success notification
     shinyalert(title = "Dataframe successfully renamed",
                text = paste("You can find <b>", input$new_dataframe_name, "</b> in the dataframe dropdown"), 
                type = "success",
@@ -199,9 +200,9 @@ server <- function(input, output, session) {
     req(input$file) # requires that a file is loaded
     tagList(
       pickerInput("keepColumnName", label = "Select column to keep:",
-                  choices = colnames( data[[input$dataframe]]  ),
-                  selected = colnames( data[[input$dataframe]] ),
-                  options = list(`actions-box` = TRUE),multiple = T)
+                  choices = colnames( data[[input$dataframe]]  ), # all available columns in the original dataframe
+                  selected = colnames( data[[input$dataframe]] ), # by default all selected
+                  options = list(`actions-box` = TRUE),multiple = T) 
     )
   })
   
@@ -236,6 +237,36 @@ server <- function(input, output, session) {
     if (!is_empty(columnString)) { colnames( data[[input$dataframe]])[colnames( data[[input$dataframe]]) == input$columnName] <- columnString}
     shinyalert(title = "Column successfully renamed",
                text = paste("Name <b>", input$new_columnName, "</b> assigned to <b>", input$columnName, "</b>"), 
+               type = "success",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE
+    )
+  })
+  
+  # add column ----------------------------------------------------------------------
+  output$addColumn <- renderUI({
+    req(input$file)
+    tagList(
+      textInput("expression", "IF ELSE expression", placeholder = "if_else(CONDITION, TRUE, FALSE)"),
+      searchInput(inputId = "add_columnName", label = NULL, 
+                  placeholder = "Column name..", 
+                  value = NULL, # initial value
+                  btnSearch = icon("plus"), btnReset = icon("backspace"), # icons
+                  width = "100%")
+    )
+  })
+  
+  observeEvent(input$add_columnName_search,{
+    
+    # # if_else(festivo == "S",1,2)
+    # data[[input$dataframe]] <- data[[input$dataframe]] %>% 
+    #   #mutate( !!paste(input$add_columnName) = !!parse_quosure(input$expression) )
+    #   mutate(NEW = parse(text = input$expression) )
+    # 
+    
+    shinyalert(title = "Column successfully added",
+               text = paste("Column <b>", input$add_columnName, "</b> added to <b>", input$dataframe, "</b>"), 
                type = "success",
                closeOnEsc = TRUE,
                closeOnClickOutside = TRUE,
@@ -292,10 +323,10 @@ server <- function(input, output, session) {
   ###### TAB "Visualize" ----------------------------------------------------------------------
   output$downloadplotButton <- downloadHandler(
     filename = function() { 
-      paste(input$chart, "plot", Sys.Date(), ".png", sep="")
+      paste(input$chart, "_plot_", Sys.Date(), ".png", sep="")
     },
     content = function(file) {
-      ggsave(file, width = 5, height = 4 )
+      ggsave(file, width = 5, height = 5 )
     })
   
   # Histogram ----------------------------------------------------------------------
@@ -309,8 +340,8 @@ server <- function(input, output, session) {
       sliderTextInput(
         inputId = "month_slider_hist",
         label = "Month:",
-        choices = unique(data[[input$dataframe]][,"Month"]),
-        selected = unique(data[[input$dataframe]][,"Month"])[c(1,length(unique(data[[input$dataframe]][,"Month"])))]
+        choices = sort(unique(data[[input$dataframe]][,"Month"])),
+        selected = sort(unique(data[[input$dataframe]][,"Month"]))[c(1, length(sort(unique(data[[input$dataframe]][,"Month"]))))]
       ),
       column(width = 6,  style = "padding-left:0px; padding-right:5px;",
              selectInput("fillvariable", label = "Fill Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
@@ -339,12 +370,25 @@ server <- function(input, output, session) {
               min_dec <= input$hours_slider_hist[2],
               Month >= input$month_slider_hist[1], 
               Month <= input$month_slider_hist[2]
-              )
+      )
     
     plot <- ggplot(data =  data_plot,
                    mapping =  aes(x =  data_plot[,input$variable],
                                   fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]} ),
-    ) + theme_bw()
+    ) + theme_bw() +
+      ggplot2::theme(
+        legend.text = element_text(size = 12),
+        legend.position = "top",                     # legend position on the top of the graph
+        legend.direction = "horizontal",             # layout of items in legends
+        legend.box = "horizontal",                   # arrangement of multiple legends
+        legend.title = element_text(size = 12),      # title of legend (inherits from title)
+        strip.text = element_text(size = 12), # facet wrap title fontsize
+        axis.title.x = element_text(size = 14,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.title.y = element_text(size = 14,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.text.x = element_text(size = 12,margin = margin(t = 10, r = 10, b = 0, l = 0), angle = 0, vjust=.3),
+        axis.text.y = element_text(size = 12)
+      ) 
+    
     
     # densità
     if (input$checkbox_density == TRUE) {
@@ -357,7 +401,7 @@ server <- function(input, output, session) {
     # flip
     if (input$checkbox_flip == TRUE) {plot <- plot + coord_flip()}
     # tema
-    plot <- plot + labs( x = input$variable, fill = input$fillvariable ) + theme(legend.position = "bottom")
+    plot <- plot + labs( x = input$variable, fill = input$fillvariable )
     # add wrap
     if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable], nrow = input$nrowvariable)}
     # log
@@ -373,6 +417,13 @@ server <- function(input, output, session) {
   output$inBoxBoxplot <- renderUI({
     req(input$file)
     tagList(
+      sliderInput(inputId = "hours_slider_box", label = "Hours:", min = 0, max = 24, value = c(0, 24) ),
+      sliderTextInput(
+        inputId = "month_slider_box",
+        label = "Month:",
+        choices = sort(unique(data[[input$dataframe]][,"Month"])),
+        selected = sort(unique(data[[input$dataframe]][,"Month"]))[c(1, length(sort(unique(data[[input$dataframe]][,"Month"]))))]
+      ),
       column(width = 6,  style = "padding-left:0px; padding-right:5px;",
              selectInput("variableX_Box", label = "Variable X:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ), # chose numerical variable
              selectInput("fillvariable_Box", label = "Fill Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
@@ -395,27 +446,46 @@ server <- function(input, output, session) {
   output$outBoxBoxplot <- renderPlot({
     req(input$file)
     
+    data_plot <- data[[input$dataframe]] %>%
+      filter( min_dec >= input$hours_slider_box[1], 
+              min_dec <= input$hours_slider_box[2],
+              Month >= input$month_slider_box[1], 
+              Month <= input$month_slider_box[2]
+      )
+    
     if (input$variableX_Box == "None") {
-      plot <- ggplot(data =  data[[input$dataframe]],
-                     mapping =  aes(y =  data[[input$dataframe]][,input$variableY_Box],
-                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable_Box]} ),
+      plot <- ggplot(data =  data_plot,
+                     mapping =  aes(y =  data_plot[,input$variableY_Box],
+                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]} ),
       ) + labs( y = input$variableY_Box, fill = input$fillvariable_Box ) 
     } else {
-      plot <- ggplot(data =  data[[input$dataframe]],
-                     mapping =  aes(x =  data[[input$dataframe]][,input$variableX_Box], y =  data[[input$dataframe]][,input$variableY_Box],
-                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data[[input$dataframe]][,input$fillvariable_Box]} ),
+      plot <- ggplot(data =  data_plot,
+                     mapping =  aes(x =  data_plot[,input$variableX_Box], y =  data_plot[,input$variableY_Box],
+                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]} ),
       ) + labs( x = input$variableX_Box, y = input$variableY_Box, fill = input$fillvariable_Box ) 
     }
     
     
-    plot <- plot + theme_bw() + geom_boxplot(na.rm = TRUE)
+    plot <- plot + theme_bw() + geom_boxplot(na.rm = TRUE) +
+      ggplot2::theme(
+        legend.text = element_text(size = 12),
+        legend.position = "top",                     # legend position on the top of the graph
+        legend.direction = "horizontal",             # layout of items in legends
+        legend.box = "horizontal",                   # arrangement of multiple legends
+        legend.title = element_text(size = 12),      # title of legend (inherits from title)
+        strip.text = element_text(size = 12), # facet wrap title fontsize
+        axis.title.x = element_text(size = 14,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.title.y = element_text(size = 14,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.text.x = element_text(size = 12,margin = margin(t = 10, r = 10, b = 0, l = 0), angle = 0, vjust=.3),
+        axis.text.y = element_text(size = 12)
+      ) 
     
     # flip
     if (input$checkbox_flip_Box == TRUE) {plot <- plot + coord_flip()}
     # tema
     plot <- plot + theme(legend.position = "bottom")
     # add wrap
-    if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data[[input$dataframe]][,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
+    if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
     # log
     if (input$checkbox_logy_Box == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
     
@@ -427,20 +497,30 @@ server <- function(input, output, session) {
   output$inBoxCarpet <- renderUI({
     req(input$file)
     tagList(
-      selectInput("variable_Carpet", label = "Variable:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ) # chose numerical variable
+      selectInput("variable_Carpet", label = "Variable:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ), # chose numerical variable
+      radioButtons("brewer", "Choose theme:", choices = c("theme1","theme2"), inline = TRUE),
+      tags$hr(),
+      column("Style", width = 6,
+             checkboxInput("checkbox_flip_Carpet", label = "Flip", value = FALSE)
+      ),
+      
+      checkbox_flip_Carpet
     )
   })
   # output box - plot - Carpet
   output$outBoxCarpet <- renderPlot({
     req(input$file)
+    if(input$brewer == "theme1"){ cols <- brewer.pal(9, "YlOrRd")}else{cols <- brewer.pal(9, "Spectral")}
+    
     timezone <- gsub(" ", "", paste("timezone_", input$type))
     plot <- ggplot(data =  data[[input$dataframe]], 
-                   mapping =  aes(x =  as.POSIXct(format(ymd_hms(data[[input$dataframe]][,"Date_Time"]), "%H:%M:%S"),"%H:%M:%S", tz = input[[timezone]]), 
+                   mapping =  aes(x =  as.POSIXct(Time, "%H:%M:%S", tz = input[[timezone]]), 
                                   y =  date(data[[input$dataframe]][,"Date_Time"]),
                                   fill = data[[input$dataframe]][,input$variable_Carpet]
                    )
     ) + 
-      geom_tile() +
+      geom_tile(na.rm = TRUE) +
+      scale_fill_gradientn(colours = cols) + # creates a two colour gradient (low-high) for the variable fill=z=power
       scale_y_date(
         breaks = scales::date_breaks("1 month"),                    # specify breaks every two months
         labels = scales::date_format("%b" , tz = input[[timezone]]),  # specify format of labels anno mese
@@ -452,11 +532,137 @@ server <- function(input, output, session) {
         expand = c(0,0)                                     # espande l'asse x affinche riempia tutto il box in orizzontale
       ) +
       theme_bw() + labs( x = "Hour" , y = "Date", fill = input$variable_Carpet) + 
-      facet_wrap(~year(data[[input$dataframe]][,"Date_Time"]), scales = "free", nrow = 1)
+      facet_wrap(~year(data[[input$dataframe]][,"Date_Time"]), scales = "free", nrow = 1) +
+      ggplot2::theme(
+        legend.text = element_text(size = 12),
+        legend.position = "top",                     # legend position on the top of the graph
+        legend.direction = "horizontal",             # layout of items in legends
+        legend.box = "horizontal",                   # arrangement of multiple legends
+        legend.title = element_text(size = 12),      # title of legend (inherits from title)
+        strip.text = element_text(size = 12), # facet wrap title fontsize
+        axis.title.x = element_text(size = 14,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.title.y = element_text(size = 14,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.text.x = element_text(size = 12,margin = margin(t = 10, r = 10, b = 0, l = 0), angle = 90, vjust=.3),
+        axis.text.y = element_text(size = 12)
+      ) 
+    
+    # flip
+    if (input$checkbox_flip_Carpet == TRUE) {plot <- plot + coord_flip()}
     
     plot
   })
   
+  ###### TAB "Clustering" ----------------------------------------------------------------------
+  
+  
+  output$clustering_inbox <- renderUI({
+    req(input$file) # requires that a file is loaded
+    tagList(
+      selectInput('cluster_variable', 'Variable:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ),
+      selectInput('cluster_normalization', 'Normalization:', choices = c("none","minmax","zscore")),
+      selectInput('cluster_distance', 'Distance:', choices = c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski")),
+      selectInput('cluster_method', 'Hierarchical clustering method:', choices = c("single","complete", "average", "mcquitty", "median", "centroid")),
+      numericInput('cluster_number', 'Number of clusters', value = 2),
+      actionButton("cluster_button", "Start Cluster!")
+    )
+  })
+  
+  observeEvent(input$cluster_button,{
+    req(input$file)
+    
+    line_color <- "gray"
+    line_size <- 0.5
+    line_alpha <- 0.7
+    timezone <- gsub(" ", "", paste("timezone_", input$type))
+    
+    data_plot <- data[[input$dataframe]]
+    Xtmp <- data_plot[,input$cluster_variable]
+    
+    # normalize data
+    switch(input$cluster_normalization,
+           none = data_plot$X <- Xtmp,
+           zscore = data_plot$X <- (Xtmp - mean(Xtmp) )/ sd(Xtmp),
+           minmax = data_plot$X <- (Xtmp - min(Xtmp) )/ (max(Xtmp)-min(Xtmp))
+    )
+    
+    
+    # process dataframe
+    df1 <- data_plot %>%
+      mutate(Date = date(Date_Time),
+             Time = format(data_plot$Date_Time, "%H:%M:%S") ) %>%
+      select(Date, Time, X)
+    
+    df1 <- distinct(df1)  
+    df2 <- spread(df1, Time, X, fill = 0) 
+    df3 <- df2[ 2:dim(df2)[2] ] 
+    
+    
+    # calculate distance matrix
+    diss_matrix <- dist(df3, input$cluster_distance)          
+    # perform clustering
+    hcl <- hclust(diss_matrix, method = input$cluster_method) 
+    # Diciamo quanti cluster vogliamo tagliando il dendrogamma
+    df2$Cluster <- paste( "Cluster", cutree(hcl, input$cluster_number) )
+    # Riportiamo in df1 l'informazione del cluster a cui appartiene secondo la data corrispondente
+    df1 <- merge.data.frame(df1, df2[c("Date", "Cluster")])
+    
+    centr <- ddply(df1, c("Cluster","Time"), summarise, X = mean(X)) # Centroidi (media della potenza per ogni cluster ad ogni time-step)
+    
+    # group by date plot
+    output$out_clustering_preview <- renderPlot({
+      
+      plot <- ggplot() + 
+        geom_line(data = df1, 
+                  aes(x = as.POSIXct(Time, format="%H:%M:%S" , tz = input[[timezone]]) , 
+                      y = X, 
+                      group = Date,
+                      ), 
+                  color = line_color,
+                  alpha = line_alpha, 
+                  size = line_size) +
+        geom_line(data = centr, 
+                  aes(x = as.POSIXct(Time, format="%H:%M:%S" , tz = input[[timezone]]) , 
+                      y = X, 
+                      color = as.factor(Cluster)), 
+                  size = line_size*2) +
+        
+        scale_x_datetime(
+          breaks = date_breaks("2 hour"),                     # specify breaks every 4 hours
+          labels = date_format(("%H:%M") , tz = input[[timezone]]),  # specify format of labels
+          expand = c(0,0)                                     # expands x axis
+        ) +
+        scale_y_continuous(
+          limits = c(0,ceiling(max(data_plot$X)) ),       # set limits from 0 to higher power consumption
+          expand = c(0,0)                                       # expands x axis
+        ) +
+        theme_bw() +                                           # white bakground with lines
+        ggplot2::theme(
+          legend.position = "none",                     # legend position on the top of the graph
+          strip.text = element_text(size = 12), # facet wrap title fontsize
+          axis.title.x = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+          axis.title.y = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+          axis.text.x = element_text(size=12, angle=45, vjust = .5),
+          axis.text.y = element_text(size=12 , vjust=.3),
+        ) +
+        labs(x = "Time", y = input$cluster_variable, color = "Cluster") + 
+        facet_wrap(~Cluster)
+      
+      plot
+    })
+    
+    # dendogram by date plot
+    output$out_clustering_dendogram <- renderPlot({
+      
+      plot(hcl, labels=FALSE, ylab = "Height", xlab = "", main = "", sub = "")
+      
+      if( input$cluster_number >=2){
+        rect.hclust(hcl, k = input$cluster_number, border = c(brewer.pal( input$cluster_number, "Set1")) )
+      }
+      
+      
+    })
+    
+  })
 }
 
 

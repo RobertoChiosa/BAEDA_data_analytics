@@ -45,16 +45,31 @@ body <- dashboardBody(
                    downloadButton('downloadplotButton', 'Download', style = "width:100%;"),
               ), # END INPUT BOX
               box(width = 8, # OUTPUT BOX
-                  conditionalPanel("input.chart == 'Histogram'", plotOutput("outBoxHistogram", height = "600px",) %>% withSpinner(color = loadingGifColor)), # histogram
-                  conditionalPanel("input.chart == 'Box Plot'", plotOutput("outBoxBoxplot") %>% withSpinner(color = loadingGifColor)), # Boxplot
-                  conditionalPanel("input.chart == 'Carpet'", plotOutput("outBoxCarpet") %>% withSpinner(color = loadingGifColor)), # Carpet
+                  conditionalPanel("input.chart == 'Histogram'", plotOutput("outBoxHistogram", height = "600px") %>% withSpinner(color = loadingGifColor)), # histogram
+                  conditionalPanel("input.chart == 'Box Plot'", plotOutput("outBoxBoxplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Boxplot
+                  conditionalPanel("input.chart == 'Carpet'", plotOutput("outBoxCarpet", height = "600px") %>% withSpinner(color = loadingGifColor)), # Carpet
               ), # END OUTPUT BOX
             )
     ), # END 5th (SUB)TAB "Visualize"
     
+    
+    ###### TAB "Advanced" ----------------------------------------------------------------------
+    tabItem(tabName = "clustering",
+            fluidRow( 
+              box( title = "Clustering options", width = 4, uiOutput("clustering_inbox") ), # INPUT BOX
+              box( width = 8, 
+                   plotOutput("out_clustering_preview", height = "400px") %>% withSpinner(color = loadingGifColor),
+                   plotOutput("out_clustering_dendogram", height = "400px") %>% withSpinner(color = loadingGifColor)
+              ) # end box
+            )
+    ),
+    
     # documentation
     tabItem(tabName = "help", includeMarkdown("docs/wiki/complete.md") )
   ),
+  
+  
+  
   # © e link alle istituzioni
   absolutePanel(
     HTML(
