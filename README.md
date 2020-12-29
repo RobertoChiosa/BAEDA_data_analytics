@@ -48,20 +48,20 @@ From this [link](https://roberto-chiosa.shinyapps.io/BAEDA_DASHBOARD_STUDENTS/) 
 First of all, be sure to have the latest version of [RStudio](https://rstudio.com/products/rstudio/) installed. To run the dashboard locally you need to clone the GitHub repository on your computer. Follow these steps:
 
 1. In RStudio, start a new Project by following this path _File > New Project > Version Control > Git_;
-2. In "Repository URL"", paste this URL `https://github.com/baeda-polito/BAEDA_DASHBOARD_STUDENTS`;
-3. Accept the default ""Project directory name"" which coincides with the GitHub repo name;
+2. In "_Repository URL_", paste this URL `https://github.com/baeda-polito/BAEDA_DASHBOARD_STUDENTS`;
+3. Accept the default "_Project directory name_" which coincides with the GitHub repo name;
 4. Chose a local path to save the repository on computer;
-4. Click "Create Project".
+4. Click "_Create Project_".
 
 <!-- CONTRIBUTING -->
 ## Contributing
 Any contributions you make are **greatly appreciated**. If you want to propose a feature or report a bug please open a new [issue](https://github.com/baeda-polito/BAEDA_DASHBOARD_STUDENTS/issues). If you want to contribute to the code, follow these steps:
 
 1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`);
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`);
+4. Push to the Branch (`git push origin feature/AmazingFeature`);
+5. Open a Pull Request.
 
 <!-- LICENSE -->
 ## License
