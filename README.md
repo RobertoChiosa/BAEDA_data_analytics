@@ -7,14 +7,14 @@
 
   <h3 align="center"> <i> Student Version </i> </h3>
   <p align="center">
-    <a href="https://github.com/baeda-polito/BAEDA_data_analytics"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/baeda-polito/BAEDA_DASHBOARD_STUDENTS"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://roberto-chiosa.shinyapps.io/BAEDA_DASHBOARD_STUDENTS/">View Demo</a>
     ·
-    <a href="https://github.com/baeda-polito/BAEDA_data_analytics/issues">Report Bug</a>
+    <a href="https://github.com/baeda-polito/BAEDA_DASHBOARD_STUDENTS/issues">Report Bug</a>
     ·
-    <a href="https://github.com/baeda-polito/BAEDA_data_analytics/issues">Request Feature</a>
+    <a href="https://github.com/baeda-polito/BAEDA_DASHBOARD_STUDENTS/issues">Request Feature</a>
   </p>
 </p>
 
