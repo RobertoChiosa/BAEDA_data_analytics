@@ -33,12 +33,14 @@ library('plyr')                   # per usare pdply
 # library('rpart')                # make classification tree
 # library('rpart.plot')           # plot classification tree
 # library('partykit')             # regression and classification tree plot and tools
-# library('scales')               # Graphical scales map data to aesthetics
 # library('MLmetrics')            # measure regression) classification and ranking performance.
 # library('imputeTS')             # manage missing values
 # library('jmotif')               # sax manipulations
 # library('ggpubr')               # multiple plots in line or column
 # library('stringr')              # multiple plots in line or column
+library(caret)
+library(dendextend) # color clusters
+library(stringi)
 # library('networkD3')            # draw sankey plots
 # library('NbClust')              # cluster validation measures
 # library('knitr')

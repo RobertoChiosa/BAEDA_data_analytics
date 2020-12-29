@@ -15,7 +15,7 @@ selection_dataframe <- function() {
   )
 }
 
-###### TAB "Manage" ----------------------------------------------------------------------
+###### MODAL ----------------------------------------------------------------------
 load_file_modal <- function(failed = FALSE) {
   bsModal(id = 'startupModal',
           trigger = 'open',
@@ -23,17 +23,17 @@ load_file_modal <- function(failed = FALSE) {
           tags$head(tags$style("#startupModal .modal-footer{ display:none}")), # removes footer default
           title = 
             HTML('
-<p align="center">
-   <a href="https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli">
-   <img src="BAEDA-logo-dashboard.png" alt="Logo" height="60">
-   </a>
-<h3 align="center"> <i> Student Version </i> </h3>
-<p align="center">
-   Now you can perform advanced data analytics tasks on your energy data.
-</p>
-</p>
-<br /> 
-'),
+            <p align="center">
+               <a href="https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli">
+               <img src="BAEDA-logo-dashboard.png" alt="Logo" height="80">
+               </a>
+            <h3 align="center"> <i> Student Version </i> </h3>
+            <p align="center">
+               Now you can perform advanced data analytics tasks on your energy data.
+            </p>
+            </p>
+            <br /> 
+            '),
           column(width = 12, align = 'center', 
                  # type of files that can be loaded
                  selectInput("type", "Chose the type of file:", c("", "csv", "rds", "xls"), selected = NULL),
@@ -66,17 +66,18 @@ load_file_modal <- function(failed = FALSE) {
                  conditionalPanel("input.type != ''",
                                   fileInput("file",paste("Upload file:") )
                  ),
-        
-          
+                 
+                 
           ),
           
           # dont' know why but i have to create a footer with a transparent action button
           footer = tagList(column(12, align = "center",  modalButton("Cancel")),
-            actionButton("upload", "", style = "color: #ffffff; background-color: #ffffff; border-color: #ffffff")
+                           actionButton("upload", "", style = "color: #ffffff; background-color: #ffffff; border-color: #ffffff")
           )
   )
 }
 
+###### TAB "Manage" ----------------------------------------------------------------------
 manage_inbox <- function() {
   tagList(
     uiOutput("keepColumns"),
@@ -93,8 +94,7 @@ manage_inbox <- function() {
     # Pivot ----------------------------------------------------------------------
     awesomeCheckbox("pivotTable_chackbox", "Pivot table?", value = FALSE),
     conditionalPanel("input.pivotTable_chackbox == true", # if we want to rename 
-                     uiOutput("pivotTable"),
-                     br()
+                     uiOutput("pivotTable")
     ),
     # Rename dataframe ----------------------------------------------------------------------
     awesomeCheckbox("new_dataframe_name_chackbox", "Save current dataframe?", value = FALSE),
@@ -106,6 +106,6 @@ manage_inbox <- function() {
                                  width = "100%")
     ),
     # Download ----------------------------------------------------------------------
-    downloadButton("download_filtered", "Download Filtered Data", style = "width:100%;"),   
+    downloadButton("download_filtered", "Download Filtered Dataframe (as csv)", style = "width:100%;"),   
   )
 }
