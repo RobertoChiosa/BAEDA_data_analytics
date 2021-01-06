@@ -2,7 +2,7 @@
 ###############            Copyright © BAEDA Lab 2020             ###############
 #################################################################################
 
-chartTypes <- c("","Carpet","Line Plot", "Box Plot","Histogram") # add here more chart types as we go on adding
+chartTypes <- c("","Carpet","Line Plot","Scatter Plot", "Box Plot","Histogram") # add here more chart types as we go on adding
 loadingGifColor <- "#0dc5c1"
 body <- dashboardBody(
   useShinyalert(),                                   # use html popups
@@ -38,16 +38,18 @@ body <- dashboardBody(
                    selectInput("chart", label = "Chart Type:", choices = chartTypes,
                                selected = NULL),
                    helpText("Note: we require the column Date_Time, Year, Month, min_dec, Hours. If an error displays please go back in the manage tab and select those columns."),
-                   conditionalPanel("input.chart == 'Histogram'", uiOutput("inBoxHistogram")), # histogram
-                   conditionalPanel("input.chart == 'Line Plot'", uiOutput("inBoxLineplot")), # histogram
+                   conditionalPanel("input.chart == 'Histogram'", uiOutput("inBoxHistogram")), # Histogram
+                   conditionalPanel("input.chart == 'Line Plot'", uiOutput("inBoxLineplot")), # Line Plot
+                   conditionalPanel("input.chart == 'Scatter Plot'", uiOutput("inBoxScatterplot")), # Scatter Plot
                    conditionalPanel("input.chart == 'Box Plot'", uiOutput("inBoxBoxplot")), # Boxplot
                    conditionalPanel("input.chart == 'Carpet'", uiOutput("inBoxCarpet")), # Carpet
                    # actionButton("plotButton", "Plot", width = '100%', style = "color: #fff; background-color: red; border-color: #red"),
                    downloadButton('downloadplotButton', 'Download', style = "width:100%;"),
               ), # END INPUT BOX
               box(width = 8, # OUTPUT BOX
-                  conditionalPanel("input.chart == 'Histogram'", plotlyOutput("outBoxHistogram", height = "600px") %>% withSpinner(color = loadingGifColor)), # histogram
-                  conditionalPanel("input.chart == 'Line Plot'", plotlyOutput("outBoxLineplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # histogram
+                  conditionalPanel("input.chart == 'Histogram'", plotlyOutput("outBoxHistogram", height = "600px") %>% withSpinner(color = loadingGifColor)), # Histogram
+                  conditionalPanel("input.chart == 'Line Plot'", plotlyOutput("outBoxLineplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Line Plot
+                  conditionalPanel("input.chart == 'Scatter Plot'", plotOutput("outBoxScatterplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Scatter Plot
                   conditionalPanel("input.chart == 'Box Plot'", plotOutput("outBoxBoxplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Boxplot
                   conditionalPanel("input.chart == 'Carpet'", plotlyOutput("outBoxCarpet", height = "600px") %>% withSpinner(color = loadingGifColor)), # Carpet
               ), # END OUTPUT BOX
@@ -58,10 +60,14 @@ body <- dashboardBody(
     ###### TAB "Advanced" ----------------------------------------------------------------------
     tabItem(tabName = "clustering",
             fluidRow( 
-              box( title = "Clustering options", width = 4, uiOutput("clustering_inbox") ), # INPUT BOX
+              box( title = "Clustering options", width = 4, 
+                   helpText("Note 1: In this section we perform a daily load profile clustering. It is not intended to be a generical clustering process."),
+                   helpText("Note 2: We require the column Date_Time, Year, Month, min_dec, Hours. If an error displays please go back in the manage tab and select those columns."),
+                   uiOutput("clustering_inbox"),
+                   uiOutput("clustering_inbox_postprocessing")), # INPUT BOX
               box( width = 8, 
-                   plotOutput("out_clustering_preview", height = "400px") %>% withSpinner(color = loadingGifColor),
-                   plotOutput("out_clustering_dendogram", height = "400px") %>% withSpinner(color = loadingGifColor)
+                   plotOutput("out_clustering_preview", height = "400px"),
+                   plotOutput("out_clustering_dendogram", height = "400px")
               ) # end box
             )
     ),

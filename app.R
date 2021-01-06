@@ -260,10 +260,8 @@ server <- function(input, output, session) {
   observeEvent(input$add_columnName_search,{
     
     # # if_else(festivo == "S",1,2)
-    # data[[input$dataframe]] <- data[[input$dataframe]] %>% 
-    #   #mutate( !!paste(input$add_columnName) = !!parse_quosure(input$expression) )
-    #   mutate(NEW = parse(text = input$expression) )
-    # 
+    # data[[input$dataframe]] <-  data[[input$dataframe]] %>%
+    #   mutate( New = parse_quo(input$expression, env = caller_env())  )
     
     shinyalert(title = "Column successfully added",
                text = paste("Column <b>", input$add_columnName, "</b> added to <b>", input$dataframe, "</b>"), 
@@ -376,9 +374,9 @@ server <- function(input, output, session) {
     plot <- ggplot(data =  data_plot,
                    mapping =  aes(x =  data_plot[,input$variable],
                                   fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]},
-                                  ),
+                   ),
     ) + theme_bw() 
-  
+    
     # densità
     if (input$checkbox_density == TRUE) {
       plot <- plot + geom_density(aes(y = ..density..,
@@ -617,50 +615,173 @@ server <- function(input, output, session) {
     plot
   })
   
+  
+  # Scatter plot ----------------------------------------------------------------------
+  # input box - select variables - SCATTER PLOT
+  output$inBoxScatterplot <- renderUI({
+    req(input$file)
+    
+    tagList(
+      column(width = 6,  style = "padding-left:0px; padding-right:5px;",
+             selectInput("variableX_Scatter", label = "Variable X:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ) # chose numerical variable
+      ),
+      column(width = 6,  style = "padding-left:5px; padding-right:0px;",
+             selectInput("variableY_Scatter", label = "Variable Y:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))) # chose numerical variable
+      ),
+      sliderInput(inputId = "hours_slider_Scatter", label = "Hours:", min = 0, max = 24, value = c(0, 24) ),
+      sliderTextInput(
+        inputId = "month_slider_Scatter",
+        label = "Month:",
+        choices = base::sort(unique(data[[input$dataframe]][,"Month"])),
+        selected = base::sort(unique(data[[input$dataframe]][,"Month"]))[c(1, length(base::sort(unique(data[[input$dataframe]][,"Month"]))))]
+      ),
+      column(width = 6,  style = "padding-left:0px; padding-right:5px;",
+             selectInput("colorvariable_Scatter", label = "Color Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
+      ),
+      column(width = 6,  style = "padding-left:5px; padding-right:0px;",
+             selectInput("facetvariable_Scatter", label = "Facet Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
+      ),
+      conditionalPanel("input.facetvariable_Scatter != 'None'", numericInput("nrowvariable_Scatter", "Number of facet rows", value = 3, min = 1)), 
+      
+      column("Style", width = 6,
+             checkboxInput("checkbox_flip_Scatter", label = "Flip", value = FALSE)
+      ),
+      column("Scale", width = 6,
+             checkboxInput("checkbox_logy_Scatter", label = "Log-Y", value = FALSE)
+      )
+    )
+  })
+  # output box - plot - SCATTER PLOT
+  
+  output$outBoxScatterplot <- renderPlot({
+    req(input$file, input$hours_slider_Scatter, input$month_slider_Scatter)
+    
+    data_plot <- data[[input$dataframe]] %>%
+      dplyr::filter( min_dec >= input$hours_slider_Scatter[1], 
+                     min_dec <= input$hours_slider_Scatter[2],
+                     Month >= input$month_slider_Scatter[1], 
+                     Month <= input$month_slider_Scatter[2]
+      )
+    
+    # data_plot <- data_plot %>%
+    #   mutate(Date = date(Date_Time), X = data_plot[,input$variableX_Scatter], Y = data_plot[,input$variableY_Scatter]) %>%
+    #   select(Date, X, Y) %>%
+    #   dplyr::group_by(Date)  %>%
+    #   summarise_all(.funs = c(mean="mean"))
+    # 
+    #   dplyr::summarize(X = mean(X,na.rm = T),
+    #                    Y = mean(Y,na.rm = T)) %>%
+    #   ungroup()
+    
+    
+    plot <- ggplot(data =  data_plot,
+                   mapping =  aes(x =  data_plot[,input$variableX_Scatter], 
+                                  y =  data_plot[,input$variableY_Scatter],
+                                  color = if (input$colorvariable_Scatter == "None") {NULL} else { data_plot[,input$colorvariable_Scatter]}
+                   )
+    ) + geom_point(alpha = 0.5) + 
+      labs( x = input$variableX_Scatter, y = input$variableY_Scatter, color = input$colorvariable_Scatter )
+    
+    # flip
+    if (input$checkbox_flip_Scatter == TRUE) {plot <- plot + coord_flip()}
+    # tema
+    plot <- plot + theme(legend.position = "bottom")
+    # add wrap
+    if (input$facetvariable_Scatter == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Scatter], nrow = input$nrowvariable_Scatter)}
+    # log
+    if (input$checkbox_logy_Scatter == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
+    
+    #plot <- ggplotly(plot, tooltip = c("x", "y"))
+    plot
+  })
+  
   ###### TAB "Clustering" ----------------------------------------------------------------------
   
   
   output$clustering_inbox <- renderUI({
     req(input$file) # requires that a file is loaded
     tagList(
-      selectInput('cluster_variable', 'Variable:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ),
-      selectInput('cluster_normalization', 'Normalization:', choices = c("none","minmax","zscore")),
-      selectInput('cluster_distance', 'Distance:', choices = c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski")),
-      selectInput('cluster_method', 'Hierarchical clustering method:', choices = c("ward.D2", "ward.D", "single","complete", "average", "mcquitty", "median", "centroid")),
-      numericInput('cluster_number', 'Number of clusters', value = 2),
-      actionButton("cluster_button", "Start Cluster!")
+      column(width = 6,  style = "padding-left:0px; padding-right:0px;",
+             selectInput('cluster_variable', 'Variable:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ),
+             selectInput('cluster_distance', 'Distance:', 
+                         choices = list(
+                           General = c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski"),
+                           Hierarchical = c("minkowski"),
+                           Partitive = c("pearson" , "abspearson" , "abscorrelation", "correlation", "spearman", "kendall")
+                         )
+             )
+      ),
+      column(width = 6,  style = "padding-left:10px; padding-right:0px;",
+             selectInput('cluster_normalization', 'Normalization:', choices = c("none","maxmin", "max", "min","zscore")),
+             selectInput('cluster_method', 'Clustering method:', 
+                         choices = list(
+                           Hierarchical = c("ward.D2", "ward.D", "single","complete", "average", "mcquitty", "median", "centroid"),
+                           Partitive = c("kmeans", "kmeans++", "FDL")
+                         ),
+                         selected = 'ward.D2')
+      ),
+      numericInput('cluster_number', 'Number of clusters', value = 2, min = 1),
+      actionButton("cluster_button", "Start Cluster!"),
+    )
+  })
+  
+  output$clustering_inbox_postprocessing <- renderUI({
+    req(input$cluster_button) # merge and discard inpute
+    tagList(
+      hr(),
+      column(width = 8,  style = "padding-left:0px; padding-right:0px;",
+             selectizeInput('cluster_merge', label = NULL, choices = c("Select cluster to merge..."='', seq(1,input$cluster_number)), multiple = TRUE )),
+      column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+             actionButton('cluster_merge_button', 'Merge!',  width = '100%')),
+      column(width = 8,  style = "padding-left:0px; padding-right:0px;",
+             selectizeInput('cluster_discard', label = NULL, choices = c('Select cluster to discard...'='', seq(1,input$cluster_number)), multiple = TRUE)),
+      column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+             actionButton('cluster_discard_button', 'Discard!',  width = '100%')),
     )
   })
   
   observeEvent(input$cluster_button,{
     req(input$file)
     
+    # notification of process
+    id <- showNotification("Plotting clusters...", duration = NULL, closeButton = FALSE, type = "message")
+    on.exit(removeNotification(id), add = TRUE)
+    
     line_color <- "gray"
     line_size <- 0.5
     line_alpha <- 0.7
     timezone <- gsub(" ", "", paste("timezone_", input$type))
     
-    data_plot <- data[[input$dataframe]]
-    Xtmp <- data_plot[,input$cluster_variable]
-    
-    # normalize data
-    switch(input$cluster_normalization,
-           none = data_plot$X <- Xtmp,
-           zscore = data_plot$X <- (Xtmp - mean(Xtmp) )/ sd(Xtmp),
-           minmax = data_plot$X <- (Xtmp - min(Xtmp) )/ (max(Xtmp)-min(Xtmp))
-    )
-    
-    
-    # process dataframe
-    df1 <- data_plot %>%
+    # process and create clustering dataframe
+    df1 <- data[[input$dataframe]]  %>%
       mutate(Date = date(Date_Time),
-             Time = format(data_plot$Date_Time, "%H:%M:%S", tz = input[[timezone]]) ) %>%
+             Time = format(data[[input$dataframe]]$Date_Time, "%H:%M:%S"),
+             X = data[[input$dataframe]][,input$cluster_variable]) %>%
       select(Date, Time, X)
     
-    df1 <- distinct(df1)  
-    df2 <- spread(df1, Time, X, fill = 0) 
-    df3 <- df2[ 2:dim(df2)[2] ] 
+    # normalize data given input command
+    switch(input$cluster_normalization,
+           none = df1 <- df1,
+           zscore = df1 <- df1 %>% dplyr::mutate(X = (X-mean(X))/sd(X) ) ,
+           max = df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = X/max(X)) %>% dplyr::ungroup(),
+           min = df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = X/min(X)) %>% dplyr::ungroup(),
+           maxmin = df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = (X-min(X))/(max(X)-min(X)) )  %>% dplyr::ungroup()
+    )
     
+    # create M N matrix
+    df1 <- distinct(df1)  # checks that the keys are unique, some problems arise when timezone
+    df2 <- pivot_wider(df1, names_from = Time, values_from = X) # use pivot_wider instead of spread
+    df3 <- df2[ 2:dim(df2)[2] ]  # keep only times
+    
+    # if (input$cluster_method == "kmeans") {
+    #   Kmeans(df3, input$cluster_number, method= input$cluster_distance)
+    # } else if (input$cluster_method == "kmeans++") {
+    #   kmeanspp(data[2:ncol(data)], input$K_3)
+    # } else{ # hierarchical
+    #   
+    # }
+    
+    ####### come prima
     # calculate distance matrix
     diss_matrix <- dist(df3, input$cluster_distance)          
     # perform clustering
@@ -675,8 +796,12 @@ server <- function(input, output, session) {
     
     centr <- ddply(df1, c("Cluster","Time"), summarise, X = mean(X)) # Centroidi (media della potenza per ogni cluster ad ogni time-step)
     
-    # group by date plot
+    # daily profile centroid plot facet by clusters
     output$out_clustering_preview <- renderPlot({
+      
+      # notification of process
+      id <- showNotification("Plotting clusters...", duration = NULL, closeButton = FALSE, type = "message")
+      on.exit(removeNotification(id), add = TRUE)
       
       plot <- ggplot() + 
         geom_line(data = df1, 
@@ -699,7 +824,7 @@ server <- function(input, output, session) {
           expand = c(0,0)                                     # expands x axis
         ) +
         scale_y_continuous(
-          limits = c(0,ceiling(max(data_plot$X)) ),       # set limits from 0 to higher power consumption
+          limits = c(0,ceiling(max(df1$X)) ),       # set limits from 0 to higher power consumption
           expand = c(0,0)                                       # expands x axis
         ) +
         theme_bw() +                                           # white bakground with lines
@@ -719,6 +844,9 @@ server <- function(input, output, session) {
     
     # dendogram by date plot
     output$out_clustering_dendogram <- renderPlot({
+      # notification of process
+      id <- showNotification("Plotting clusters...", duration = NULL, closeButton = FALSE, type = "message")
+      on.exit(removeNotification(id), add = TRUE)
       
       hcl <- as.dendrogram(hcl) 
       
@@ -733,6 +861,8 @@ server <- function(input, output, session) {
       # }
       
     })
+    
+    
   })
 }
 
