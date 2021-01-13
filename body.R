@@ -64,9 +64,9 @@ body <- dashboardBody(
                    helpText("Note 1: In this section we perform a daily load profile clustering. It is not intended to be a generical clustering process."),
                    helpText("Note 2: We require the column Date_Time, Year, Month, min_dec, Hours. If an error displays please go back in the manage tab and select those columns."),
                    uiOutput("clustering_inbox"),
-                   uiOutput("clustering_inbox_postprocessing")), # INPUT BOX
+                   uiOutput("clustering_inbox_postprocessing")),
               box( width = 8, 
-                   plotOutput("out_clustering_preview", height = "400px"),
+                   plotOutput("out_clustering_preview", height = "400px") %>% withSpinner(color = loadingGifColor),
                    plotOutput("out_clustering_dendogram", height = "400px")
               ) # end box
             )

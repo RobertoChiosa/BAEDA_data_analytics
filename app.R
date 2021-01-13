@@ -46,6 +46,7 @@ server <- function(input, output, session) {
   
   # reactive value where we will store all the loaded dataframes
   data <- reactiveValues()
+  data_results <- reactiveValues()
   
   # Load file ----------------------------------------------------------------------
   # create a reactive dataframe df when the file is loaded and add
@@ -697,7 +698,7 @@ server <- function(input, output, session) {
   
   ###### TAB "Clustering" ----------------------------------------------------------------------
   
-  
+  # Clustering input parameters ----------------------------------------------------------------------
   output$clustering_inbox <- renderUI({
     req(input$file) # requires that a file is loaded
     tagList(
@@ -706,7 +707,6 @@ server <- function(input, output, session) {
              selectInput('cluster_distance', 'Distance:', 
                          choices = list(
                            General = c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski"),
-                           Hierarchical = c("minkowski"),
                            Partitive = c("pearson" , "abspearson" , "abscorrelation", "correlation", "spearman", "kendall")
                          )
              )
@@ -730,27 +730,29 @@ server <- function(input, output, session) {
     tagList(
       hr(),
       column(width = 8,  style = "padding-left:0px; padding-right:0px;",
-             selectizeInput('cluster_merge', label = NULL, choices = c("Select cluster to merge..."='', seq(1,input$cluster_number)), multiple = TRUE )),
+             selectizeInput('cluster_merge', label = NULL, choices = c("Select cluster to merge..."='', unique(data_results[["Clustering_df"]]$Cluster) ), multiple = TRUE )),
       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
              actionButton('cluster_merge_button', 'Merge!',  width = '100%')),
       column(width = 8,  style = "padding-left:0px; padding-right:0px;",
-             selectizeInput('cluster_discard', label = NULL, choices = c('Select cluster to discard...'='', seq(1,input$cluster_number)), multiple = TRUE)),
+             selectizeInput('cluster_discard', label = NULL, choices = c('Select cluster to discard...'='', unique(data_results[["Clustering_df"]]$Cluster) ), multiple = TRUE)),
       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
              actionButton('cluster_discard_button', 'Discard!',  width = '100%')),
+      searchInput(inputId = "clustering_dataframe_name", 
+                  label = "Save clustering results dataframe", 
+                  placeholder = "New name..", 
+                  value = NULL, # initial value
+                  btnSearch = icon("plus"), btnReset = icon("backspace"), # icons
+                  width = "100%")
     )
   })
   
+  # Clustering process ----------------------------------------------------------------------
   observeEvent(input$cluster_button,{
     req(input$file)
     
     # notification of process
-    id <- showNotification("Plotting clusters...", duration = NULL, closeButton = FALSE, type = "message")
+    id <- showNotification("Performing clustering...", duration = NULL, closeButton = FALSE, type = "message")
     on.exit(removeNotification(id), add = TRUE)
-    
-    line_color <- "gray"
-    line_size <- 0.5
-    line_alpha <- 0.7
-    timezone <- gsub(" ", "", paste("timezone_", input$type))
     
     # process and create clustering dataframe
     df1 <- data[[input$dataframe]]  %>%
@@ -770,100 +772,160 @@ server <- function(input, output, session) {
     
     # create M N matrix
     df1 <- distinct(df1)  # checks that the keys are unique, some problems arise when timezone
-    df2 <- pivot_wider(df1, names_from = Time, values_from = X) # use pivot_wider instead of spread
+    df2 <- pivot_wider(df1, names_from = Time, values_from = X) %>% # use pivot_wider instead of spread
+      na.omit() # omits na when coercing
     df3 <- df2[ 2:dim(df2)[2] ]  # keep only times
     
-    # if (input$cluster_method == "kmeans") {
-    #   Kmeans(df3, input$cluster_number, method= input$cluster_distance)
-    # } else if (input$cluster_method == "kmeans++") {
-    #   kmeanspp(data[2:ncol(data)], input$K_3)
-    # } else{ # hierarchical
-    #   
-    # }
+    # check consistency of method and distance
+    shinyFeedback::hideFeedback("cluster_method")
+    shinyFeedback::hideFeedback("cluster_distance")
+    validated = TRUE
+    if ( input$cluster_distance %in% c("pearson" , "abspearson" , "abscorrelation", "correlation", "spearman", "kendall") & 
+         input$cluster_method %in%  c("ward.D2", "ward.D", "single","complete", "average", "mcquitty", "median", "centroid") ) {
+      # incompatible condition partitive distance but hierarchical method
+      validated = FALSE
+      shinyFeedback::feedbackDanger("cluster_method", TRUE, "Inconsistent method") 
+      shinyFeedback::feedbackDanger("cluster_distance", TRUE, "Inconsistent distance") 
+    } 
     
-    ####### come prima
-    # calculate distance matrix
-    diss_matrix <- dist(df3, input$cluster_distance)          
-    # perform clustering
-    hcl <- hclust(diss_matrix, method = input$cluster_method) 
+    # continues the execution if there is consistence between method and distance
+    # general+partitive/hierarchical OR partitive+partitive
+    req(validated)
     
-    clusters_colors <- brewer.pal( 9, "Set1")
+    if (input$cluster_method == "kmeans") {
+      clust_res <- Kmeans(df3, input$cluster_number, method = input$cluster_distance) # perform clustering
+      df2$Cluster <- clust_res$cluster                            # add labels to dataframe
+    } else if (input$cluster_method == "kmeans++") {
+      clust_res <- kmeanspp(df3, input$cluster_number)                # perform clustering
+      df2$Cluster <- clust_res$cluster             # add labels to dataframe
+    } else{ # hierarchical
+      diss_matrix <- dist(df3, input$cluster_distance)                # calculate distance matrix    
+      hcl <- hclust(diss_matrix, method = input$cluster_method)       # perform clustering
+      df2$Cluster <- cutree(hcl, input$cluster_number) # add labels to dataframe
+    }
     
-    # Diciamo quanti cluster vogliamo tagliando il dendrogamma
-    df2$Cluster <- paste( "Cluster", cutree(hcl, input$cluster_number) )
-    # Riportiamo in df1 l'informazione del cluster a cui appartiene secondo la data corrispondente
+    # merge cluster information with the original dataframe
     df1 <- merge.data.frame(df1, df2[c("Date", "Cluster")])
-    
-    centr <- ddply(df1, c("Cluster","Time"), summarise, X = mean(X)) # Centroidi (media della potenza per ogni cluster ad ogni time-step)
-    
-    # daily profile centroid plot facet by clusters
-    output$out_clustering_preview <- renderPlot({
-      
-      # notification of process
-      id <- showNotification("Plotting clusters...", duration = NULL, closeButton = FALSE, type = "message")
-      on.exit(removeNotification(id), add = TRUE)
-      
-      plot <- ggplot() + 
-        geom_line(data = df1, 
-                  aes(x = as.POSIXct(Time, format="%H:%M:%S" , tz = input[[timezone]]) , 
-                      y = X, 
-                      group = Date,
-                  ), na.rm = T,
-                  color = line_color,
-                  alpha = line_alpha, 
-                  size = line_size) +
-        geom_line(data = centr, 
-                  aes(x = as.POSIXct(Time, format="%H:%M:%S" , tz = input[[timezone]]) , 
-                      y = X, 
-                      color = as.factor(Cluster)), 
-                  size = line_size*2, na.rm = T) +
-        scale_color_manual(values = clusters_colors[c(1:input$cluster_number)]) + 
-        scale_x_datetime(
-          breaks = date_breaks("2 hour"),                     # specify breaks every 4 hours
-          labels = date_format(("%H:%M") , tz = input[[timezone]]),  # specify format of labels
-          expand = c(0,0)                                     # expands x axis
-        ) +
-        scale_y_continuous(
-          limits = c(0,ceiling(max(df1$X)) ),       # set limits from 0 to higher power consumption
-          expand = c(0,0)                                       # expands x axis
-        ) +
-        theme_bw() +                                           # white bakground with lines
-        ggplot2::theme(
-          legend.position = "none",                     # legend position on the top of the graph
-          strip.text = element_text(size = 12), # facet wrap title fontsize
-          axis.title.x = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
-          axis.title.y = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
-          axis.text.x = element_text(size=12, angle=45, vjust = .5),
-          axis.text.y = element_text(size=12 , vjust=.3),
-        ) +
-        labs(x = "Time", y = input$cluster_variable, color = "Cluster") + 
-        facet_wrap(~Cluster)
-      
-      plot
-    })
-    
-    # dendogram by date plot
-    output$out_clustering_dendogram <- renderPlot({
-      # notification of process
-      id <- showNotification("Plotting clusters...", duration = NULL, closeButton = FALSE, type = "message")
-      on.exit(removeNotification(id), add = TRUE)
-      
-      hcl <- as.dendrogram(hcl) 
-      
-      # Color the branches based on the clusters:
-      hcl <- color_branches(hcl, k=input$cluster_number, col = clusters_colors[c(1:input$cluster_number)]) #, groupLabels=iris_species)
-      
-      plot(hcl, leaflab = "none", # no leaf labels (usually too many to be readable)
-           ylab = "Height", xlab = "", main = "", sub = "")
-      
-      # if( input$cluster_number >=2){
-      #   rect.hclust(hcl, k = input$cluster_number, border = c(brewer.pal( input$cluster_number, "Set1")) )
-      # }
-      
-    })
-    
-    
+    # saves df1 in memory
+    data_results[["Clustering_df"]] <- df1
   })
+  
+  # Merge clusters ----------------------------------------------------------------------
+  observeEvent(input$cluster_merge_button, {
+    df_tmp <- data_results[["Clustering_df"]]
+    tmp <- min(input$cluster_merge)                           # gets the minimum value of cluster to be merged
+    df_tmp$Cluster[ df_tmp$Cluster %in% input$cluster_merge] <- tmp # assigm to all the cluster labels the minimum cluster label
+    data_results[["Clustering_df"]] <- df_tmp
+  })
+  
+  # Discard clusters ----------------------------------------------------------------------
+  observeEvent(input$cluster_discard_button, {
+    df_tmp <- data_results[["Clustering_df"]]
+    df_tmp <- df_tmp[! df_tmp$Cluster %in% input$cluster_discard,]
+    data_results[["Clustering_df"]] <- df_tmp 
+  })
+  
+  # Plot daily profiles clusters ----------------------------------------------------------------------
+  output$out_clustering_preview <- renderPlot({
+    
+    req(input$cluster_button)
+    
+    df1 <- data_results[["Clustering_df"]] # load actual cluster dataframe
+    
+    # manipulates the dataframe to add cluster label with count
+    conteggio <- df1 %>% 
+      pivot_wider(names_from = Time, values_from = X)  %>%
+      dplyr::group_by(Cluster) %>%
+      dplyr::count(Cluster)
+    
+    # creates label with number of profiles
+    conteggio$Cluster_lab <- paste("Cluster", conteggio$Cluster, "( n =", conteggio$n, ")")
+    
+    df1 <- merge.data.frame(df1, conteggio[c("Cluster", "Cluster_lab")])
+    
+    centr <- ddply(df1, c("Cluster_lab","Time"), summarise, X = mean(X)) # Centroidi (media della potenza per ogni cluster ad ogni time-step)
+    clusters_colors <- brewer.pal(12, "Paired")
+    line_color <- "gray"
+    line_size <- 0.5
+    line_alpha <- 0.7
+    timezone <- gsub(" ", "", paste("timezone_", input$type))
+    
+    plot <- ggplot() +
+      geom_line(data = df1,
+                aes(x = as.POSIXct(Time, format="%H:%M:%S" , tz = input[[timezone]]) ,
+                    y = X,
+                    group = Date,
+                ), na.rm = T,
+                color = line_color,
+                alpha = line_alpha,
+                size = line_size) +
+      geom_line(data = centr,
+                aes(x = as.POSIXct(Time, format="%H:%M:%S" , tz = input[[timezone]]) ,
+                    y = X,
+                    color = as.factor(Cluster_lab)),
+                size = line_size*2, na.rm = T) +
+      scale_color_manual(values = clusters_colors[c(1:input$cluster_number)]) +
+      scale_x_datetime(
+        breaks = date_breaks("4 hour"),                     # specify breaks every 4 hours
+        labels = date_format(("%H:%M") , tz = input[[timezone]]),  # specify format of labels
+        expand = c(0,0)                                     # expands x axis
+      ) +
+      scale_y_continuous(
+        limits = c(0,ceiling(max(df1$X)) ),       # set limits from 0 to higher power consumption
+        expand = c(0,0)                                       # expands x axis
+      ) +
+      theme_bw() +                                           # white bakground with lines
+      ggplot2::theme(
+        legend.position = "none",                     # legend position on the top of the graph
+        strip.text = element_text(size = 12), # facet wrap title fontsize
+        axis.title.x = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.title.y = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.text.x = element_text(size=12, angle=45, vjust = .5),
+        axis.text.y = element_text(size=12 , vjust=.3),
+      ) +
+      labs(x = "Time", y = input$cluster_variable, color = "Cluster") +
+      facet_wrap(~Cluster_lab)
+    
+    plot
+  })
+  
+  
+  # Plot dendogram ----------------------------------------------------------------------
+  # 
+  # # dendogram by date plot
+  # output$out_clustering_dendogram <- renderPlot({
+  #   # notification of process
+  #   id <- showNotification("Plotting clusters...", duration = NULL, closeButton = FALSE, type = "message")
+  #   on.exit(removeNotification(id), add = TRUE)
+  #   
+  #   hcl <- as.dendrogram(hcl) 
+  #   
+  #   # Color the branches based on the clusters:
+  #   hcl <- color_branches(hcl, k=input$cluster_number, col = clusters_colors[c(1:input$cluster_number)]) #, groupLabels=iris_species)
+  #   
+  #   plot(hcl, leaflab = "none", # no leaf labels (usually too many to be readable)
+  #        ylab = "Height", xlab = "", main = "", sub = "")
+  #   
+  #   # if( input$cluster_number >=2){
+  #   #   rect.hclust(hcl, k = input$cluster_number, border = c(brewer.pal( input$cluster_number, "Set1")) )
+  #   # }
+  #   
+  # })
+  # 
+  
+  # Add clustering dataframe ----------------------------------------------------------------------
+  observeEvent(input$clustering_dataframe_name_search,{
+    data[[input$clustering_dataframe_name]] <-  data_results[["Clustering_df"]]
+    # success notification
+    shinyalert(title = "Dataframe successfully saved",
+               text = paste("You can find <b>", input$clustering_dataframe_name, "</b> in the dataframe dropdown"), 
+               type = "success",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE
+    )
+  })
+  
 }
 
 shinyApp(ui, server)

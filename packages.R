@@ -29,6 +29,9 @@ library('DT')                     # to use output datatable
 library('skimr')                  # for statistical summary
 library('plyr')                   # per usare pdply
 library('rlang') # to parse and evaluate string expressions in mutate
+library('amap') # Kmean slustering function
+library('LICORS') # Kmean++ slustering function
+
 # library('ggExtra')              # distributions on border
 # library('RColorBrewer')         # Pacchetto per creare palette di colori più accattivanti
 # library('rpart')                # make classification tree
