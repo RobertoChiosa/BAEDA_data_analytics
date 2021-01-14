@@ -1,5 +1,8 @@
 #################################################################################
 ###############            Copyright © BAEDA Lab 2020             ###############
+###############                     -------                       ###############
+###############                  Roberto Chiosa                   ###############
+###############             roberto.chiosa@polito.it              ###############
 #################################################################################
 
 ###### SIDEBAR functions ----------------------------------------------------------------------
@@ -8,8 +11,8 @@ selection_dataframe <- function() {
     # select the dataset you want to use for the analysis - default none
     tags$div(title = "This is the actual dataframe used for your analysis",
              selectInput("dataframe", label = "Dataframe:", choices = c("None")),
-             actionButton("upload", "Upload a new dataframe ...", icon = icon("plus"), width = "87%"),
-             #actionButton("upload", NULL, icon = icon("calendar-alt"), width = "100%")
+             actionButton("upload", "  Upload a new dataframe", icon = icon("plus"), width = "87%"),
+             actionButton("add_calendar_columns", "  Add calendar variables", icon = icon("calendar-alt"), width = "87%"),
     ),
     #column(9, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px; margin-bottom: 0px;", selectInput("dataframe", label = NULL, choices = c("None"))  ),
     #column(3, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px;margin-bottom: 0px;", actionButton("tt", "+")),
@@ -18,41 +21,72 @@ selection_dataframe <- function() {
 
 ###### ADD CALENDARVARIABLES function ----------------------------------------------------------------------
 
-
-add_calendar_variables <- function(nome, df, timezone, dateFormats) {
+add_calendar_variables <- function(timestamp, timezone, df) {
   
-  # function to automatically find date column
-  coldate <- sapply(df,   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
+  # notification of process
+  id <- showNotification("Calculating...", duration = NULL, closeButton = FALSE, type = "message")
+  on.exit(removeNotification(id), add = TRUE)
   
-  # in no timestamp column can be found notify the user
-  if (any(coldate) == FALSE) {
-    # warning notification
-    shinyalert(title = "No timestamp column found!", 
-               paste("However, you can find <b>", nome, "</b> in the dataframe dropdown"),
-               type = "warning",
-               closeOnEsc = TRUE,
-               closeOnClickOutside = TRUE,
-               html = TRUE
-    )
+  # allowed time formats - update accordingly
+  dateFormats <- c("%Y-%m-%d %H:%M:%S",       # ISO date format
+                   "%m/%d %H:%M:%S",          # energy+
+                   "%m/%d  %H:%M:%S",         # energy+ 2 spazi
+                   " %m/%d    %H:%M:%S",      # energy+ 2 spazi +1
+                   "%d/%m/%y %H:%M")          # accepted date formats
+  
+  if (timestamp == T) {
+    # function to automatically find date column
+    coldate <- sapply(df,   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
+    
+    # in no timestamp column can be found notify the user
+    if (any(coldate) == FALSE) {
+      df_out <- df
+      # warning notification
+      shinyalert(title = "No timestamp column found!",
+                 paste("It was not possible to add the desired columns"),
+                 type = "error",
+                 closeOnEsc = TRUE,
+                 closeOnClickOutside = TRUE,
+                 html = TRUE
+      )
+    } else if (sum(coldate[TRUE])>1)  { # if timestamp columns found create date time columns
+      df_out <- df
+      # warning notification
+      shinyalert(title = "Multiple timestamp column found!",
+                 paste("It was not possible to add the desired columns"),
+                 type = "error",
+                 closeOnEsc = TRUE,
+                 closeOnClickOutside = TRUE,
+                 html = TRUE
+      )
+    }else{
+      df_out <- df %>%
+        mutate(
+          Date_Time = as.POSIXct(df[,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = timezone), # depend on selected timezone
+          Date = as.Date(Date_Time), # week start on monday
+          Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
+          Month = month(Date_Time, label = TRUE), # ordered factor
+          Month_Day = mday(Date_Time), # numeric
+          Year = as.ordered(year(Date_Time)), # ordered factor
+          Year_Day = mday(Date_Time), # numeric
+          Hour = hour(Date_Time), # numeric
+          Minute = minute(Date_Time), # numeric
+          min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
+        )%>% na.omit()
+      # success notification
+      shinyalert(title = "Columns successfully added",
+                 text = paste("You can find the updated dataframe in the dataframe dropdown"),
+                 type = "success",
+                 closeOnEsc = TRUE,
+                 closeOnClickOutside = TRUE,
+                 html = TRUE
+      )
+    }
+  } else { # no timestamp check box selected
     df_out <- df
-  } else { # if timestamp columns found create date time columns
-    df_out <- df %>%
-      mutate(
-        Date_Time = as.POSIXct(df[,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = timezone), # depend on selected timezone
-        Date = as.Date(Date_Time), # week start on monday
-        Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
-        Month = month(Date_Time, label = TRUE), # ordered factor
-        Month_Day = mday(Date_Time), # numeric
-        Year = as.ordered(year(Date_Time)), # ordered factor
-        Year_Day = mday(Date_Time), # numeric
-        Hour = hour(Date_Time), # numeric
-        Minute = minute(Date_Time), # numeric
-        min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
-      ) 
-    # success notification
-    shinyalert(title = "Dataframe successfully added",
-               text = paste("You can find <b>", nome, "</b> in the dataframe dropdown <br> We created some useful new variables..."), 
-               type = "success",
+    shinyalert(title = "No timestamp column found!",
+               paste("You didn't check the timestamp checkbox upon upload"),
+               type = "warning",
                closeOnEsc = TRUE,
                closeOnClickOutside = TRUE,
                html = TRUE
@@ -82,10 +116,12 @@ load_file_modal <- function(failed = FALSE) {
             '),
           column(width = 12, align = 'center', 
                  # type of files that can be loaded
-                 selectInput("type", "Chose the type of file:", c("", "csv", "rds", "xls"), selected = NULL),
+                 selectInput("type", "Chose the type of file:", 
+                             c("", "Comma-separated values (.csv)" = "csv","R object (.rds)"="rds"), selected = NULL),
                  
                  # the user wants to load a csv file
                  conditionalPanel("input.type == 'csv'",
+                                  
                                   column(width = 6, selectInput("separator", "Separator:", c("Comma (,)" = ",", "Semicolon (;)" = ";")) ),
                                   column(width = 6, selectInput("decimal", "Decimal:", c("Point (.)" = ".","Comma (,)" = ",")) ),
                                   column(width = 4, checkboxInput("header", "Header?", value = TRUE) ),
@@ -103,11 +139,6 @@ load_file_modal <- function(failed = FALSE) {
                                                    selectInput("timezone_rds", "Timezone:", choices = OlsonNames(), selected = "Europe/Rome"),
                                   ),
                  ),
-                 
-                 # the user wants to load a xlm file
-                 conditionalPanel("input.type == 'xls'",
-                                  h2("WARNING: file still not supported")
-                 ), 
                  
                  conditionalPanel("input.type != ''",
                                   fileInput("file",paste("Upload file:") )
@@ -128,29 +159,26 @@ manage_inbox <- function() {
   tagList(
     uiOutput("keepColumns"),
     # Rename column ----------------------------------------------------------------------
-    awesomeCheckbox("modifyColumns_chackbox", "Rename column?", value = FALSE),
+    awesomeCheckbox("modifyColumns_chackbox", "Rename column", value = FALSE),
     conditionalPanel("input.modifyColumns_chackbox == true", # if we want to rename 
                      uiOutput("modifyColumns"),
     ),
     # Add column ----------------------------------------------------------------------
-    awesomeCheckbox("addColumns_chackbox", "Add column?", value = FALSE),
+    awesomeCheckbox("addColumns_chackbox", "Add column", value = FALSE),
     conditionalPanel("input.addColumns_chackbox == true", # if we want to rename 
                      uiOutput("addColumn"),
     ),
     # Pivot ----------------------------------------------------------------------
-    awesomeCheckbox("pivotTable_chackbox", "Pivot table?", value = FALSE),
+    awesomeCheckbox("pivotTable_chackbox", "Pivot table", value = FALSE),
     conditionalPanel("input.pivotTable_chackbox == true", # if we want to rename 
                      uiOutput("pivotTable")
     ),
     # Rename dataframe ----------------------------------------------------------------------
-    awesomeCheckbox("new_dataframe_name_chackbox", "Save current dataframe?", value = FALSE),
-    conditionalPanel("input.new_dataframe_name_chackbox == true", # if we want to rename 
-                     searchInput(inputId = "new_dataframe_name", label = NULL, 
-                                 placeholder = "New name..", 
-                                 value = NULL, # initial value
-                                 btnSearch = icon("plus"), btnReset = icon("backspace"), # icons
-                                 width = "100%")
-    ),
+    searchInput(inputId = "new_dataframe_name", label = "Save current dataframe", 
+                placeholder = "New name..", 
+                value = NULL, # initial value
+                btnSearch = icon("plus"), btnReset = icon("backspace"), # icons
+                width = "100%"),
     # Download ----------------------------------------------------------------------
     downloadButton("download_filtered", "Download Filtered Dataframe (as csv)", style = "width:100%;"),   
   )

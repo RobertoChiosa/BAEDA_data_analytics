@@ -1,5 +1,8 @@
 #################################################################################
 ###############            Copyright © BAEDA Lab 2020             ###############
+###############                     -------                       ###############
+###############                  Roberto Chiosa                   ###############
+###############             roberto.chiosa@polito.it              ###############
 #################################################################################
 
 ## app.R ##
@@ -8,11 +11,6 @@ rm(list = ls())         # remove all variables of the workspace
 
 # global variables
 unitsMeasure <- read.csv("./data/units.csv", header = TRUE, sep = ",", check.names = FALSE) # available units of measure
-dateFormats <- c("%Y-%m-%d %H:%M:%S",       # ISO date format
-                 "%m/%d %H:%M:%S",          # energy+
-                 "%m/%d  %H:%M:%S",         # energy+ 2 spazi
-                 " %m/%d    %H:%M:%S",      # energy+ 2 spazi +1
-                 "%d/%m/%y %H:%M")          # accepted date formats
 
 source("packages.R")    # load necessary packages
 source("functions.R")   # load user defined functions
@@ -29,7 +27,7 @@ ui <- dashboardPage(skin = "black",     # sets overall appearance
 
 # SERVER FUNCTION ----------------------------------------------------------------------
 server <- function(input, output, session) {
-  
+ 
   ###### SIDEBAR functions ----------------------------------------------------------------------
   
   # forces startup modal dialog to open when the application starts
@@ -73,7 +71,7 @@ server <- function(input, output, session) {
     req(validated, cancelOutput = TRUE)
     
     # notification that the file has beening loaded
-    id <- showNotification("Reading data...", duration = NULL, closeButton = FALSE)
+    id <- showNotification("Reading data...", duration = NULL, closeButton = FALSE, type = "message")
     on.exit(removeNotification(id), add = TRUE)
     
     # reads the input file and assigms it to the reactive value data
@@ -84,62 +82,21 @@ server <- function(input, output, session) {
                            # xls = read_excel(path = inFile$datapath)
     )
     
-    # create the correct timestamp and timezone input to validate the following condition
-    timestamp <- gsub(" ", "", paste("timestamp_", input$type))
-    timezone <- gsub(" ", "", paste("timezone_", input$type))
+    # saves the selectd timezone anc timestamp column in the global environment
+    data_results[["timestamp"]] <- gsub(" ", "", paste("timestamp_", input$type))
+    data_results[["timezone"]] <- gsub(" ", "", paste("timezone_", input$type))
     
-    if (input[[timestamp]] == T) {
-      
-      # data[[nome]] <- add_calendar_variables(nome, data[[nome]], input[[timezone]], dateFormats)
-      # ##############
-      # # function to automatically find date column
-      # coldate <- sapply(data[[nome]],   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
-      # 
-      # # in no timestamp column can be found notify the user
-      # if (any(coldate) == FALSE) {
-      #   # warning notification
-      #   shinyalert(title = "No timestamp column found!", 
-      #              paste("However, you can find <b>", nome, "</b> in the dataframe dropdown"),
-      #              type = "warning",
-      #              closeOnEsc = TRUE,
-      #              closeOnClickOutside = TRUE,
-      #              html = TRUE
-      #   )
-      # } else { # if timestamp columns found create date time columns
-      #   data[[nome]] <- data[[nome]] %>%
-      #     mutate(
-      #       Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input[[timezone]]), # depend on selected timezone
-      #       Date = as.Date(Date_Time), # week start on monday
-      #       Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
-      #       Month = month(Date_Time, label = TRUE), # ordered factor
-      #       Month_Day = mday(Date_Time), # numeric
-      #       Year = as.ordered(year(Date_Time)), # ordered factor
-      #       Year_Day = mday(Date_Time), # numeric
-      #       Hour = hour(Date_Time), # numeric
-      #       Minute = minute(Date_Time), # numeric
-      #       min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
-      #     ) 
-      #   # success notification
-      #   shinyalert(title = "Dataframe successfully added",
-      #              text = paste("You can find <b>", nome, "</b> in the dataframe dropdown <br> We created some useful new variables..."), 
-      #              type = "success",
-      #              closeOnEsc = TRUE,
-      #              closeOnClickOutside = TRUE,
-      #              html = TRUE
-      #   )
-      # }
-      # ##############
-    } else { # no timestamp check box selected
-      # success notification
-      shinyalert(title = "Dataframe successfully added",
-                 text = paste("You can find <b>", nome, "</b> in the dataframe dropdown"), 
-                 type = "success",
-                 closeOnEsc = TRUE,
-                 closeOnClickOutside = TRUE,
-                 html = TRUE
-      )
-    }
   })
+  
+
+  observeEvent(input$add_calendar_columns, {
+    req(input$file) # require a file to be added
+    data[[input$dataframe]] <- add_calendar_variables(
+      input[[data_results[["timestamp"]] ]],  # gets the checkbox
+      input[[data_results[["timezone"]] ]], # gets the timezone
+      data[[input$dataframe]])
+  })
+  
   
   # Dataframe dropdown creation ----------------------------------------------------------------------
   # create a reactive list of loaded dataframes
@@ -542,11 +499,11 @@ server <- function(input, output, session) {
     #   dplyr::filter(Date >= input$daterange_Carpet[1], Date <= input$daterange_Carpet[2])
     
     plot <- ggplot(data =  data_plot, 
-                   mapping =  aes(x =  as.POSIXct(format(data_plot$Date_Time, "%H:%M:%S"), "%H:%M:%S", tz = input[[timezone]]), 
+                   mapping =  aes(x =  as.POSIXct(format(Date_Time, "%H:%M:%S"), "%H:%M:%S", tz = input[[timezone]]), 
                                   y =  date(data_plot[,"Date_Time"]),
                                   fill = data_plot[,input$variable_Carpet],
-                                  text = paste(' Time:', format(data_plot$Date_Time, "%H:%M:%S"), 
-                                               '<br> Date: ', date(data_plot$Date_Time), '<br>',
+                                  text = paste(' Time:', format(Date_Time, "%H:%M:%S"), 
+                                               '<br> Date: ', date(Date_Time), '<br>',
                                                input$variable_Carpet, ':', data_plot[,input$variable_Carpet]
                                   )
                    )
@@ -588,8 +545,9 @@ server <- function(input, output, session) {
       #                min    = date_min,
       #                max    = date_max,
       #                format = "yyyy-mm-dd",
-      #                separator = " - "),
-      selectInput("variableY_Line", label = "Variable Y:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
+      #                separator = " - "),x
+      selectInput("variableY_Line", label = "Variable Y:",
+                  choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
     )
   })
   # output box - plot - BOXPLOT
@@ -607,7 +565,7 @@ server <- function(input, output, session) {
                                   y =  data_plot[,input$variableY_Line],
                                   text = paste(' Time:', format(data_plot$Date_Time, "%H:%M:%S"), 
                                                '<br> Date: ', data_plot$Date, '<br>',
-                                               input$variableY_Line, ':', data_plot[,input$variableY_Line]
+                                               input$variableY_Line, ':', data_plot[,input$variableY_Line],
                                   ), 
                                   group = 1 # solve ggplotly problem
                    )
@@ -618,7 +576,7 @@ server <- function(input, output, session) {
     
     # # add wrap
     # if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
-
+    
     
     plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE)
     
@@ -757,7 +715,10 @@ server <- function(input, output, session) {
   
   # Clustering process ----------------------------------------------------------------------
   observeEvent(input$cluster_button,{
-    req(input$file)
+    # validation
+    req(input$file) # require a uploaded file
+    validated <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
+    req(validated) # stops execution if no datetime found
     
     # notification of process
     id <- showNotification("Performing clustering...", duration = NULL, closeButton = FALSE, type = "message")
@@ -826,6 +787,7 @@ server <- function(input, output, session) {
     df_tmp$Cluster[ df_tmp$Cluster %in% input$cluster_merge] <- tmp # assigm to all the cluster labels the minimum cluster label
     data_results[["Clustering_df"]] <- df_tmp
   })
+  
   
   # Discard clusters ----------------------------------------------------------------------
   observeEvent(input$cluster_discard_button, {

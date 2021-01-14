@@ -1,5 +1,8 @@
 #################################################################################
 ###############            Copyright © BAEDA Lab 2020             ###############
+###############                     -------                       ###############
+###############                  Roberto Chiosa                   ###############
+###############             roberto.chiosa@polito.it              ###############
 #################################################################################
 
 chartTypes <- c("","Carpet","Line Plot","Scatter Plot", "Box Plot","Histogram") # add here more chart types as we go on adding
@@ -8,6 +11,7 @@ body <- dashboardBody(
   useShinyalert(),                                   # use html popups
   shinyFeedback::useShinyFeedback(),                 # use html feedbacks
   tags$style(".fa-plus {color:green}"),              # change plus icon color
+  tags$style(".fa-calendar-alt {color:green}"),      # change calendar icon color
   tags$style(".fa-backspace {color:red}"),           # change backspace icon color
   # shinyDashboardThemes(theme = "purple_gradient"), # cool dashboard theme
   
@@ -37,7 +41,7 @@ body <- dashboardBody(
               box( title = "Chart options", width = 4,
                    selectInput("chart", label = "Chart Type:", choices = chartTypes,
                                selected = NULL),
-                   helpText("Note: we require the column Date_Time, Year, Month, min_dec, Hours. If an error displays please go back in the manage tab and select those columns."),
+                   helpText("Note: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
                    conditionalPanel("input.chart == 'Histogram'", uiOutput("inBoxHistogram")), # Histogram
                    conditionalPanel("input.chart == 'Line Plot'", uiOutput("inBoxLineplot")), # Line Plot
                    conditionalPanel("input.chart == 'Scatter Plot'", uiOutput("inBoxScatterplot")), # Scatter Plot
@@ -62,7 +66,7 @@ body <- dashboardBody(
             fluidRow( 
               box( title = "Clustering options", width = 4, 
                    helpText("Note 1: In this section we perform a daily load profile clustering. It is not intended to be a generical clustering process."),
-                   helpText("Note 2: We require the column Date_Time, Year, Month, min_dec, Hours. If an error displays please go back in the manage tab and select those columns."),
+                   helpText("Note 2: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
                    uiOutput("clustering_inbox"),
                    uiOutput("clustering_inbox_postprocessing")),
               box( width = 8, 

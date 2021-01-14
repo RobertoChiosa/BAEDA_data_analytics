@@ -16,6 +16,11 @@
 # 
 # 
 # df.power <- read_rds("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_clean.rds")
+# df.power <- df.power %>%
+# mutate(date_time = as.POSIXct(date_time , format = "%Y-%m-%d %H:%M:%S" , tz = "Europe/Rome"),
+#        festivo = as.factor(festivo))
+# write_rds(df.power,"/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_clean.rds")
+# str(df.power)
 # dim(df.power)
 # summary(df.power)
 # 
