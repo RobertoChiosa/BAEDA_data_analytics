@@ -89,42 +89,46 @@ server <- function(input, output, session) {
     timezone <- gsub(" ", "", paste("timezone_", input$type))
     
     if (input[[timestamp]] == T) {
-      # function to automatically find date column
-      coldate <- sapply(data[[nome]],   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
       
-      # in no timestamp column can be found notify the user
-      if (any(coldate) == FALSE) {
-        # warning notification
-        shinyalert(title = "No timestamp column found!", 
-                   paste("However, you can find <b>", nome, "</b> in the dataframe dropdown"),
-                   type = "warning",
-                   closeOnEsc = TRUE,
-                   closeOnClickOutside = TRUE,
-                   html = TRUE
-        )
-      } else { # if timestamp columns found create date time columns
-        data[[nome]] <- data[[nome]] %>%
-          mutate(
-            Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input[[timezone]]), # depend on selected timezone
-            Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
-            Month = month(Date_Time, label = TRUE), # ordered factor
-            Month_Day = mday(Date_Time), # numeric
-            Year = as.ordered(year(Date_Time)), # ordered factor
-            Year_Day = mday(Date_Time), # numeric
-            Hour = hour(Date_Time), # numeric
-            Minute = minute(Date_Time), # numeric
-            min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
-          ) %>%
-          na.omit() # omits na when coercing
-        # success notification
-        shinyalert(title = "Dataframe successfully added",
-                   text = paste("You can find <b>", nome, "</b> in the dataframe dropdown <br> We created some useful new variables..."), 
-                   type = "success",
-                   closeOnEsc = TRUE,
-                   closeOnClickOutside = TRUE,
-                   html = TRUE
-        )
-      }
+      # data[[nome]] <- add_calendar_variables(nome, data[[nome]], input[[timezone]], dateFormats)
+      # ##############
+      # # function to automatically find date column
+      # coldate <- sapply(data[[nome]],   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
+      # 
+      # # in no timestamp column can be found notify the user
+      # if (any(coldate) == FALSE) {
+      #   # warning notification
+      #   shinyalert(title = "No timestamp column found!", 
+      #              paste("However, you can find <b>", nome, "</b> in the dataframe dropdown"),
+      #              type = "warning",
+      #              closeOnEsc = TRUE,
+      #              closeOnClickOutside = TRUE,
+      #              html = TRUE
+      #   )
+      # } else { # if timestamp columns found create date time columns
+      #   data[[nome]] <- data[[nome]] %>%
+      #     mutate(
+      #       Date_Time = as.POSIXct(data[[nome]][,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = input[[timezone]]), # depend on selected timezone
+      #       Date = as.Date(Date_Time), # week start on monday
+      #       Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
+      #       Month = month(Date_Time, label = TRUE), # ordered factor
+      #       Month_Day = mday(Date_Time), # numeric
+      #       Year = as.ordered(year(Date_Time)), # ordered factor
+      #       Year_Day = mday(Date_Time), # numeric
+      #       Hour = hour(Date_Time), # numeric
+      #       Minute = minute(Date_Time), # numeric
+      #       min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
+      #     ) 
+      #   # success notification
+      #   shinyalert(title = "Dataframe successfully added",
+      #              text = paste("You can find <b>", nome, "</b> in the dataframe dropdown <br> We created some useful new variables..."), 
+      #              type = "success",
+      #              closeOnEsc = TRUE,
+      #              closeOnClickOutside = TRUE,
+      #              html = TRUE
+      #   )
+      # }
+      # ##############
     } else { # no timestamp check box selected
       # success notification
       shinyalert(title = "Dataframe successfully added",
@@ -512,13 +516,13 @@ server <- function(input, output, session) {
     date_min = min( data[[input$dataframe]][, "Date_Time"] )
     
     tagList(
-      dateRangeInput("daterange_Carpet", "Date range:",
-                     start  = if_else(date_max-date_min > lubridate::years(1), date_max- lubridate::days(365), date_min),
-                     end    = date_max,
-                     min    = date_min,
-                     max    = date_max,
-                     format = "yyyy-mm-dd",
-                     separator = " - "),
+      # dateRangeInput("daterange_Carpet", "Date range:",
+      #                start  = if_else(date_max-date_min > lubridate::years(1), date_max - lubridate::days(365), date_min),
+      #                end    = date_max,
+      #                min    = date_min,
+      #                max    = date_max,
+      #                format = "yyyy-mm-dd",
+      #                separator = " - "),
       selectInput("variable_Carpet", label = "Variable:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ), # chose numerical variable
       selectInput("facetvariable_Carpet", label = "Facet Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
       radioButtons("brewer", "Choose theme:", choices = c("theme1","theme2"), inline = TRUE)
@@ -532,8 +536,10 @@ server <- function(input, output, session) {
     
     timezone <- gsub(" ", "", paste("timezone_", input$type))
     
-    data_plot <- data[[input$dataframe]] %>%
-      dplyr::filter(Date_Time >= input$daterange_Carpet[1], Date_Time <= input$daterange_Carpet[2])
+    data_plot <- data[[input$dataframe]]
+    
+    # data_plot <- data[[input$dataframe]] %>%
+    #   dplyr::filter(Date >= input$daterange_Carpet[1], Date <= input$daterange_Carpet[2])
     
     plot <- ggplot(data =  data_plot, 
                    mapping =  aes(x =  as.POSIXct(format(data_plot$Date_Time, "%H:%M:%S"), "%H:%M:%S", tz = input[[timezone]]), 
@@ -562,7 +568,7 @@ server <- function(input, output, session) {
     # add wrap
     if (input$facetvariable_Carpet == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Carpet],  scales = "free", nrow = 1)}
     
-    plot <- ggplotly(plot, tooltip = c("text"))
+    plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE)
     plot
   })
   
@@ -572,34 +578,35 @@ server <- function(input, output, session) {
   output$inBoxLineplot <- renderUI({
     req(input$file)
     
-    date_max = max( data[[input$dataframe]][, "Date_Time"] )
-    date_min = min( data[[input$dataframe]][, "Date_Time"] )
+    # date_max = max( data[[input$dataframe]][, "Date_Time"] )
+    # date_min = min( data[[input$dataframe]][, "Date_Time"] )
     
     tagList(
-      dateRangeInput("daterange_Line", "Date range:",
-                     start  = if_else(date_max-date_min > lubridate::years(1), date_max- lubridate::days(365), date_min),
-                     end    = date_max,
-                     min    = date_min,
-                     max    = date_max,
-                     format = "yyyy-mm-dd",
-                     separator = " - "),
+      # dateRangeInput("daterange_Line", "Date range:",
+      #                start  = if_else(date_max-date_min > lubridate::years(1), date_max- lubridate::days(365), date_min),
+      #                end    = date_max,
+      #                min    = date_min,
+      #                max    = date_max,
+      #                format = "yyyy-mm-dd",
+      #                separator = " - "),
       selectInput("variableY_Line", label = "Variable Y:", choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
     )
   })
   # output box - plot - BOXPLOT
   output$outBoxLineplot <- renderPlotly({
-    req(input$variableY_Line, input$daterange_Line)
+    req(input$variableY_Line)
     
     timezone <- gsub(" ", "", paste("timezone_", input$type))
     
-    data_plot <- data[[input$dataframe]] %>%
-      dplyr::filter(Date_Time >= input$daterange_Line[1], Date_Time <= input$daterange_Line[2])
+    data_plot <- data[[input$dataframe]]
+    # data_plot <- data[[input$dataframe]] %>%
+    #   dplyr::filter(Date_Time >= input$daterange_Line[1], Date_Time <= input$daterange_Line[2])
     
     plot <- ggplot(data =  data_plot,
                    mapping =  aes(x = as.POSIXct(data_plot$Date_Time, "%Y-%m-%d %H:%M:%S", tz = input[[timezone]]),
                                   y =  data_plot[,input$variableY_Line],
                                   text = paste(' Time:', format(data_plot$Date_Time, "%H:%M:%S"), 
-                                               '<br> Date: ', date(data_plot$Date_Time), '<br>',
+                                               '<br> Date: ', data_plot$Date, '<br>',
                                                input$variableY_Line, ':', data_plot[,input$variableY_Line]
                                   ), 
                                   group = 1 # solve ggplotly problem
@@ -611,8 +618,10 @@ server <- function(input, output, session) {
     
     # # add wrap
     # if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
+
     
-    plot <- ggplotly(plot, tooltip = c("text"))
+    plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE)
+    
     plot
   })
   
@@ -757,7 +766,7 @@ server <- function(input, output, session) {
     # process and create clustering dataframe
     df1 <- data[[input$dataframe]]  %>%
       mutate(Date = date(Date_Time),
-             Time = format(data[[input$dataframe]]$Date_Time, "%H:%M:%S"),
+             Time = format(round_date(data[[input$dataframe]]$Date_Time, "5 mins") , "%H:%M:%S"),
              X = data[[input$dataframe]][,input$cluster_variable]) %>%
       select(Date, Time, X)
     
@@ -828,7 +837,7 @@ server <- function(input, output, session) {
   # Plot daily profiles clusters ----------------------------------------------------------------------
   output$out_clustering_preview <- renderPlot({
     
-    req(input$cluster_button)
+    req(input$cluster_button, data_results[["Clustering_df"]])
     
     df1 <- data_results[["Clustering_df"]] # load actual cluster dataframe
     

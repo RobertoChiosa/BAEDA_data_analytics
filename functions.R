@@ -8,11 +8,57 @@ selection_dataframe <- function() {
     # select the dataset you want to use for the analysis - default none
     tags$div(title = "This is the actual dataframe used for your analysis",
              selectInput("dataframe", label = "Dataframe:", choices = c("None")),
-             actionButton("upload", "Upload a new dataframe ...", icon = icon("plus"), width = "87%")
+             actionButton("upload", "Upload a new dataframe ...", icon = icon("plus"), width = "87%"),
+             #actionButton("upload", NULL, icon = icon("calendar-alt"), width = "100%")
     ),
-    # column(9, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px; margin-bottom: 0px;", selectInput("dataframe", label = NULL, choices = c("None"))  ),
-    # column(3, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px;margin-bottom: 0px;", actionButton("tt", "+")),
+    #column(9, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px; margin-bottom: 0px;", selectInput("dataframe", label = NULL, choices = c("None"))  ),
+    #column(3, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px;margin-bottom: 0px;", actionButton("tt", "+")),
   )
+}
+
+###### ADD CALENDARVARIABLES function ----------------------------------------------------------------------
+
+
+add_calendar_variables <- function(nome, df, timezone, dateFormats) {
+  
+  # function to automatically find date column
+  coldate <- sapply(df,   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
+  
+  # in no timestamp column can be found notify the user
+  if (any(coldate) == FALSE) {
+    # warning notification
+    shinyalert(title = "No timestamp column found!", 
+               paste("However, you can find <b>", nome, "</b> in the dataframe dropdown"),
+               type = "warning",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE
+    )
+    df_out <- df
+  } else { # if timestamp columns found create date time columns
+    df_out <- df %>%
+      mutate(
+        Date_Time = as.POSIXct(df[,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = timezone), # depend on selected timezone
+        Date = as.Date(Date_Time), # week start on monday
+        Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
+        Month = month(Date_Time, label = TRUE), # ordered factor
+        Month_Day = mday(Date_Time), # numeric
+        Year = as.ordered(year(Date_Time)), # ordered factor
+        Year_Day = mday(Date_Time), # numeric
+        Hour = hour(Date_Time), # numeric
+        Minute = minute(Date_Time), # numeric
+        min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
+      ) 
+    # success notification
+    shinyalert(title = "Dataframe successfully added",
+               text = paste("You can find <b>", nome, "</b> in the dataframe dropdown <br> We created some useful new variables..."), 
+               type = "success",
+               closeOnEsc = TRUE,
+               closeOnClickOutside = TRUE,
+               html = TRUE
+    )
+  }
+  return(df_out)
 }
 
 ###### MODAL ----------------------------------------------------------------------
