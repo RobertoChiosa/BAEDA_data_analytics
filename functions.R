@@ -6,6 +6,7 @@
 #################################################################################
 
 ###### SIDEBAR functions ----------------------------------------------------------------------
+# UI function for the sidebar dropdown
 selection_dataframe <- function() {
   tagList(
     # select the dataset you want to use for the analysis - default none
@@ -20,7 +21,7 @@ selection_dataframe <- function() {
 }
 
 ###### ADD CALENDARVARIABLES function ----------------------------------------------------------------------
-
+# function that performs the adding of calendar variables
 add_calendar_variables <- function(timestamp, timezone, df) {
   
   # notification of process
@@ -96,6 +97,7 @@ add_calendar_variables <- function(timestamp, timezone, df) {
 }
 
 ###### MODAL ----------------------------------------------------------------------
+# function that renders the modal UI
 load_file_modal <- function(failed = FALSE) {
   bsModal(id = 'startupModal',
           trigger = 'open',
@@ -154,32 +156,33 @@ load_file_modal <- function(failed = FALSE) {
   )
 }
 
-###### TAB "Manage" ----------------------------------------------------------------------
+###### "MANAGE" TAB UI  ----------------------------------------------------------------------
+# assembles different server UI in the rigth way
 manage_inbox <- function() {
   tagList(
     uiOutput("keepColumns"),
-    # Rename column ----------------------------------------------------------------------
+    # 2.7) Rename column ----------------------------------------------------------------------
     awesomeCheckbox("modifyColumns_chackbox", "Rename column", value = FALSE),
     conditionalPanel("input.modifyColumns_chackbox == true", # if we want to rename 
                      uiOutput("modifyColumns"),
     ),
-    # Add column ----------------------------------------------------------------------
+    # 2.8) Add column ----------------------------------------------------------------------
     awesomeCheckbox("addColumns_chackbox", "Add column", value = FALSE),
     conditionalPanel("input.addColumns_chackbox == true", # if we want to rename 
                      uiOutput("addColumn"),
     ),
-    # Pivot ----------------------------------------------------------------------
+    # 2.9) Pivot table ----------------------------------------------------------------------
     awesomeCheckbox("pivotTable_chackbox", "Pivot table", value = FALSE),
     conditionalPanel("input.pivotTable_chackbox == true", # if we want to rename 
                      uiOutput("pivotTable")
     ),
-    # Rename dataframe ----------------------------------------------------------------------
+    # 2.4) Rename dataframe ----------------------------------------------------------------------
     searchInput(inputId = "new_dataframe_name", label = "Save current dataframe", 
                 placeholder = "New name..", 
                 value = NULL, # initial value
                 btnSearch = icon("plus"), btnReset = icon("backspace"), # icons
                 width = "100%"),
-    # Download ----------------------------------------------------------------------
+    # 2.10) Download filtered dataframe ----------------------------------------------------------------------
     downloadButton("download_filtered", "Download Filtered Dataframe (as csv)", style = "width:100%;"),   
   )
 }

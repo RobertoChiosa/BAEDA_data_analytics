@@ -5,7 +5,6 @@
 ###############             roberto.chiosa@polito.it              ###############
 #################################################################################
 
-## app.R ##
 cat("\014")             # clears the console
 rm(list = ls())         # remove all variables of the workspace
 
@@ -27,54 +26,59 @@ ui <- dashboardPage(skin = "black",     # sets overall appearance
 
 # SERVER FUNCTION ----------------------------------------------------------------------
 server <- function(input, output, session) {
- 
-  ###### SIDEBAR functions ----------------------------------------------------------------------
   
-  # forces startup modal dialog to open when the application starts
+  ###### 1) SIDEBAR FUNCTIONS ----------------------------------------------------------------------
+  
+  # forces start-up modal dialog to open when the application starts
   toggleModal(session, "startupModal", toggle = "open")
+  
+  # 1.1) Upload new dataframe ----------------------------------------------------------------------
   # when clicked a the upload modal is sown again
-  observeEvent(input$upload,{
+  observeEvent(input$upload,{ 
     toggleModal(session, "startupModal", toggle = "open")
   })
   
-  ###### TAB "Manage" ----------------------------------------------------------------------
+  # 1.2) Add calendar variables ----------------------------------------------------------------------
+  # when clicked it adds calendar variables to the selected dataframe
+  observeEvent(input$add_calendar_columns, {
+    req(input$file)                                     # # the execution CONTINUES only if a file is present
+    
+    data[[input$dataframe]] <- add_calendar_variables(  # find it in functions.R
+      input[[data_results[["timestamp"]] ]],            # gets the timestamp checkbox value
+      input[[data_results[["timezone"]] ]],             # gets the timezone checkbox value
+      data[[input$dataframe]]
+    )
+  })
   
-  # this option permits to read larger files than shiny default
-  options(shiny.maxRequestSize = 100*1024^2)
+  ###### 2) "MANAGE" TAB ----------------------------------------------------------------------
+  # global environment and global options
+  data <- reactiveValues()                     # reactive value to store the loaded dataframes
+  data_results <- reactiveValues()             # reactive value where we will store all the loaded dataframes
+  options(shiny.maxRequestSize = 100*1024^2)   # this option permits to read larger files than shiny default
   
-  # reactive value where we will store all the loaded dataframes
-  data <- reactiveValues()
-  data_results <- reactiveValues()
-  
-  # Load file ----------------------------------------------------------------------
+  # 2.1) Load file ----------------------------------------------------------------------
   # create a reactive dataframe df when the file is loaded and add
   observeEvent(input$file,{
     inFile <- input$file   # input file loaded
     nome <- inFile$name    # input file name
     
     # validate that the file is in the right format
-    # this is the only accepted file given the one chosen
-    admitted <- gsub( " ", "", paste("\\.", input$type, "$" )) 
-    
-    # validated is TRUE if the value is acceptable FALSE if not acceptable
-    validated <- grepl(admitted, nome) 
+    admitted <- gsub( " ", "", paste("\\.", input$type, "$" ))  # this is the only accepted file given the one chosen
+    validated <- grepl(admitted, nome)                          # validated is TRUE if the value is acceptable FALSE if not acceptable
     
     # gives error feedback if the file is not in the format required/selected and STOPS the execution
     shinyFeedback::hideFeedback("file")
-    if (validated == TRUE) { 
-      shinyFeedback::feedbackSuccess("file", TRUE, "Format accepted")
-    } else { 
-      shinyFeedback::feedbackDanger("file", TRUE, "Format not accepted") 
-    }
+    if (validated == TRUE) { shinyFeedback::feedbackSuccess("file", TRUE, "Format accepted")} 
+    else { shinyFeedback::feedbackDanger("file", TRUE, "Format not accepted") }
     
     # the execution CONTINUES only if the file is accepted
     req(validated, cancelOutput = TRUE)
     
-    # notification that the file has beening loaded
+    # notification that the file is being loaded
     id <- showNotification("Reading data...", duration = NULL, closeButton = FALSE, type = "message")
     on.exit(removeNotification(id), add = TRUE)
     
-    # reads the input file and assigms it to the reactive value data
+    # reads the input file and assigns it to the reactive value data
     data[[nome]] <- switch(input$type, # condition on the file type
                            csv = read.csv(file = inFile$datapath, header = input$header, sep = input$separator, 
                                           dec = input$decomal, stringsAsFactors = input$strAsFact, check.names = FALSE),
@@ -82,52 +86,41 @@ server <- function(input, output, session) {
                            # xls = read_excel(path = inFile$datapath)
     )
     
-    # saves the selectd timezone anc timestamp column in the global environment
+    # saves the selected timezone and timestamp column in the global environment
     data_results[["timestamp"]] <- gsub(" ", "", paste("timestamp_", input$type))
     data_results[["timezone"]] <- gsub(" ", "", paste("timezone_", input$type))
     
   })
   
-
-  observeEvent(input$add_calendar_columns, {
-    req(input$file) # require a file to be added
-    data[[input$dataframe]] <- add_calendar_variables(
-      input[[data_results[["timestamp"]] ]],  # gets the checkbox
-      input[[data_results[["timezone"]] ]], # gets the timezone
-      data[[input$dataframe]])
-  })
-  
-  
-  # Dataframe dropdown creation ----------------------------------------------------------------------
-  # create a reactive list of loaded dataframes
+  # 2.2) Dataframe dropdown creation ----------------------------------------------------------------------
+  # create a reactive list of loaded dataframes. When new file loaded the list is updated
   reactive_list <- reactive({ 
-    req(input$file) # when new file loaded the list is updated
+    req(input$file) 
     names(data)
   })
   
-  # when the list changes change the inputs as well
+  # when the list changes the sidebar change the inputs as well see selection_dataframe() function
   observeEvent(reactive_list(),{
-    # when new file loaded and new name given the select is updated
-    updateSelectInput(session, "dataframe",
-                      choices = reactive_list(),                             # update choiches with all loaded data
-                      selected = reactive_list()[length(reactive_list())]    # selected the last loaded file
+    updateSelectInput(session, "dataframe",                               # when new file loaded and new name given the select is updated
+                      choices = reactive_list(),                          # update choices with all loaded data
+                      selected = reactive_list()[length(reactive_list())] # selected the last loaded file
     )
   })
   
-  # Value boxes ----------------------------------------------------------------------
-  # number of rows value box
+  # 2.3) Value boxes ----------------------------------------------------------------------
+  # number of rows in the current dataframe value box
   output$valueBox1 <- renderValueBox({
     req(input$file) # requires that a file is loaded
     valueBox(length(input$dataframe_table_rows_all), "Number of rows", icon = icon("arrows-alt-v"), color = "orange")
   })
-  # number of columns value box
+  # number of columns in the current dataframe value box
   output$valueBox2 <- renderValueBox({
     req(input$file) # requires that a file is loaded
     valueBox(length(input$keepColumnName), "Number of columns", icon = icon("arrows-alt-h"), color = "blue")
   })
   
-  # Rename dataframe ----------------------------------------------------------------------
-  # change dataframe name by adding another dataframe 
+  # 2.4) Rename dataframe ----------------------------------------------------------------------
+  # change dataframe name by adding another dataframe (don't know how to overwrite)
   observeEvent(input$new_dataframe_name_search,{
     data[[input$new_dataframe_name]] <-  data[[input$dataframe]][input$dataframe_table_rows_all, input$keepColumnName]
     # success notification
@@ -140,7 +133,8 @@ server <- function(input, output, session) {
     )
   })
   
-  # Display datatable ----------------------------------------------------------------------
+  # 2.5) Display datatable ----------------------------------------------------------------------
+  # displays through datatable function the actual selected dataframe
   output$dataframe_table <- renderDT(
     data[[input$dataframe]][,input$keepColumnName],
     filter = 'top',
@@ -157,7 +151,8 @@ server <- function(input, output, session) {
     ),
     # rownames = FALSE
   )
-  # Keep column ----------------------------------------------------------------------
+  # 2.6) Keep column ----------------------------------------------------------------------
+  # selection of all the available columns and possibility to exclude some
   output$keepColumns <- renderUI({
     req(input$file) # requires that a file is loaded
     tagList(
@@ -168,16 +163,19 @@ server <- function(input, output, session) {
     )
   })
   
-  # Rename column ----------------------------------------------------------------------
+  # 2.7) Rename column ----------------------------------------------------------------------
+  # permits to rename the column by adding the unit of measure as well
+  # UI side
   output$modifyColumns <- renderUI({
     req(input$file)
     tagList(
       selectInput("columnName", label = "Select column to modify:",
                   choices = c("", input$keepColumnName),
-                  selected = NULL), # chose numerical variable
+                  selected = NULL), 
+      # if a column is selected it shows the options
       conditionalPanel("input.columnName != '' ",
                        selectizeInput("units", label = "Units of measurements:",
-                                      choices = c("",unitsMeasure$Symbol), # all admitted unit
+                                      choices = c("",unitsMeasure$Symbol), # all admitted unit # implement with groups
                                       selected = NULL,
                                       multiple = FALSE,
                                       options = list(maxOptions = 5)
@@ -190,7 +188,7 @@ server <- function(input, output, session) {
       )
     )
   })
-  
+  # SERVER side
   observeEvent(input$new_columnName_search,{
     unitsString <- if (input$units == "") {NULL} else {paste("[",input$units, "]")} # add unit of measures if units selected
     nameString <- if (input$new_columnName == "") {NULL} else {input$new_columnName} # change column name if new name in input
@@ -206,7 +204,9 @@ server <- function(input, output, session) {
     )
   })
   
-  # Add column ----------------------------------------------------------------------
+  # 2.8) Add column ----------------------------------------------------------------------
+  # permits to add column based on given condition TO BE IMPLEMENTED on SERVER SIDE
+  # UI side
   output$addColumn <- renderUI({
     req(input$file)
     tagList(
@@ -218,7 +218,7 @@ server <- function(input, output, session) {
                   width = "100%")
     )
   })
-  
+  # SERVER side
   observeEvent(input$add_columnName_search,{
     
     # # if_else(festivo == "S",1,2)
@@ -234,7 +234,9 @@ server <- function(input, output, session) {
     )
   })
   
-  # Pivot table ----------------------------------------------------------------------
+  # 2.9) Pivot table ----------------------------------------------------------------------
+  # permits to pivot tables based on selection of categorical values
+  # UI side
   output$pivotTable <- renderUI({
     req(input$file)
     tagList(
@@ -257,7 +259,7 @@ server <- function(input, output, session) {
       actionButton("pivotTableButton", "Pivot!", width = '100%')
     )
   })
-  
+  # SERVER side
   observeEvent(input$pivotTableButton,{ 
     req(input$variablePivot, input$columnsPivot, input$functionPivot)
     switch (input$functionPivot,
@@ -269,7 +271,8 @@ server <- function(input, output, session) {
       select(input$variablePivot, input$columnsPivot)
   })
   
-  # Download filtered dataframe ----------------------------------------------------------------------
+  # 2.10) Download filtered dataframe ----------------------------------------------------------------------
+  # permits the download of the filtered dataframe, only csv available now, implement with modal like upload
   output$download_filtered <- downloadHandler(
     filename = function() {  paste('dataframe-', Sys.Date(), '.csv', sep='') },
     content = function(file) {
@@ -280,8 +283,9 @@ server <- function(input, output, session) {
     }
   )
   
+  ###### 3) TAB "Visualize" ----------------------------------------------------------------------
   
-  ###### TAB "Visualize" ----------------------------------------------------------------------
+  # the download button has to be implemented with options
   output$downloadplotButton <- downloadHandler(
     filename = function() { 
       paste(input$chart, "_plot_", Sys.Date(), ".png", sep="")
@@ -290,7 +294,7 @@ server <- function(input, output, session) {
       ggsave(file, width = 5, height = 5 )
     })
   
-  # Histogram ----------------------------------------------------------------------
+  # 3.1) Histogram ----------------------------------------------------------------------
   # input box - select variables - HISTOGRAM
   output$inBoxHistogram <- renderUI({
     req(input$file)
@@ -362,8 +366,8 @@ server <- function(input, output, session) {
     plot
   })
   
-  # Boxplot ----------------------------------------------------------------------
-  # input box - select variables - BOXPLOT
+  # 3.2) Boxplot ----------------------------------------------------------------------
+  # input box - select variables - Boxplot
   output$inBoxBoxplot <- renderUI({
     req(input$file)
     tagList(
@@ -420,7 +424,7 @@ server <- function(input, output, session) {
       
     )
   })
-  # output box - plot - BOXPLOT
+  # output box - plot - Boxplot
   output$outBoxBoxplot <- renderPlot({
     req(input$file, input$hours_slider_box, input$month_slider_box)
     
@@ -434,7 +438,8 @@ server <- function(input, output, session) {
     if (input$variableX_Box == "None") {
       plot <- ggplot(data =  data_plot,
                      mapping =  aes(y =  data_plot[,input$variableY_Box],
-                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]} ),
+                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]} 
+                                    )
       ) + labs( y = input$variableY_Box, fill = input$fillvariable_Box ) 
     } else {
       plot <- ggplot(data =  data_plot,
@@ -444,7 +449,9 @@ server <- function(input, output, session) {
     }
     
     plot <- plot + theme_bw() + 
-      geom_boxplot(outlier.colour = input$outliers_color, 
+      # stat_boxplot(geom ='errorbar') +
+      geom_boxplot(
+                   outlier.colour = input$outliers_color, 
                    outlier.fill = input$outliers_fill, 
                    outlier.shape = input$outliers_shape, 
                    outlier.size = input$outliers_size, 
@@ -464,7 +471,7 @@ server <- function(input, output, session) {
     plot
   })
   
-  # Carpet ----------------------------------------------------------------------
+  # 3.3) Carpet ----------------------------------------------------------------------
   # input box - select variables - Carpet
   output$inBoxCarpet <- renderUI({
     req(input$file)
@@ -530,8 +537,8 @@ server <- function(input, output, session) {
   })
   
   
-  # Lineplot ----------------------------------------------------------------------
-  # input box - select variables - LINEPLOT
+  # 3.4) Lineplot ----------------------------------------------------------------------
+  # input box - select variables - Lineplot
   output$inBoxLineplot <- renderUI({
     req(input$file)
     
@@ -550,7 +557,7 @@ server <- function(input, output, session) {
                   choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
     )
   })
-  # output box - plot - BOXPLOT
+  # output box - plot - Lineplot
   output$outBoxLineplot <- renderPlotly({
     req(input$variableY_Line)
     
@@ -565,7 +572,7 @@ server <- function(input, output, session) {
                                   y =  data_plot[,input$variableY_Line],
                                   text = paste(' Time:', format(data_plot$Date_Time, "%H:%M:%S"), 
                                                '<br> Date: ', data_plot$Date, '<br>',
-                                               input$variableY_Line, ':', data_plot[,input$variableY_Line],
+                                               input$variableY_Line, ':', data_plot[,input$variableY_Line]
                                   ), 
                                   group = 1 # solve ggplotly problem
                    )
@@ -584,8 +591,8 @@ server <- function(input, output, session) {
   })
   
   
-  # Scatter plot ----------------------------------------------------------------------
-  # input box - select variables - SCATTER PLOT
+  # 3.5) Scatterplot ----------------------------------------------------------------------
+  # input box - select variables - Scatterplot
   output$inBoxScatterplot <- renderUI({
     req(input$file)
     
@@ -619,7 +626,7 @@ server <- function(input, output, session) {
       )
     )
   })
-  # output box - plot - SCATTER PLOT
+  # output box - plot - Scatterplot
   
   output$outBoxScatterplot <- renderPlot({
     req(input$file, input$hours_slider_Scatter, input$month_slider_Scatter)
@@ -663,9 +670,9 @@ server <- function(input, output, session) {
     plot
   })
   
-  ###### TAB "Clustering" ----------------------------------------------------------------------
+  ###### 4) "CLUSTERING" TAB ----------------------------------------------------------------------
   
-  # Clustering input parameters ----------------------------------------------------------------------
+  # 4.1) Clustering input parameters ----------------------------------------------------------------------
   output$clustering_inbox <- renderUI({
     req(input$file) # requires that a file is loaded
     tagList(
@@ -676,7 +683,8 @@ server <- function(input, output, session) {
                            General = c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski"),
                            Partitive = c("pearson" , "abspearson" , "abscorrelation", "correlation", "spearman", "kendall")
                          )
-             )
+             ),
+             numericInput('cluster_number', 'Number of clusters', value = 2, min = 1)
       ),
       column(width = 6,  style = "padding-left:10px; padding-right:0px;",
              selectInput('cluster_normalization', 'Normalization:', choices = c("none","maxmin", "max", "min","zscore")),
@@ -685,13 +693,41 @@ server <- function(input, output, session) {
                            Hierarchical = c("ward.D2", "ward.D", "single","complete", "average", "mcquitty", "median", "centroid"),
                            Partitive = c("kmeans", "kmeans++", "FDL")
                          ),
-                         selected = 'ward.D2')
-      ),
-      numericInput('cluster_number', 'Number of clusters', value = 2, min = 1),
-      actionButton("cluster_button", "Start Cluster!"),
+                         selected = 'ward.D2'
+             ),
+             # NBCLUST
+             tags$div(title = "By selecting yes the NBclust package will evaluate the optimal number of clusters",
+                      radioGroupButtons(inputId = "radio_nbclust", label = "Search optimal number", choices = c("Yes", "No"), justified = TRUE
+                      )
+             )
+      )
     )
   })
   
+  # 4.2) NBClust input parameters ----------------------------------------------------------------------
+  output$clustering_inbox_nbclust <- renderUI({
+    
+    if(input$radio_nbclust == "Yes"){# if we want to evaluate the optimal number of clusters
+      # validation of nbclust function
+      valid_dist <- input$cluster_distance %in% c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski")
+      valid_meth <- !(input$cluster_method %in% c("kmeans++", "FDL") )
+      
+      shiny::validate(
+        need(valid_dist == TRUE,  "Sorry, the selected distance is not supported for the optimal number of clusters evaluation"),
+        need(valid_meth == TRUE, "Sorry, the selected clustering method is not supported for the optimal number of clusters evaluation")
+      )
+      # the user interface buttons
+      tagList(
+        selectInput('index_nbclust', 'Select index:', 
+                    choices = c("kl", "ch", "hartigan", "ccc", "scott", "marriot", "trcovw", "tracew", "friedman", "rubin", "cindex", "db", "silhouette", "duda", "pseudot2", "beale", "ratkowsky", "ball", "ptbiserial", "gap", "frey", "mcclain", "gamma", "gplus", "tau", "dunn", "hubert", "sdindex", "dindex", "sdbw", "all", "alllong"),
+                    selected = 'silhouette'
+        ),
+        sliderInput(inputId = "cluster_number_nbclust", label = "Number of clusters:", min = 2, max = 8, value = c(2, 8) ),
+      )
+    } # else NULL
+  })
+  
+  # 4.3) Clustering post rocessing input parameters ----------------------------------------------------------------------
   output$clustering_inbox_postprocessing <- renderUI({
     req(input$cluster_button) # merge and discard inpute
     tagList(
@@ -713,12 +749,12 @@ server <- function(input, output, session) {
     )
   })
   
-  # Clustering process ----------------------------------------------------------------------
+  # 4.4) Clustering process ----------------------------------------------------------------------
   observeEvent(input$cluster_button,{
     # validation
-    req(input$file) # require a uploaded file
-    validated <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
-    req(validated) # stops execution if no datetime found
+    req(input$file)                                                   # require a uploaded file
+    validate_df <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
+    req(validate_df)                                                  # stops execution if no datetime found
     
     # notification of process
     id <- showNotification("Performing clustering...", duration = NULL, closeButton = FALSE, type = "message")
@@ -749,61 +785,62 @@ server <- function(input, output, session) {
     # check consistency of method and distance
     shinyFeedback::hideFeedback("cluster_method")
     shinyFeedback::hideFeedback("cluster_distance")
-    validated = TRUE
-    if ( input$cluster_distance %in% c("pearson" , "abspearson" , "abscorrelation", "correlation", "spearman", "kendall") & 
-         input$cluster_method %in%  c("ward.D2", "ward.D", "single","complete", "average", "mcquitty", "median", "centroid") ) {
-      # incompatible condition partitive distance but hierarchical method
-      validated = FALSE
+    
+    # if TRUE incompatible condition partitive distance but hierarchical method
+    inconsistent = input$cluster_distance %in% c("pearson" , "abspearson" , "abscorrelation", "correlation", "spearman", "kendall") & 
+      input$cluster_method %in%  c("ward.D2", "ward.D", "single","complete", "average", "mcquitty", "median", "centroid") 
+    
+    if ( inconsistent == TRUE ) { # incompatible condition
       shinyFeedback::feedbackDanger("cluster_method", TRUE, "Inconsistent method") 
       shinyFeedback::feedbackDanger("cluster_distance", TRUE, "Inconsistent distance") 
     } 
     
     # continues the execution if there is consistence between method and distance
     # general+partitive/hierarchical OR partitive+partitive
-    req(validated)
+    req(!inconsistent)
     
     if (input$cluster_method == "kmeans") {
       clust_res <- Kmeans(df3, input$cluster_number, method = input$cluster_distance) # perform clustering
-      df2$Cluster <- clust_res$cluster                            # add labels to dataframe
+      df2$Cluster <- clust_res$cluster                                                # add labels to dataframe
     } else if (input$cluster_method == "kmeans++") {
-      clust_res <- kmeanspp(df3, input$cluster_number)                # perform clustering
-      df2$Cluster <- clust_res$cluster             # add labels to dataframe
+      clust_res <- kmeanspp(df3, input$cluster_number)                                # perform clustering
+      df2$Cluster <- clust_res$cluster                                                # add labels to dataframe
     } else{ # hierarchical
-      diss_matrix <- dist(df3, input$cluster_distance)                # calculate distance matrix    
-      hcl <- hclust(diss_matrix, method = input$cluster_method)       # perform clustering
-      df2$Cluster <- cutree(hcl, input$cluster_number) # add labels to dataframe
+      diss_matrix <- dist(df3, input$cluster_distance)                                # calculate distance matrix    
+      hcl <- hclust(diss_matrix, method = input$cluster_method)                       # perform clustering
+      df2$Cluster <- cutree(hcl, input$cluster_number)                                # add labels to dataframe
     }
     
     # merge cluster information with the original dataframe
     df1 <- merge.data.frame(df1, df2[c("Date", "Cluster")])
-    # saves df1 in memory
+    # saves df1 in memory as result
     data_results[["Clustering_df"]] <- df1
   })
   
-  # Merge clusters ----------------------------------------------------------------------
+  # 4.5) Merge clusters ----------------------------------------------------------------------
   observeEvent(input$cluster_merge_button, {
-    df_tmp <- data_results[["Clustering_df"]]
-    tmp <- min(input$cluster_merge)                           # gets the minimum value of cluster to be merged
-    df_tmp$Cluster[ df_tmp$Cluster %in% input$cluster_merge] <- tmp # assigm to all the cluster labels the minimum cluster label
-    data_results[["Clustering_df"]] <- df_tmp
+    df_tmp <- data_results[["Clustering_df"]]                         # gets resulting dataframe with labels
+    tmp <- min(input$cluster_merge)                                   # gets the minimum value of cluster to be merged
+    df_tmp$Cluster[ df_tmp$Cluster %in% input$cluster_merge] <- tmp   # assign to all the cluster labels the minimum cluster label
+    data_results[["Clustering_df"]] <- df_tmp                         # save resulting dataframe in results memory
   })
   
   
-  # Discard clusters ----------------------------------------------------------------------
+  # 4.6) Discard clusters ----------------------------------------------------------------------
   observeEvent(input$cluster_discard_button, {
-    df_tmp <- data_results[["Clustering_df"]]
-    df_tmp <- df_tmp[! df_tmp$Cluster %in% input$cluster_discard,]
-    data_results[["Clustering_df"]] <- df_tmp 
+    df_tmp <- data_results[["Clustering_df"]]                         # gets resulting dataframe with labels
+    df_tmp <- df_tmp[! df_tmp$Cluster %in% input$cluster_discard,]    # keeps only those without the selected label
+    data_results[["Clustering_df"]] <- df_tmp                         # save resulting dataframe in results memory
   })
   
-  # Plot daily profiles clusters ----------------------------------------------------------------------
+  # 4.7) Plot daily profiles clusters ----------------------------------------------------------------------
   output$out_clustering_preview <- renderPlot({
-    
+    # requires a performed clustering and a result dataframe in memory
     req(input$cluster_button, data_results[["Clustering_df"]])
     
     df1 <- data_results[["Clustering_df"]] # load actual cluster dataframe
     
-    # manipulates the dataframe to add cluster label with count
+    # manipulates the dataframe to add cluster label with count 
     conteggio <- df1 %>% 
       pivot_wider(names_from = Time, values_from = X)  %>%
       dplyr::group_by(Cluster) %>%
@@ -812,9 +849,13 @@ server <- function(input, output, session) {
     # creates label with number of profiles
     conteggio$Cluster_lab <- paste("Cluster", conteggio$Cluster, "( n =", conteggio$n, ")")
     
+    # ricreated the original dataframe but with labels and count
     df1 <- merge.data.frame(df1, conteggio[c("Cluster", "Cluster_lab")])
     
-    centr <- ddply(df1, c("Cluster_lab","Time"), summarise, X = mean(X)) # Centroidi (media della potenza per ogni cluster ad ogni time-step)
+    # calculates the centroid for each cluster
+    centr <- ddply(df1, c("Cluster_lab","Time"), summarise, X = mean(X))
+    
+    # graphical parameters
     clusters_colors <- brewer.pal(12, "Paired")
     line_color <- "gray"
     line_size <- 0.5
@@ -861,7 +902,7 @@ server <- function(input, output, session) {
   })
   
   
-  # Plot dendogram ----------------------------------------------------------------------
+  # 4.8) Plot dendogram ----------------------------------------------------------------------
   # 
   # # dendogram by date plot
   # output$out_clustering_dendogram <- renderPlot({
@@ -884,7 +925,9 @@ server <- function(input, output, session) {
   # })
   # 
   
-  # Add clustering dataframe ----------------------------------------------------------------------
+  # 4.10) Add clustering dataframe ----------------------------------------------------------------------
+  # permits to add the clustering dataframe to the dropdown
+  # it saves a copy from result memory to data reactive values
   observeEvent(input$clustering_dataframe_name_search,{
     data[[input$clustering_dataframe_name]] <-  data_results[["Clustering_df"]]
     # success notification
@@ -899,4 +942,5 @@ server <- function(input, output, session) {
   
 }
 
+# runs the app
 shinyApp(ui, server)

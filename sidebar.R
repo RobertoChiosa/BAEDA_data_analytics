@@ -11,11 +11,11 @@ sidebar <- dashboardSidebar(
   sidebarMenu(            
     id = "tabs",  
     selection_dataframe(),
-    menuItem("Manage", tabName = "manage", icon = icon("cogs")),                      # TAB "Manage" 
-    menuItem("Visualize", tabName = "visualize", icon = icon("chart-bar") ),          # TAB "Visualize" 
-    menuItem("Advanced", tabName = "advanced", icon = icon("project-diagram"),        # TAB "Advanced" 
-             menuSubItem("Clustering", tabName = "clustering")                        # TAB "Clustering"                     
+    menuItem("Manage", tabName = "manage", icon = icon("cogs")),                      # TAB "MANAGE" 
+    menuItem("Visualize", tabName = "visualize", icon = icon("chart-bar") ),          # TAB "VISUALIZE" 
+    menuItem("Advanced", tabName = "advanced", icon = icon("project-diagram"),        # TAB "ADVANCED" 
+             menuSubItem("Clustering", tabName = "clustering")                        # TAB "CLUSTERING"                     
     ),
-    menuItem("Help", tabName = "help", icon = icon("book"))                           # TAB "Help" 
+    menuItem("Help", tabName = "help", icon = icon("book"))                           # TAB "HELP" 
   )
 )

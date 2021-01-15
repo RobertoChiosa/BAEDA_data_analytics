@@ -1,5 +1,8 @@
 #################################################################################
 ###############            Copyright © BAEDA Lab 2020             ###############
+###############                     -------                       ###############
+###############                  Roberto Chiosa                   ###############
+###############             roberto.chiosa@polito.it              ###############
 #################################################################################
 
 library('units')                  # units of measurements
@@ -46,7 +49,7 @@ library(caret)
 library(dendextend) # color clusters
 library(stringi)
 # library('networkD3')            # draw sankey plots
-# library('NbClust')              # cluster validation measures
+library(NbClust)              # cluster validation measures
 # library('knitr')
 # library('magrittr')
 # library('dendextend')

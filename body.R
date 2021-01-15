@@ -20,7 +20,9 @@ body <- dashboardBody(
     ###### TAB "Manage" ----------------------------------------------------------------------
     tabItem(tabName = "manage",
             fluidRow( 
-              box( title = "Table options", width = 4, manage_inbox() ), # INPUT BOX
+              # INPUT BOX
+              box( title = "Table options", width = 4, manage_inbox() ), 
+              # OUTPUT BOX
               box( width = 8, 
                    fluidRow(
                      valueBoxOutput("valueBox1", width = 6), 
@@ -31,7 +33,7 @@ body <- dashboardBody(
                             DTOutput("dataframe_table") %>% withSpinner(color = loadingGifColor) 
                      )
                    )
-              ) # end box
+              ) 
             )
     ),
     ###### TAB "Visualize" ----------------------------------------------------------------------
@@ -49,14 +51,15 @@ body <- dashboardBody(
                    conditionalPanel("input.chart == 'Carpet'", uiOutput("inBoxCarpet")), # Carpet
                    # actionButton("plotButton", "Plot", width = '100%', style = "color: #fff; background-color: red; border-color: #red"),
                    downloadButton('downloadplotButton', 'Download', style = "width:100%;"),
-              ), # END INPUT BOX
-              box(width = 8, # OUTPUT BOX
+              ), 
+              # OUTPUT BOX
+              box(width = 8,
                   conditionalPanel("input.chart == 'Histogram'", plotlyOutput("outBoxHistogram", height = "600px") %>% withSpinner(color = loadingGifColor)), # Histogram
                   conditionalPanel("input.chart == 'Line Plot'", plotlyOutput("outBoxLineplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Line Plot
                   conditionalPanel("input.chart == 'Scatter Plot'", plotOutput("outBoxScatterplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Scatter Plot
                   conditionalPanel("input.chart == 'Box Plot'", plotOutput("outBoxBoxplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Boxplot
                   conditionalPanel("input.chart == 'Carpet'", plotlyOutput("outBoxCarpet", height = "600px") %>% withSpinner(color = loadingGifColor)), # Carpet
-              ), # END OUTPUT BOX
+              ), 
             )
     ), # END 5th (SUB)TAB "Visualize"
     
@@ -64,15 +67,20 @@ body <- dashboardBody(
     ###### TAB "Advanced" ----------------------------------------------------------------------
     tabItem(tabName = "clustering",
             fluidRow( 
+              # INPUT BOX
               box( title = "Clustering options", width = 4, 
                    helpText("Note 1: In this section we perform a daily load profile clustering. It is not intended to be a generical clustering process."),
                    helpText("Note 2: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
                    uiOutput("clustering_inbox"),
+                   uiOutput("clustering_inbox_nbclust"),
+                   br(),
+                   actionButton("cluster_button", "Start Cluster!"),
                    uiOutput("clustering_inbox_postprocessing")),
+              # OUTPUT BOX
               box( width = 8, 
                    plotOutput("out_clustering_preview", height = "400px") %>% withSpinner(color = loadingGifColor),
                    plotOutput("out_clustering_dendogram", height = "400px")
-              ) # end box
+              ) 
             )
     ),
     
