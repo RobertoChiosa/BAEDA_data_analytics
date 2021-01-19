@@ -42,7 +42,7 @@ server <- function(input, output, session) {
   # when clicked it adds calendar variables to the selected dataframe
   observeEvent(input$add_calendar_columns, {
     req(input$file)                                     # # the execution CONTINUES only if a file is present
-    
+     
     data[[input$dataframe]] <- add_calendar_variables(  # find it in functions.R
       input[[data_results[["timestamp"]] ]],            # gets the timestamp checkbox value
       input[[data_results[["timezone"]] ]],             # gets the timezone checkbox value
