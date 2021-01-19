@@ -73,7 +73,7 @@ body <- dashboardBody(
                    helpText("Note 2: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
                    uiOutput("clustering_inbox"),
                    uiOutput("clustering_inbox_nbclust"),
-                   br(),
+                   uiOutput("clustering_results_nbclust"),
                    actionButton("cluster_button", "Start Cluster!"),
                    uiOutput("clustering_inbox_postprocessing")),
               # OUTPUT BOX
@@ -85,9 +85,9 @@ body <- dashboardBody(
     ),
     
     # documentation
-    tabItem(tabName = "help", includeMarkdown("docs/wiki/complete.md") )
+    tabItem(tabName = "help",  includeMarkdown("docs/wiki/complete.md") )
   ),
-
+  
   # © e link alle istituzioni
   absolutePanel(
     HTML(

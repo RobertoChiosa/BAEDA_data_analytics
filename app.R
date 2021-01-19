@@ -439,7 +439,7 @@ server <- function(input, output, session) {
       plot <- ggplot(data =  data_plot,
                      mapping =  aes(y =  data_plot[,input$variableY_Box],
                                     fill = if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]} 
-                                    )
+                     )
       ) + labs( y = input$variableY_Box, fill = input$fillvariable_Box ) 
     } else {
       plot <- ggplot(data =  data_plot,
@@ -451,12 +451,12 @@ server <- function(input, output, session) {
     plot <- plot + theme_bw() + 
       # stat_boxplot(geom ='errorbar') +
       geom_boxplot(
-                   outlier.colour = input$outliers_color, 
-                   outlier.fill = input$outliers_fill, 
-                   outlier.shape = input$outliers_shape, 
-                   outlier.size = input$outliers_size, 
-                   outlier.alpha = input$outliers_alpha,
-                   coef = input$outliers_coef,  na.rm = TRUE) 
+        outlier.colour = input$outliers_color, 
+        outlier.fill = input$outliers_fill, 
+        outlier.shape = input$outliers_shape, 
+        outlier.size = input$outliers_size, 
+        outlier.alpha = input$outliers_alpha,
+        coef = input$outliers_coef,  na.rm = TRUE) 
     
     # flip
     if (input$checkbox_flip_Box == TRUE) {plot <- plot + coord_flip()}
@@ -697,8 +697,8 @@ server <- function(input, output, session) {
              ),
              # NBCLUST
              tags$div(title = "By selecting yes the NBclust package will evaluate the optimal number of clusters",
-                      radioGroupButtons(inputId = "radio_nbclust", label = "Search optimal number", choices = c("Yes", "No"), justified = TRUE
-                      )
+                      radioGroupButtons(inputId = "radio_nbclust", label = "Search optimal number", 
+                                        choices = c("Yes", "No"), selected = "No", justified = TRUE)
              )
       )
     )
@@ -706,30 +706,34 @@ server <- function(input, output, session) {
   
   # 4.2) NBClust input parameters ----------------------------------------------------------------------
   output$clustering_inbox_nbclust <- renderUI({
+    valid1 <- input$radio_nbclust == "Yes"
+    req(valid1)# if we want to evaluate the optimal number of clusters
+    # validation of nbclust function
+    valid_dist <- input$cluster_distance %in% c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski")
+    valid_meth <- !(input$cluster_method %in% c("kmeans++", "FDL") )
     
-    if(input$radio_nbclust == "Yes"){# if we want to evaluate the optimal number of clusters
-      # validation of nbclust function
-      valid_dist <- input$cluster_distance %in% c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski")
-      valid_meth <- !(input$cluster_method %in% c("kmeans++", "FDL") )
-      
-      shiny::validate(
-        need(valid_dist == TRUE,  "Sorry, the selected distance is not supported for the optimal number of clusters evaluation"),
-        need(valid_meth == TRUE, "Sorry, the selected clustering method is not supported for the optimal number of clusters evaluation")
+    shiny::validate(
+      need(valid_dist == TRUE,  "Sorry, the selected distance is not supported for the optimal number of clusters evaluation"),
+      need(valid_meth == TRUE, "Sorry, the selected clustering method is not supported for the optimal number of clusters evaluation")
+    )
+    
+    # the user interface buttons
+    tagList(
+      column(width = 6,  style = "padding-left:0px; padding-right:5px;",
+             selectInput('index_nbclust', 'Select index:', 
+                         choices = c("kl", "ch", "hartigan", "ccc", "scott", "marriot", "trcovw", "tracew", "friedman", "rubin", "cindex", "db", "silhouette", "duda", "pseudot2", "beale", "ratkowsky", "ball", "ptbiserial", "gap", "frey", "mcclain", "gamma", "gplus", "tau", "dunn", "hubert", "sdindex", "dindex", "sdbw", "all", "alllong"),
+                         selected = 'silhouette'
+             )
+      ),
+      column(width = 6,  style = "padding-left:5px; padding-right:0px;",
+             sliderInput(inputId = "cluster_number_nbclust", label = "Number of clusters:", min = 1, max = 10, value = c(1, 10) ),
       )
-      # the user interface buttons
-      tagList(
-        selectInput('index_nbclust', 'Select index:', 
-                    choices = c("kl", "ch", "hartigan", "ccc", "scott", "marriot", "trcovw", "tracew", "friedman", "rubin", "cindex", "db", "silhouette", "duda", "pseudot2", "beale", "ratkowsky", "ball", "ptbiserial", "gap", "frey", "mcclain", "gamma", "gplus", "tau", "dunn", "hubert", "sdindex", "dindex", "sdbw", "all", "alllong"),
-                    selected = 'silhouette'
-        ),
-        sliderInput(inputId = "cluster_number_nbclust", label = "Number of clusters:", min = 2, max = 8, value = c(2, 8) ),
-      )
-    } # else NULL
+    )
   })
-  
-  # 4.3) Clustering post rocessing input parameters ----------------------------------------------------------------------
+
+  # 4.3) Clustering post processing input parameters ----------------------------------------------------------------------
   output$clustering_inbox_postprocessing <- renderUI({
-    req(input$cluster_button) # merge and discard inpute
+    req(input$file, input$cluster_button) # merge and discard inpute
     tagList(
       hr(),
       column(width = 8,  style = "padding-left:0px; padding-right:0px;",
@@ -754,6 +758,11 @@ server <- function(input, output, session) {
     # validation
     req(input$file)                                                   # require a uploaded file
     validate_df <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
+    # # give feedback about the absence of a correct dataframe
+    # shinyFeedback::hideFeedback("cluster_variable")
+    # if ( validate_df == FALSE ) { # incompatible condition
+    #   shinyFeedback::feedbackWarning("cluster_variable", TRUE, "Please add calendar variables to the current dataframe")
+    # }
     req(validate_df)                                                  # stops execution if no datetime found
     
     # notification of process
@@ -815,6 +824,28 @@ server <- function(input, output, session) {
     df1 <- merge.data.frame(df1, df2[c("Date", "Cluster")])
     # saves df1 in memory as result
     data_results[["Clustering_df"]] <- df1
+    
+    # validation of nbclust function
+    validate_nbclust <- input$radio_nbclust == "Yes" # if TRUE the user has checkes yes
+    valid_dist <- input$cluster_distance %in% c("euclidean","maximum", "manhattan", "canberra", "binary", "minkowski") # if TRUE acceptable
+    valid_meth <- !(input$cluster_method %in% c("kmeans++", "FDL") )  # if TRUE acceptable
+    req(validate_nbclust, valid_dist, valid_meth)
+    
+    # notification of process
+    id2 <- showNotification("Searching optimal number of clusters..", duration = NULL, closeButton = FALSE, type = "message")
+    on.exit(removeNotification(id2), add = TRUE)
+    
+    Nb_res <- NbClust(df3, distance = input$cluster_distance, 
+                      min.nc = input$cluster_number_nbclust[1], max.nc = input$cluster_number_nbclust[2], 
+                      method = input$cluster_method, 
+                      index = input$index_nbclust)
+    
+    optimal_N_clusters <- length(unique(Nb_res$Best.partition))
+    
+    # give feedback about the optimal number
+    shinyFeedback::hideFeedback("cluster_number_nbclust")
+    shinyFeedback::feedbackWarning("cluster_number_nbclust", TRUE, paste("The suggested number of clusters is", optimal_N_clusters) ) 
+    
   })
   
   # 4.5) Merge clusters ----------------------------------------------------------------------
@@ -836,7 +867,8 @@ server <- function(input, output, session) {
   # 4.7) Plot daily profiles clusters ----------------------------------------------------------------------
   output$out_clustering_preview <- renderPlot({
     # requires a performed clustering and a result dataframe in memory
-    req(input$cluster_button, data_results[["Clustering_df"]])
+    validate_df <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
+    req(input$cluster_button, data_results[["Clustering_df"]], validate_df)
     
     df1 <- data_results[["Clustering_df"]] # load actual cluster dataframe
     

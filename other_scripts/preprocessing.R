@@ -1,20 +1,47 @@
 # # preprocessing del file data.csv
-# #df.power <- read.csv("/Users/robi/Desktop/BAEDA_data_analytics/data/run.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
-# df.power <- read.csv("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_1.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
-# 
-# boxplot(df.power$power_mech_room)
-# 
-# df.power$power_mech_room[ df.power$power_mech_room<0 ] <- NA
-# df.power$power_mech_room[ df.power$power_mech_room > 2000 ] <- NA
-# 
-# df.power$power_mech_room <- na_interpolation(df.power$power_mech_room, option = "linear")
-# 
-# summary(df.power)
-# 
-# write_rds(df.power,"/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_clean.rds")
-# 
-# 
-# 
+
+df.power <- read.csv("/Users/robi/Desktop/aSAX/df_tot.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
+
+df.power <- df.power %>%
+  mutate(Timestamp = as.POSIXct(Date_Time , format = "%Y-%m-%d %H:%M:%S" , tz = "Europe/Rome"),
+         Holiday = as.factor(if_else(festivo == "S", "Yes", "No")),
+         Mechanical_Room = Refrigeration_unit2,
+         T_air = TempARIA,
+         H_global = RadGLOBale,
+         FasciaAEEG = as.factor(FasciaAEEG),
+  ) %>%
+  select(-Date,-Date_Time, -Refrigeration_unit2,-festivo, -Time, -min_dec, -Day_Type, -TempARIA, -RadGLOBale) %>%
+  select(Timestamp, FasciaAEEG, Holiday, Total_Power, Allocated, Not_allocated,  everything()) %>%
+  filter(year(Timestamp) >= 2017, year(Timestamp) <= 2018)
+
+df.power
+str(df.power)
+write_rds(df.power,"/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/data_tot.rds")
+write_csv(df.power,"/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/data_tot.csv")
+
+df.power <- read.csv("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_1.csv", header = T, sep = ",", dec = ".", check.names = FALSE)
+
+boxplot(df.power$power_mech_room)
+
+df.power$power_mech_room[ df.power$power_mech_room<0 ] <- NA
+df.power$power_mech_room[ df.power$power_mech_room > 2000 ] <- NA
+
+df.power$power_mech_room <- na_interpolation(df.power$power_mech_room, option = "linear")
+
+summary(df.power)
+
+write_rds(df.power,"/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_clean.rds")
+
+
+tt <- readRDS('/Users/robi/Downloads/ENEA_aggregatoorarioTOT_edificio.rds')
+
+colnames(tt)[1] <- "Date_Time"
+
+str(tt)
+
+tt <- as.data.frame(tt)
+write_rds(tt, '/Users/robi/Downloads/ENEA_aggregatoorarioTOT_edificio.rds')
+
 # df.power <- read_rds("/Users/robi/Desktop/BAEDA_DASHBOARD_STUDENTS/data/df_cooling_clean.rds")
 # df.power <- df.power %>%
 # mutate(date_time = as.POSIXct(date_time , format = "%Y-%m-%d %H:%M:%S" , tz = "Europe/Rome"),
