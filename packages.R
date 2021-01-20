@@ -1,5 +1,8 @@
 #################################################################################
 ###############            Copyright © BAEDA Lab 2020             ###############
+###############                     -------                       ###############
+###############                  Roberto Chiosa                   ###############
+###############             roberto.chiosa@polito.it              ###############
 #################################################################################
 
 library('units')                  # units of measurements
@@ -28,6 +31,10 @@ library('readxl')                 # read and import excel files
 library('DT')                     # to use output datatable
 library('skimr')                  # for statistical summary
 library('plyr')                   # per usare pdply
+library('rlang') # to parse and evaluate string expressions in mutate
+library('amap') # Kmean slustering function
+library('LICORS') # Kmean++ slustering function
+
 # library('ggExtra')              # distributions on border
 # library('RColorBrewer')         # Pacchetto per creare palette di colori più accattivanti
 # library('rpart')                # make classification tree
@@ -42,7 +49,7 @@ library(caret)
 library(dendextend) # color clusters
 library(stringi)
 # library('networkD3')            # draw sankey plots
-# library('NbClust')              # cluster validation measures
+library(NbClust)              # cluster validation measures
 # library('knitr')
 # library('magrittr')
 # library('dendextend')
