@@ -83,6 +83,18 @@ body <- dashboardBody(
               ) 
             )
     ),
+    tabItem(tabName = "classification",
+            fluidRow( 
+              # INPUT BOX
+              box( title = "Classification options", width = 4, 
+                   helpText("Note 1: In this section we perform a daily load profile clustering. It is not intended to be a generical clustering process."),
+                   helpText("Note 2: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar.")
+              ),
+              # OUTPUT BOX
+              box( width = 8
+              ) 
+            )
+    ),
     
     # documentation
     tabItem(tabName = "help",  includeMarkdown("docs/wiki/complete.md") )

@@ -14,7 +14,8 @@ sidebar <- dashboardSidebar(
     menuItem("Manage", tabName = "manage", icon = icon("cogs")),                      # TAB "MANAGE" 
     menuItem("Visualize", tabName = "visualize", icon = icon("chart-bar") ),          # TAB "VISUALIZE" 
     menuItem("Advanced", tabName = "advanced", icon = icon("project-diagram"),        # TAB "ADVANCED" 
-             menuSubItem("Clustering", tabName = "clustering")                        # TAB "CLUSTERING"                     
+             menuSubItem("Clustering", tabName = "clustering"),                       # TAB "CLUSTERING"   
+             menuSubItem("Classification", tabName = "classification")                # TAB "CLASSIFICATION"   
     ),
     menuItem("Help", tabName = "help", icon = icon("book"))                           # TAB "HELP" 
   )
