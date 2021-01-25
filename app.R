@@ -42,7 +42,7 @@ server <- function(input, output, session) {
   # when clicked it adds calendar variables to the selected dataframe
   observeEvent(input$add_calendar_columns, {
     req(input$file)                                     # # the execution CONTINUES only if a file is present
-     
+    
     data[[input$dataframe]] <- add_calendar_variables(  # find it in functions.R
       input[[data_results[["timestamp"]] ]],            # gets the timestamp checkbox value
       input[[data_results[["timezone"]] ]],             # gets the timezone checkbox value
@@ -555,6 +555,7 @@ server <- function(input, output, session) {
       #                separator = " - "),x
       selectInput("variableY_Line", label = "Variable Y:",
                   choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric))), # chose numerical variable
+      selectInput("colorvariable_Line", label = "Color Variable:", choices = c("None", colnames(dplyr::select_if( data[[input$dataframe]], is.factor))) ),
     )
   })
   # output box - plot - Lineplot
@@ -568,16 +569,18 @@ server <- function(input, output, session) {
     #   dplyr::filter(Date_Time >= input$daterange_Line[1], Date_Time <= input$daterange_Line[2])
     
     plot <- ggplot(data =  data_plot,
-                   mapping =  aes(x = as.POSIXct(data_plot$Date_Time, "%Y-%m-%d %H:%M:%S", tz = input[[timezone]]),
+                   mapping =  aes(x = as.POSIXct(Date_Time, "%Y-%m-%d %H:%M:%S", tz = input[[timezone]]),
                                   y =  data_plot[,input$variableY_Line],
-                                  text = paste(' Time:', format(data_plot$Date_Time, "%H:%M:%S"), 
-                                               '<br> Date: ', data_plot$Date, '<br>',
+                                  text = paste(
+                                    # ' Time:', format(Date_Time, "%H:%M:%S"), 
+                                    #            '<br> Date: ', Date, '<br>',
                                                input$variableY_Line, ':', data_plot[,input$variableY_Line]
                                   ), 
-                                  group = 1 # solve ggplotly problem
+                                  group = 1, # solve ggplotly problem
+                                  color = if (input$colorvariable_Line == "None") {NULL} else { data_plot[,input$colorvariable_Line]} 
                    )
     ) + 
-      geom_line(na.rm = TRUE) +
+      geom_line(na.rm = TRUE)+
       theme_bw() +
       labs( x = "Date Time", y = input$variableY_Line)
     
@@ -585,9 +588,30 @@ server <- function(input, output, session) {
     # if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
     
     
-    plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE)
+    plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE) 
     
-    plot
+    plot %>%
+      layout(hovermode = "x unified",
+             showlegend = T,
+             autosize = T,
+             # legend = list(orientation = 'h',
+             #               bgcolor = "#E2E2E2",
+             #               bordercolor = "#FFFFFF",
+             #               borderwidth = 2),
+             yaxis = list( autorange = TRUE),
+             xaxis = list( autorange = TRUE,
+                           rangeselector =  list(
+                             buttons = list( 
+                             list(count = 1, label = 'All', step = 'all'),
+                             list(count = 1, label = 'Year', step = 'year', stepmode = 'backward'),
+                             list(count = 6, label = 'Semester', step = 'month', stepmode = 'backward'),
+                             list(count = 1, label = 'Month', step = 'month', stepmode = 'backward'),
+                             list(count = 7, label = 'Week', step = 'day', stepmode = 'backward'),
+                             list(count = 6, label = '6 Hours', step = 'hour', stepmode = 'backward')
+                           ))
+             )
+      )
+    
   })
   
   
@@ -730,7 +754,7 @@ server <- function(input, output, session) {
       )
     )
   })
-
+  
   # 4.3) Clustering post processing input parameters ----------------------------------------------------------------------
   output$clustering_inbox_postprocessing <- renderUI({
     req(input$file, input$cluster_button) # merge and discard inpute
@@ -969,6 +993,39 @@ server <- function(input, output, session) {
                closeOnEsc = TRUE,
                closeOnClickOutside = TRUE,
                html = TRUE
+    )
+  })
+  
+  
+  ###### 5) "CART" TAB ----------------------------------------------------------------------
+  
+  # 5.1) CART input parameters ----------------------------------------------------------------------
+  output$cart_inbox <- renderUI({
+    req(input$file) # requires that a file is loaded
+    tagList(
+      selectInput('cart_type', 'Select tree:', choices = c("Regression","Classification", "Evolutionary") ),
+      conditionalPanel("input.cart_type == 'Regression' ",
+                       selectInput('target_var_rt', 'Select target variable (numerical):', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ),
+                       selectInput('split_var_rt', 'Select categorical split variables:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) , multiple = TRUE),
+                       sliderInput(inputId = "minsplit_rt", label = "Min split:", min = 1, max = 100, value = 30),
+                       sliderInput(inputId = "minbucket_rt", label = "Min bucket:", min = 1, max = 100, value = 30),
+                       sliderInput(inputId = "maxdepth_rt", label = "Max depth:", min = 1, max = 100, value = 30)
+      ),
+      conditionalPanel("input.cart_type == 'Classification' ",
+                       selectInput('target_var_ct', 'Select target variable (categorical):', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) ),
+                       selectInput('split_var_ct', 'Select categorical split variables:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) , multiple = TRUE),
+                       sliderInput(inputId = "minsplit_ct", label = "Min split:", min = 1, max = 100, value = 30),
+                       sliderInput(inputId = "minbucket_ct", label = "Min bucket:", min = 1, max = 100, value = 30),
+                       sliderInput(inputId = "maxdepth_ct", label = "Max depth:", min = 1, max = 100, value = 30)
+      ),
+      conditionalPanel("input.cart_type == 'Evolutionary' ",
+                       selectInput('target_var_ev', 'Select target variable (categorical):', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) ),
+                       selectInput('split_var_ev', 'Select categorical split variables:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) , multiple = TRUE),
+                       sliderInput(inputId = "minsplit_ev", label = "Min split:", min = 1, max = 100, value = 30),
+                       sliderInput(inputId = "minbucket_ev", label = "Min bucket:", min = 1, max = 100, value = 30),
+                       sliderInput(inputId = "maxdepth_ev", label = "Max depth:", min = 1, max = 100, value = 30),
+                       textInput(inputId = "seed_ev", label = "Seed:", placeholder = "(ex.) 1234")
+      )
     )
   })
   
