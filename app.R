@@ -18,10 +18,13 @@ source("sidebar.R")     # load sidebar script
 source("body.R")        # load body script
 
 # USER INTERFACE ----------------------------------------------------------------------
-ui <- dashboardPage(skin = "black",     # sets overall appearance 
-                    header,             # loaded from external script
-                    sidebar,            # loaded from external script
-                    body                # loaded from external script
+ui <- dashboardPage(skin = "black",                             # sets overall appearance 
+                    header,                                     # loaded from external script
+                    sidebar,                                    # loaded from external script
+                    body,                                        # loaded from external script
+                    tags$style(type="text/css",
+                               ".shiny-output-error { visibility: hidden; }",
+                               ".shiny-output-error:before { visibility: hidden; }")
 )
 
 # SERVER FUNCTION ----------------------------------------------------------------------
@@ -35,7 +38,8 @@ server <- function(input, output, session) {
   # 1.1) Upload new dataframe ----------------------------------------------------------------------
   # when clicked a the upload modal is sown again
   observeEvent(input$upload,{ 
-    toggleModal(session, "startupModal", toggle = "open")
+    shinyFeedback::hideFeedback("file") # hides previous file feedback
+    toggleModal(session, "startupModal", toggle = "open") # reopens modal
   })
   
   # 1.2) Add calendar variables ----------------------------------------------------------------------
@@ -48,6 +52,11 @@ server <- function(input, output, session) {
       input[[data_results[["timezone"]] ]],             # gets the timezone checkbox value
       data[[input$dataframe]]
     )
+  })
+  
+  # every time chart is clicked it resets the plot button
+  observeEvent(input$chart, {
+    shinyjs::reset("plot_button")
   })
   
   ###### 2) "MANAGE" TAB ----------------------------------------------------------------------
@@ -76,6 +85,7 @@ server <- function(input, output, session) {
     
     # notification that the file is being loaded
     id <- showNotification("Reading data...", duration = NULL, closeButton = FALSE, type = "message")
+    on.exit(toggleModal(session, "startupModal", toggle = "close"), add = TRUE)
     on.exit(removeNotification(id), add = TRUE)
     
     # reads the input file and assigns it to the reactive value data
@@ -328,42 +338,48 @@ server <- function(input, output, session) {
   })
   # output box - plot - HISTOGRAM
   output$outBoxHistogram <- renderPlotly({
-    req(input$file, input$hours_slider_hist, input$month_slider_hist)
     
-    data_plot <- data[[input$dataframe]] %>%
-      dplyr::filter( min_dec >= input$hours_slider_hist[1], 
-                     min_dec <= input$hours_slider_hist[2],
-                     Month >= input$month_slider_hist[1], 
-                     Month <= input$month_slider_hist[2]
-      )
+    req(input$plot_button)  # requires the plot button to be pressed
+    isolate({               # avoid reactivity of parameters
+      
+      data_plot <- data[[input$dataframe]] %>%
+        dplyr::filter( min_dec >= input$hours_slider_hist[1], 
+                       min_dec <= input$hours_slider_hist[2],
+                       Month >= input$month_slider_hist[1], 
+                       Month <= input$month_slider_hist[2]
+        )
+      
+      plot <- ggplot(data =  data_plot,
+                     mapping =  aes(x =  data_plot[,input$variable],
+                                    fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]},
+                     ),
+      ) + theme_bw() 
+      
+      # densità
+      if (input$checkbox_density == TRUE) {
+        plot <- plot + geom_density(aes(y = ..density..,
+                                        fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]}),
+                                    alpha = 0.4,
+                                    bw = input$bins/5,
+                                    na.rm = TRUE)  # aggiungo distribuzione
+      } else{plot <- plot + geom_histogram(bins = input$bins, na.rm = TRUE)} #
+      # flip
+      if (input$checkbox_flip == TRUE) {plot <- plot + coord_flip()}
+      # tema
+      plot <- plot + labs( x = input$variable, fill = input$fillvariable )
+      # add wrap
+      if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable], nrow = input$nrowvariable)}
+      # log
+      # flip
+      if (input$checkbox_logx == TRUE) {plot <- plot + scale_x_continuous(trans = 'log10') }
+      if (input$checkbox_logy == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
+      
+      plot <- ggplotly(plot, tooltip = c("y"))
+      resetLoadingButton("plot_button")         # reset the loading button
+      plot
+      
+    }) # end isolate
     
-    plot <- ggplot(data =  data_plot,
-                   mapping =  aes(x =  data_plot[,input$variable],
-                                  fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]},
-                   ),
-    ) + theme_bw() 
-    
-    # densità
-    if (input$checkbox_density == TRUE) {
-      plot <- plot + geom_density(aes(y = ..density..,
-                                      fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]}),
-                                  alpha = 0.4,
-                                  bw = input$bins/5,
-                                  na.rm = TRUE)  # aggiungo distribuzione
-    } else{plot <- plot + geom_histogram(bins = input$bins, na.rm = TRUE)} #
-    # flip
-    if (input$checkbox_flip == TRUE) {plot <- plot + coord_flip()}
-    # tema
-    plot <- plot + labs( x = input$variable, fill = input$fillvariable )
-    # add wrap
-    if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable], nrow = input$nrowvariable)}
-    # log
-    # flip
-    if (input$checkbox_logx == TRUE) {plot <- plot + scale_x_continuous(trans = 'log10') }
-    if (input$checkbox_logy == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
-    
-    plot <- ggplotly(plot, tooltip = c("y"))
-    plot
   })
   
   # 3.2) Boxplot ----------------------------------------------------------------------
@@ -426,49 +442,55 @@ server <- function(input, output, session) {
   })
   # output box - plot - Boxplot
   output$outBoxBoxplot <- renderPlot({
-    req(input$file, input$hours_slider_box, input$month_slider_box)
+    req(input$plot_button)  # requires the plot button to be pressed
+    isolate({               # avoid reactivity of parameters
+      
+      data_plot <- data[[input$dataframe]] %>%
+        dplyr::filter( min_dec >= input$hours_slider_box[1], 
+                       min_dec <= input$hours_slider_box[2],
+                       Month >= input$month_slider_box[1], 
+                       Month <= input$month_slider_box[2]
+        )
+      
+      if (input$variableX_Box == "None") {
+        plot <- ggplot(data =  data_plot,
+                       mapping =  aes(y =  data_plot[,input$variableY_Box],
+                                      fill = isolate(if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]}) 
+                       )
+        ) + labs( y = input$variableY_Box, fill = input$fillvariable_Box ) 
+      } else {
+        plot <- ggplot(data =  data_plot,
+                       mapping =  aes(x =  data_plot[,input$variableX_Box], y =  data_plot[,input$variableY_Box],
+                                      fill = isolate(if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]}) 
+                                      ),
+        ) + labs( x = input$variableX_Box, y = input$variableY_Box, fill = input$fillvariable_Box ) 
+      }
+      
+      plot <- plot + theme_bw() + 
+        # stat_boxplot(geom ='errorbar') +
+        geom_boxplot(
+          outlier.colour = input$outliers_color, 
+          outlier.fill = input$outliers_fill, 
+          outlier.shape = input$outliers_shape, 
+          outlier.size = input$outliers_size, 
+          outlier.alpha = input$outliers_alpha,
+          coef = input$outliers_coef,  na.rm = TRUE) 
+      
+      # flip
+      if (input$checkbox_flip_Box == TRUE) {plot <- plot + coord_flip()}
+      # tema
+      plot <- plot + theme(legend.position = "bottom")
+      # add wrap
+      if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
+      # log
+      if (input$checkbox_logy_Box == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
+      
+      # plot <- ggplotly(plot)
+      resetLoadingButton("plot_button")         # reset the loading button
+      plot
+      
+    }) # end isolate
     
-    data_plot <- data[[input$dataframe]] %>%
-      dplyr::filter( min_dec >= input$hours_slider_box[1], 
-                     min_dec <= input$hours_slider_box[2],
-                     Month >= input$month_slider_box[1], 
-                     Month <= input$month_slider_box[2]
-      )
-    
-    if (input$variableX_Box == "None") {
-      plot <- ggplot(data =  data_plot,
-                     mapping =  aes(y =  data_plot[,input$variableY_Box],
-                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]} 
-                     )
-      ) + labs( y = input$variableY_Box, fill = input$fillvariable_Box ) 
-    } else {
-      plot <- ggplot(data =  data_plot,
-                     mapping =  aes(x =  data_plot[,input$variableX_Box], y =  data_plot[,input$variableY_Box],
-                                    fill = if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]} ),
-      ) + labs( x = input$variableX_Box, y = input$variableY_Box, fill = input$fillvariable_Box ) 
-    }
-    
-    plot <- plot + theme_bw() + 
-      # stat_boxplot(geom ='errorbar') +
-      geom_boxplot(
-        outlier.colour = input$outliers_color, 
-        outlier.fill = input$outliers_fill, 
-        outlier.shape = input$outliers_shape, 
-        outlier.size = input$outliers_size, 
-        outlier.alpha = input$outliers_alpha,
-        coef = input$outliers_coef,  na.rm = TRUE) 
-    
-    # flip
-    if (input$checkbox_flip_Box == TRUE) {plot <- plot + coord_flip()}
-    # tema
-    plot <- plot + theme(legend.position = "bottom")
-    # add wrap
-    if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
-    # log
-    if (input$checkbox_logy_Box == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
-    
-    # plot <- ggplotly(plot)
-    plot
   })
   
   # 3.3) Carpet ----------------------------------------------------------------------
@@ -494,46 +516,50 @@ server <- function(input, output, session) {
   })
   # output box - plot - Carpet
   output$outBoxCarpet <- renderPlotly({
-    req(input$file, input$brewer)
-    
-    if(input$brewer == "theme1"){ cols <- brewer.pal(9, "YlOrRd")}else{cols <- rev(brewer.pal(9, "Spectral"))}
-    
-    timezone <- gsub(" ", "", paste("timezone_", input$type))
-    
-    data_plot <- data[[input$dataframe]]
-    
-    # data_plot <- data[[input$dataframe]] %>%
-    #   dplyr::filter(Date >= input$daterange_Carpet[1], Date <= input$daterange_Carpet[2])
-    
-    plot <- ggplot(data =  data_plot, 
-                   mapping =  aes(x =  as.POSIXct(format(Date_Time, "%H:%M:%S"), "%H:%M:%S", tz = input[[timezone]]), 
-                                  y =  date(data_plot[,"Date_Time"]),
-                                  fill = data_plot[,input$variable_Carpet],
-                                  text = paste(' Time:', format(Date_Time, "%H:%M:%S"), 
-                                               '<br> Date: ', date(Date_Time), '<br>',
-                                               input$variable_Carpet, ':', data_plot[,input$variable_Carpet]
-                                  )
-                   )
-    ) + 
-      geom_tile(na.rm = TRUE) +
-      scale_fill_gradientn(colours = cols) + # creates a two colour gradient (low-high) for the variable fill=z=power
-      scale_y_date(
-        breaks = scales::date_breaks("1 month"),                    # specify breaks every two months
-        labels = scales::date_format("%Y-%b" , tz = input[[timezone]]),  # specify format of labels anno mese
-        expand = c(0,0)                                     # espande l'asse y affinche riempia tutto il box in verticale
-      ) +
-      scale_x_datetime(
-        breaks = scales::date_breaks("4 hour"),                     # specify breaks every 4 hours
-        labels = scales::date_format(("%H:%M") , tz = input[[timezone]]),# specify format of labels ora minuti
-        expand = c(0,0)                                     # espande l'asse x affinche riempia tutto il box in orizzontale
-      ) +
-      theme_bw() + labs( x = "Hour" , y = "Date", fill = input$variable_Carpet)
-    
-    # add wrap
-    if (input$facetvariable_Carpet == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Carpet],  scales = "free", nrow = 1)}
-    
-    plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE)
-    plot
+    req(input$plot_button)  # requires the plot button to be pressed
+    isolate({               # avoid reactivity of parameters
+      
+      if(input$brewer == "theme1"){ cols <- brewer.pal(9, "YlOrRd")}else{cols <- rev(brewer.pal(9, "Spectral"))}
+      
+      timezone <- gsub(" ", "", paste("timezone_", input$type))
+      
+      data_plot <- data[[input$dataframe]]
+      
+      # data_plot <- data[[input$dataframe]] %>%
+      #   dplyr::filter(Date >= input$daterange_Carpet[1], Date <= input$daterange_Carpet[2])
+      
+      plot <- ggplot(data =  data_plot, 
+                     mapping =  aes(x =  as.POSIXct(format(Date_Time, "%H:%M:%S"), "%H:%M:%S", tz = input[[timezone]]), 
+                                    y =  date(data_plot[,"Date_Time"]),
+                                    fill = data_plot[,input$variable_Carpet],
+                                    text = paste(' Time:', format(Date_Time, "%H:%M:%S"), 
+                                                 '<br> Date: ', date(Date_Time), '<br>',
+                                                 input$variable_Carpet, ':', data_plot[,input$variable_Carpet]
+                                    )
+                     )
+      ) + 
+        geom_tile(na.rm = TRUE) +
+        scale_fill_gradientn(colours = cols) + # creates a two colour gradient (low-high) for the variable fill=z=power
+        scale_y_date(
+          breaks = scales::date_breaks("1 month"),                    # specify breaks every two months
+          labels = scales::date_format("%Y-%b" , tz = input[[timezone]]),  # specify format of labels anno mese
+          expand = c(0,0)                                     # espande l'asse y affinche riempia tutto il box in verticale
+        ) +
+        scale_x_datetime(
+          breaks = scales::date_breaks("4 hour"),                     # specify breaks every 4 hours
+          labels = scales::date_format(("%H:%M") , tz = input[[timezone]]),# specify format of labels ora minuti
+          expand = c(0,0)                                     # espande l'asse x affinche riempia tutto il box in orizzontale
+        ) +
+        theme_bw() + labs( x = "Hour" , y = "Date", fill = input$variable_Carpet)
+      
+      # add wrap
+      if (input$facetvariable_Carpet == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Carpet],  scales = "free", nrow = 1)}
+      
+      plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE)
+      resetLoadingButton("plot_button")         # reset the loading button
+      plot
+      
+    }) # end isolate
   })
   
   
@@ -560,58 +586,61 @@ server <- function(input, output, session) {
   })
   # output box - plot - Lineplot
   output$outBoxLineplot <- renderPlotly({
-    req(input$variableY_Line)
-    
-    timezone <- gsub(" ", "", paste("timezone_", input$type))
-    
-    data_plot <- data[[input$dataframe]]
-    # data_plot <- data[[input$dataframe]] %>%
-    #   dplyr::filter(Date_Time >= input$daterange_Line[1], Date_Time <= input$daterange_Line[2])
-    
-    plot <- ggplot(data =  data_plot,
-                   mapping =  aes(x = as.POSIXct(Date_Time, "%Y-%m-%d %H:%M:%S", tz = input[[timezone]]),
-                                  y =  data_plot[,input$variableY_Line],
-                                  text = paste(
-                                    # ' Time:', format(Date_Time, "%H:%M:%S"), 
-                                    #            '<br> Date: ', Date, '<br>',
-                                               input$variableY_Line, ':', data_plot[,input$variableY_Line]
-                                  ), 
-                                  group = 1, # solve ggplotly problem
-                                  color = if (input$colorvariable_Line == "None") {NULL} else { data_plot[,input$colorvariable_Line]} 
-                   )
-    ) + 
-      geom_line(na.rm = TRUE)+
-      theme_bw() +
-      labs( x = "Date Time", y = input$variableY_Line)
-    
-    # # add wrap
-    # if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
-    
-    
-    plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE) 
-    
-    plot %>%
-      layout(hovermode = "x unified",
-             showlegend = T,
-             autosize = T,
-             # legend = list(orientation = 'h',
-             #               bgcolor = "#E2E2E2",
-             #               bordercolor = "#FFFFFF",
-             #               borderwidth = 2),
-             yaxis = list( autorange = TRUE),
-             xaxis = list( autorange = TRUE,
-                           rangeselector =  list(
-                             buttons = list( 
-                             list(count = 1, label = 'All', step = 'all'),
-                             list(count = 1, label = 'Year', step = 'year', stepmode = 'backward'),
-                             list(count = 6, label = 'Semester', step = 'month', stepmode = 'backward'),
-                             list(count = 1, label = 'Month', step = 'month', stepmode = 'backward'),
-                             list(count = 7, label = 'Week', step = 'day', stepmode = 'backward'),
-                             list(count = 6, label = '6 Hours', step = 'hour', stepmode = 'backward')
-                           ))
-             )
-      )
-    
+    req(input$plot_button)  # requires the plot button to be pressed
+    isolate({               # avoid reactivity of parameters
+      
+      timezone <- gsub(" ", "", paste("timezone_", input$type))
+      
+      data_plot <- data[[input$dataframe]]
+      # data_plot <- data[[input$dataframe]] %>%
+      #   dplyr::filter(Date_Time >= input$daterange_Line[1], Date_Time <= input$daterange_Line[2])
+      
+      plot <- ggplot(data =  data_plot,
+                     mapping =  aes(x = as.POSIXct(Date_Time, "%Y-%m-%d %H:%M:%S", tz = input[[timezone]]),
+                                    y =  data_plot[,input$variableY_Line],
+                                    text = paste(
+                                      # ' Time:', format(Date_Time, "%H:%M:%S"), 
+                                      #            '<br> Date: ', Date, '<br>',
+                                      input$variableY_Line, ':', data_plot[,input$variableY_Line]
+                                    ), 
+                                    group = 1, # solve ggplotly problem
+                                    color = if (input$colorvariable_Line == "None") {NULL} else { data_plot[,input$colorvariable_Line]} 
+                     )
+      ) + 
+        geom_line(na.rm = TRUE)+
+        theme_bw() +
+        labs( x = "Date Time", y = input$variableY_Line)
+      
+      # # add wrap
+      # if (input$facetvariable_Box == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Box], nrow = input$nrowvariable_Box)}
+      
+      
+      plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE) 
+      
+      resetLoadingButton("plot_button")         # reset the loading button
+      
+      plot %>%
+        layout(hovermode = "x unified",
+               showlegend = T,
+               autosize = T,
+               # legend = list(orientation = 'h',
+               #               bgcolor = "#E2E2E2",
+               #               bordercolor = "#FFFFFF",
+               #               borderwidth = 2),
+               yaxis = list( autorange = TRUE),
+               xaxis = list( autorange = TRUE,
+                             rangeselector =  list(
+                               buttons = list( 
+                                 list(count = 1, label = 'All', step = 'all'),
+                                 list(count = 1, label = 'Year', step = 'year', stepmode = 'backward'),
+                                 list(count = 6, label = 'Semester', step = 'month', stepmode = 'backward'),
+                                 list(count = 1, label = 'Month', step = 'month', stepmode = 'backward'),
+                                 list(count = 7, label = 'Week', step = 'day', stepmode = 'backward'),
+                                 list(count = 6, label = '6 Hours', step = 'hour', stepmode = 'backward')
+                               ))
+               )
+        )
+    }) # end isolate
   })
   
   
@@ -653,45 +682,49 @@ server <- function(input, output, session) {
   # output box - plot - Scatterplot
   
   output$outBoxScatterplot <- renderPlot({
-    req(input$file, input$hours_slider_Scatter, input$month_slider_Scatter)
-    
-    data_plot <- data[[input$dataframe]] %>%
-      dplyr::filter( min_dec >= input$hours_slider_Scatter[1], 
-                     min_dec <= input$hours_slider_Scatter[2],
-                     Month >= input$month_slider_Scatter[1], 
-                     Month <= input$month_slider_Scatter[2]
-      )
-    
-    # data_plot <- data_plot %>%
-    #   mutate(Date = date(Date_Time), X = data_plot[,input$variableX_Scatter], Y = data_plot[,input$variableY_Scatter]) %>%
-    #   select(Date, X, Y) %>%
-    #   dplyr::group_by(Date)  %>%
-    #   summarise_all(.funs = c(mean="mean"))
-    # 
-    #   dplyr::summarize(X = mean(X,na.rm = T),
-    #                    Y = mean(Y,na.rm = T)) %>%
-    #   ungroup()
-    
-    
-    plot <- ggplot(data =  data_plot,
-                   mapping =  aes(x =  data_plot[,input$variableX_Scatter], 
-                                  y =  data_plot[,input$variableY_Scatter],
-                                  color = if (input$colorvariable_Scatter == "None") {NULL} else { data_plot[,input$colorvariable_Scatter]}
-                   )
-    ) + geom_point(alpha = 0.5) + 
-      labs( x = input$variableX_Scatter, y = input$variableY_Scatter, color = input$colorvariable_Scatter )
-    
-    # flip
-    if (input$checkbox_flip_Scatter == TRUE) {plot <- plot + coord_flip()}
-    # tema
-    plot <- plot + theme(legend.position = "bottom")
-    # add wrap
-    if (input$facetvariable_Scatter == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Scatter], nrow = input$nrowvariable_Scatter)}
-    # log
-    if (input$checkbox_logy_Scatter == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
-    
-    #plot <- ggplotly(plot, tooltip = c("x", "y"))
-    plot
+    req(input$plot_button)  # requires the plot button to be pressed
+    isolate({               # avoid reactivity of parameters
+      
+      
+      data_plot <- data[[input$dataframe]] %>%
+        dplyr::filter( min_dec >= input$hours_slider_Scatter[1], 
+                       min_dec <= input$hours_slider_Scatter[2],
+                       Month >= input$month_slider_Scatter[1], 
+                       Month <= input$month_slider_Scatter[2]
+        )
+      
+      # data_plot <- data_plot %>%
+      #   mutate(Date = date(Date_Time), X = data_plot[,input$variableX_Scatter], Y = data_plot[,input$variableY_Scatter]) %>%
+      #   select(Date, X, Y) %>%
+      #   dplyr::group_by(Date)  %>%
+      #   summarise_all(.funs = c(mean="mean"))
+      # 
+      #   dplyr::summarize(X = mean(X,na.rm = T),
+      #                    Y = mean(Y,na.rm = T)) %>%
+      #   ungroup()
+      
+      plot <- ggplot(data =  data_plot,
+                     mapping =  aes(x =  data_plot[,input$variableX_Scatter], 
+                                    y =  data_plot[,input$variableY_Scatter],
+                                    color = if (input$colorvariable_Scatter == "None") {NULL} else { data_plot[,input$colorvariable_Scatter]}
+                     )
+      ) + geom_point(alpha = 0.5) + 
+        labs( x = input$variableX_Scatter, y = input$variableY_Scatter, color = input$colorvariable_Scatter )
+      
+      # flip
+      if (input$checkbox_flip_Scatter == TRUE) {plot <- plot + coord_flip()}
+      # tema
+      plot <- plot + theme(legend.position = "bottom")
+      # add wrap
+      if (input$facetvariable_Scatter == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable_Scatter], nrow = input$nrowvariable_Scatter)}
+      # log
+      if (input$checkbox_logy_Scatter == TRUE) {plot <- plot + scale_y_continuous(trans = 'log10') }
+      
+      #plot <- ggplotly(plot, tooltip = c("x", "y"))
+      resetLoadingButton("plot_button")         # reset the loading button
+      plot
+      
+    }) # end isolate
   })
   
   ###### 4) "CLUSTERING" TAB ----------------------------------------------------------------------

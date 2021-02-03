@@ -1,26 +1,34 @@
-# # library(shiny)
-# # plotvars <- c("Cars","Book stores")
-# # ui <- fluidPage(
-# #   sidebarPanel(
-# #     column(9, style="display:inline-block; ", selectInput("dataframe", label = NULL, choices = c("None"))  ),
-# #     column(3, style="display:inline-block;", actionButton("tt", "+")),
-# #   ),
-# #   mainPanel(
-# #     column(9, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px; margin-bottom: 0px;", selectInput("dataframe", label = NULL, choices = c("None"))  ),
-# #     column(3, style="display:inline-block; padding-left:0px; padding-right:0px; padding-top:0px; padding-bottom:0px;margin-bottom: 0px;", actionButton("tt", "+")),
-# #   )
-# # )
-# # server <- shinyServer(function(input,output){})
-# # shinyApp(ui, server)
-# # 
-# # 
-# # # runApp(list(
-# # #   ui = bootstrapPage(
-# # #     div(style="display:inline-block; padding-left:0px; padding-right:1px; padding-top:0px; padding-bottom:0px;",actionButton("tt", "+") ),
-# # #     div(style="display:inline-block; padding-left:0px; padding-right:1px; padding-top:0px; padding-bottom:0px;",selectInput("dataframe", label = NULL, choices = c("None")) )
-# # #   ),
-# # #   server = function(input, output) {}
-# # # ))
-# 
-
-
+library(shiny)
+ui <- fluidPage(
+  h3("Action Buttons"),
+  actionButton("default", "Default"),
+  actionButton("primary", "Primary", class = "btn-primary"),
+  actionButton("secondary", "Secondary", class = "btn-secondary"),
+  actionButton("success", "Success", class = "btn-success"),
+  actionButton("info", "Info", class = "btn-info"),
+  actionButton("warning", "Warning", class = "btn-warning"),
+  actionButton("danger", "Danger", class = "btn-danger"),
+  actionButton("link", "Link", class = "btn-link"),
+  
+  h3("Download Buttons"),
+  downloadButton("default", "Default"),
+  downloadButton("primary", "Primary", class = "btn-primary"),
+  downloadButton("secondary", "Secondary", class = "btn-secondary"),
+  downloadButton("success", "Success", class = "btn-success"),
+  downloadButton("info", "Info", class = "btn-info"),
+  downloadButton("warning", "Warning", class = "btn-warning"),
+  downloadButton("danger", "Danger", class = "btn-danger"),
+  downloadButton("link", "Link", class = "btn-link"),
+  
+  h3("Bookmark Buttons"),
+  bookmarkButton("Default"),
+  bookmarkButton("Primary", class = "btn-primary"),
+  bookmarkButton("Secondary", class = "btn-secondary"),
+  bookmarkButton("Success", class = "btn-success"),
+  bookmarkButton("Info", class = "btn-info"),
+  bookmarkButton("Warning", class = "btn-warning"),
+  bookmarkButton("Danger", class = "btn-danger"),
+  bookmarkButton("Link", class = "btn-link")
+)
+server <- function(input, output, session) {}
+shinyApp(ui, server)

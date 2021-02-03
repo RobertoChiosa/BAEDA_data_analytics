@@ -9,7 +9,8 @@ chartTypes <- c("","Carpet","Line Plot","Scatter Plot", "Box Plot","Histogram") 
 loadingGifColor <- "#0dc5c1"
 body <- dashboardBody(
   useShinyalert(),                                   # use html popups
-  shinyFeedback::useShinyFeedback(),                 # use html feedbacks
+  useShinyjs(),
+  useShinyFeedback(),                 # use html feedbacks
   tags$style(".fa-plus {color:green}"),              # change plus icon color
   tags$style(".fa-calendar-alt {color:green}"),      # change calendar icon color
   tags$style(".fa-backspace {color:red}"),           # change backspace icon color
@@ -41,8 +42,9 @@ body <- dashboardBody(
             fluidRow( 
               # INPUT BOX
               box( title = "Chart options", width = 4,
-                   selectInput("chart", label = "Chart Type:", choices = chartTypes,
-                               selected = NULL),
+                   selectInput("chart", label = "Chart Type:", choices = chartTypes,selected = NULL),
+                   #conditionalPanel("input.chart != ''",  loadingButton("plot_button", "Plot", class = "btn btn-success", loadingLabel = "Plotting...", loadingSpinner = "spinner", style = "width: 100%;")),
+                   conditionalPanel("input.chart != ''",  actionButton("plot_button", "Plot", class = "btn-success", icon = icon("chart-bar"), width = "100%")),
                    helpText("Note: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
                    conditionalPanel("input.chart == 'Histogram'", uiOutput("inBoxHistogram")), # Histogram
                    conditionalPanel("input.chart == 'Line Plot'", uiOutput("inBoxLineplot")), # Line Plot

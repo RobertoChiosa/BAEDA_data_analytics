@@ -67,6 +67,8 @@ library(NbClust)              # cluster validation measures
 # library('rjson')                # read json files
 library('rsconnect')              # deploy on shinyapp.io
 library('shinyWidgets')           # add htms widgets
+library('shinyFeedback')           # add feedbacks
+library('shinyjs')           # javascript
 library('shinyhelper')            # add help feature
 library('reactlog')               # construct a reactive graph
 library('highcharter')            # time series plot
