@@ -76,7 +76,7 @@ body <- dashboardBody(
                    uiOutput("clustering_inbox"),
                    uiOutput("clustering_inbox_nbclust"),
                    uiOutput("clustering_results_nbclust"),
-                   actionButton("cluster_button", "Start Cluster!"),
+                   actionButton("cluster_button", "Perform cluster", class = "btn-success", icon = icon("chart-bar"), width = "100%"),
                    uiOutput("clustering_inbox_postprocessing")),
               # OUTPUT BOX
               box( width = 8, 
@@ -90,12 +90,33 @@ body <- dashboardBody(
               # INPUT BOX
               box( title = "CART options", width = 4, 
                    uiOutput("cart_inbox"),
-                   actionButton("cart_button", "Perform CART"),
+                   actionButton("cart_button", "Perform CART", class = "btn-success", icon = icon("chart-bar"), width = "100%"),
               ),
               # OUTPUT BOX
               box( width = 8,
+                   dropdownButton( size = "sm",
+                     tags$h3("Graphical parameters"),
+                     numericInput(inputId = 'out_cart_tree_fontsize', label = 'Fontsize:', value = 11),
+                     numericInput(inputId = 'out_cart_tree_tnex', label = 'Terminal nodes extension:', value = 2.5),
+                     circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                     tooltip = tooltipOptions(title = "Click to modify plot inputs")
+                   ),
                    plotOutput("out_cart_tree", height = "400px") %>% withSpinner(color = loadingGifColor),
-                   plotOutput("out_cart_cp", height = "400px")%>% withSpinner(color = loadingGifColor)
+                   column(width = 6, style = "padding-left:0px; padding-right:0px;",
+                          dropdownButton( size = "sm",
+                            tags$h3("Graphical parameters"),
+                            selectInput("out_cart_cp_color", "Line color",choices = c("red", "green", "blue")),
+                            selectInput("out_cart_cp_upper", "Upper",choices = c("size", "splits", "none")),
+                            numericInput('out_cart_cp_lty', label = 'Line Type:', value = 2),
+                            circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                            tooltip = tooltipOptions(title = "Click to see plot inputs")
+                          ),
+                          plotOutput("out_cart_cp", height = "400px") %>% withSpinner(color = loadingGifColor)
+                   ),
+                   column(width = 6,
+                          verbatimTextOutput("out_cart_cptable")%>% withSpinner(color = loadingGifColor)
+                   )
+                   
               ) 
             )
     ),

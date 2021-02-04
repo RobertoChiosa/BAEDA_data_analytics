@@ -815,6 +815,7 @@ server <- function(input, output, session) {
     # validation
     req(input$file)                                                   # require a uploaded file
     validate_df <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
+    
     # # give feedback about the absence of a correct dataframe
     # shinyFeedback::hideFeedback("cluster_variable")
     # if ( validate_df == FALSE ) { # incompatible condition
@@ -1052,10 +1053,19 @@ server <- function(input, output, session) {
       ),
       conditionalPanel("input.cart_type == 'rpart' ",
                        selectInput('target_var_rt', 'Target variable:', choices = colnames(data[[input$dataframe]]) ),
-                       selectInput('split_var_rt', 'Split variables:', choices = colnames(data[[input$dataframe]]) , multiple = TRUE),
+                       h5("Select split variables (as.numeric - as.ordered - as.factor)"),
+                       column(width = 4,  style = "padding-left:0px; padding-right:0px;", 
+                              selectInput('split_var_num_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) , multiple = TRUE),
+                       ),
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                              selectInput('split_var_ord_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor )) , multiple = TRUE),
+                       ),
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                              selectInput('split_var_fact_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor )) , multiple = TRUE),
+                       ),
                        selectInput('index_rt', 'Splitting index:', choices = c("gini", "information")),
                        sliderInput(inputId = "maxdepth_rt", label = "Max depth:", min = 1, max = 20, value = 4),
-                       sliderInput(inputId = "cp_rt", label = "Complexity parameter:", min = 1e-8, max = 1e-1, value = 1e-4, step = 1e-5),
+                       sliderInput(inputId = "cp_rt", label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
                        column(width = 4,  style = "padding-left:0px; padding-right:0px;", 
                               numericInput(inputId = "minsplit_rt", label = "Min split:", min = 1, max = 10, value = 0),
                        ),
@@ -1085,19 +1095,23 @@ server <- function(input, output, session) {
     # notification of process
     id <- showNotification("Performing CART...", duration = NULL, closeButton = FALSE, type = "message")
     on.exit(removeNotification(id), add = TRUE)
-    dfct <- data[[input$dataframe]]
+    
+    # select the dataframe to perform CART on
+    dfct <- data[[input$dataframe]] %>%
+      select(c(input$target_var_rt, input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt) ) %>% # keep only selected variables
+      mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
+      mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
     
     if (input$cart_type == "rpart") {
       data_results[["cart_df"]] <- rpart(
-        reformulate(response = input$target_var_rt , termlabels = input$split_var_rt),
-        #.data[[input$target_var_rt]] ~ .data[[input$split_var_rt]],    
-        #eval(parse(text = input$target_var_rt)) ~ eval(parse(text = paste(input$split_var_rt, collapse=" + ") )),                                                    # target attribute based on training attributes
+        reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
         data = dfct ,                                                               # data to be used
         parms = list(split = input$index_rt),
         #method = input$method_rt,
         control = rpart.control(minbucket = input$minbucket_rt,  # 120 min 15 minutes sampling*number of days
                                 cp = input$cp_rt ,                                          # nessun vincolo sul cp permette lo svoluppo completo dell'albero
-                                xval = (length(dfct) - 1 ),                        # k-fold leave one out LOOCV
+                                # xval = (dim(dfct)[1] - 1 ),                        # k-fold leave one out LOOCV
+                                xval = input$xval_rt,
                                 maxdepth = input$maxdepth_rt
         )) 
       
@@ -1112,16 +1126,22 @@ server <- function(input, output, session) {
     req(input$cart_button, data_results[["cart_df"]])
     
     ct_party <- as.party(data_results[["cart_df"]])
-    
     #names(ct_party$data) <- c(input$target_var_rt, input$split_var_rt) # change labels to plot
-    plot(ct_party, tnex = 2.5,  gp = gpar(fontsize = 10))
+    plot(ct_party, tnex = input$out_cart_tree_tnex,  gp = gpar(fontsize = input$out_cart_tree_fontsize))
+    
   })
   
   output$out_cart_cp <- renderPlot({
-    
     req(input$cart_button, data_results[["cart_df"]])
-    plotcp(data_results[["cart_df"]], lty = 2, col = "red", upper = "size")
-    
+    plotcp(data_results[["cart_df"]], 
+           lty = input$out_cart_cp_lty, 
+           col = input$out_cart_cp_color, 
+           upper = input$out_cart_cp_upper)
+  })
+  
+  output$out_cart_cptable <- renderPrint({
+    req(input$cart_button, data_results[["cart_df"]])
+    data_results[["cart_df"]][["cptable"]]
   })
   
 }
