@@ -93,7 +93,9 @@ body <- dashboardBody(
                    actionButton("cart_button", "Perform CART"),
               ),
               # OUTPUT BOX
-              box( width = 8
+              box( width = 8,
+                   plotOutput("out_cart_tree", height = "400px") %>% withSpinner(color = loadingGifColor),
+                   plotOutput("out_cart_cp", height = "400px")%>% withSpinner(color = loadingGifColor)
               ) 
             )
     ),

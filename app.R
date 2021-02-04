@@ -462,7 +462,7 @@ server <- function(input, output, session) {
         plot <- ggplot(data =  data_plot,
                        mapping =  aes(x =  data_plot[,input$variableX_Box], y =  data_plot[,input$variableY_Box],
                                       fill = isolate(if (input$fillvariable_Box == "None") {NULL} else { data_plot[,input$fillvariable_Box]}) 
-                                      ),
+                       ),
         ) + labs( x = input$variableX_Box, y = input$variableY_Box, fill = input$fillvariable_Box ) 
       }
       
@@ -1036,30 +1036,92 @@ server <- function(input, output, session) {
   output$cart_inbox <- renderUI({
     req(input$file) # requires that a file is loaded
     tagList(
-      selectInput('cart_type', 'Select tree:', choices = c("Regression","Classification", "Evolutionary") ),
-      conditionalPanel("input.cart_type == 'Regression' ",
-                       selectInput('target_var_rt', 'Select target variable (numerical):', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) ),
-                       selectInput('split_var_rt', 'Select categorical split variables:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) , multiple = TRUE),
-                       sliderInput(inputId = "minsplit_rt", label = "Min split:", min = 1, max = 100, value = 30),
-                       sliderInput(inputId = "minbucket_rt", label = "Min bucket:", min = 1, max = 100, value = 30),
-                       sliderInput(inputId = "maxdepth_rt", label = "Max depth:", min = 1, max = 100, value = 30)
+      selectInput('cart_type', 'Select algorithm:', choices = c("rpart", "evtree") ),
+      radioGroupButtons( inputId = "cart_objective", label = NULL, choices = c("Descriptive", "Predictive"), selected = "Descriptive", justified = TRUE),
+      conditionalPanel("input.cart_objective == 'Predictive' ",
+                       p("additional parameters..."),
+                       ## predictive train test
+                       # percentuale
+                       # 70 30 continua oppure random sample sbilanciato rispetto variabile categorica
+                       # seed sul sample
+                       # modello su train e prediction confusion matrix 
+                       # predict per testarlo confusion matrix
+                       # seed per evtree
+                       ## descriptive tutto
+                       # campionamento random test train
       ),
-      conditionalPanel("input.cart_type == 'Classification' ",
-                       selectInput('target_var_ct', 'Select target variable (categorical):', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) ),
-                       selectInput('split_var_ct', 'Select categorical split variables:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) , multiple = TRUE),
-                       sliderInput(inputId = "minsplit_ct", label = "Min split:", min = 1, max = 100, value = 30),
-                       sliderInput(inputId = "minbucket_ct", label = "Min bucket:", min = 1, max = 100, value = 30),
-                       sliderInput(inputId = "maxdepth_ct", label = "Max depth:", min = 1, max = 100, value = 30)
+      conditionalPanel("input.cart_type == 'rpart' ",
+                       selectInput('target_var_rt', 'Target variable:', choices = colnames(data[[input$dataframe]]) ),
+                       selectInput('split_var_rt', 'Split variables:', choices = colnames(data[[input$dataframe]]) , multiple = TRUE),
+                       selectInput('index_rt', 'Splitting index:', choices = c("gini", "information")),
+                       sliderInput(inputId = "maxdepth_rt", label = "Max depth:", min = 1, max = 20, value = 4),
+                       sliderInput(inputId = "cp_rt", label = "Complexity parameter:", min = 1e-8, max = 1e-1, value = 1e-4, step = 1e-5),
+                       column(width = 4,  style = "padding-left:0px; padding-right:0px;", 
+                              numericInput(inputId = "minsplit_rt", label = "Min split:", min = 1, max = 10, value = 0),
+                       ),
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                              numericInput(inputId = "minbucket_rt", label = "Min bucket:", min = 1, max = 100, value = 30), # input numerico default e suggestions info
+                       ),
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                              numericInput(inputId = "xval_rt", label = "Cross validation:", min = 0,  value = 10), # input numerico default e suggestions info
+                       )
       ),
-      conditionalPanel("input.cart_type == 'Evolutionary' ",
+      conditionalPanel("input.cart_type == 'evtree' ",
                        selectInput('target_var_ev', 'Select target variable (categorical):', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) ),
                        selectInput('split_var_ev', 'Select categorical split variables:', choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor)) , multiple = TRUE),
-                       sliderInput(inputId = "minsplit_ev", label = "Min split:", min = 1, max = 100, value = 30),
-                       sliderInput(inputId = "minbucket_ev", label = "Min bucket:", min = 1, max = 100, value = 30),
+                       numericInput(inputId = "minsplit_ev", label = "Min split:", min = 1, max = 100, value = 30), # numeric
+                       numericInput(inputId = "minbucket_ev", label = "Min bucket:", min = 1, max = 100, value = 30), # numeric
                        sliderInput(inputId = "maxdepth_ev", label = "Max depth:", min = 1, max = 100, value = 30),
                        textInput(inputId = "seed_ev", label = "Seed:", placeholder = "(ex.) 1234")
       )
     )
+  })
+  
+  # 5.3) CART process ----------------------------------------------------------------------
+  observeEvent(input$cart_button,{
+    # validation
+    req(input$file)                                                   # require a uploaded file                                                # stops execution if no datetime found
+    
+    # notification of process
+    id <- showNotification("Performing CART...", duration = NULL, closeButton = FALSE, type = "message")
+    on.exit(removeNotification(id), add = TRUE)
+    dfct <- data[[input$dataframe]]
+    
+    if (input$cart_type == "rpart") {
+      data_results[["cart_df"]] <- rpart(
+        reformulate(response = input$target_var_rt , termlabels = input$split_var_rt),
+        #.data[[input$target_var_rt]] ~ .data[[input$split_var_rt]],    
+        #eval(parse(text = input$target_var_rt)) ~ eval(parse(text = paste(input$split_var_rt, collapse=" + ") )),                                                    # target attribute based on training attributes
+        data = dfct ,                                                               # data to be used
+        parms = list(split = input$index_rt),
+        #method = input$method_rt,
+        control = rpart.control(minbucket = input$minbucket_rt,  # 120 min 15 minutes sampling*number of days
+                                cp = input$cp_rt ,                                          # nessun vincolo sul cp permette lo svoluppo completo dell'albero
+                                xval = (length(dfct) - 1 ),                        # k-fold leave one out LOOCV
+                                maxdepth = input$maxdepth_rt
+        )) 
+      
+      
+      
+    }
+    
+    
+  })
+  
+  output$out_cart_tree <- renderPlot({
+    req(input$cart_button, data_results[["cart_df"]])
+    
+    ct_party <- as.party(data_results[["cart_df"]])
+    
+    #names(ct_party$data) <- c(input$target_var_rt, input$split_var_rt) # change labels to plot
+    plot(ct_party, tnex = 2.5,  gp = gpar(fontsize = 10))
+  })
+  
+  output$out_cart_cp <- renderPlot({
+    
+    req(input$cart_button, data_results[["cart_df"]])
+    plotcp(data_results[["cart_df"]], lty = 2, col = "red", upper = "size")
+    
   })
   
 }
