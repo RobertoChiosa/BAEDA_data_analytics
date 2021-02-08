@@ -16,6 +16,7 @@ source("functions.R")   # load user defined functions
 source("header.R")      # load header script
 source("sidebar.R")     # load sidebar script
 source("body.R")        # load body script
+source("./modules/module_cart.R")        # load body script
 
 # USER INTERFACE ----------------------------------------------------------------------
 ui <- dashboardPage(skin = "black",                             # sets overall appearance 
@@ -924,6 +925,7 @@ server <- function(input, output, session) {
   
   # 4.7) Plot daily profiles clusters ----------------------------------------------------------------------
   output$out_clustering_preview <- renderPlot({
+    
     # requires a performed clustering and a result dataframe in memory
     validate_df <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
     req(input$cluster_button, data_results[["Clustering_df"]], validate_df)
@@ -985,10 +987,11 @@ server <- function(input, output, session) {
         axis.text.x = element_text(size=12, angle=45, vjust = .5),
         axis.text.y = element_text(size=12 , vjust=.3),
       ) +
-      labs(x = "Time", y = input$cluster_variable, color = "Cluster") +
+      labs(x = "Time", y = isolate(input$cluster_variable), color = "Cluster") +
       facet_wrap(~Cluster_lab)
     
     plot
+  
   })
   
   
@@ -1036,6 +1039,9 @@ server <- function(input, output, session) {
   # 5.1) CART input parameters ----------------------------------------------------------------------
   output$cart_inbox <- renderUI({
     req(input$file) # requires that a file is loaded
+    # df_cartUI <- data[[input$dataframe]]
+    # cartInput("cart", df_cartUI)
+    
     tagList(
       selectInput('cart_type', 'Select algorithm:', choices = c("rpart", "evtree") ),
       radioGroupButtons( inputId = "cart_objective", label = NULL, choices = c("Descriptive", "Predictive"), selected = "Descriptive", justified = TRUE),
@@ -1045,7 +1051,7 @@ server <- function(input, output, session) {
                        # percentuale
                        # 70 30 continua oppure random sample sbilanciato rispetto variabile categorica
                        # seed sul sample
-                       # modello su train e prediction confusion matrix 
+                       # modello su train e prediction confusion matrix
                        # predict per testarlo confusion matrix
                        # seed per evtree
                        ## descriptive tutto
@@ -1054,25 +1060,25 @@ server <- function(input, output, session) {
       conditionalPanel("input.cart_type == 'rpart' ",
                        selectInput('target_var_rt', 'Target variable:', choices = colnames(data[[input$dataframe]]) ),
                        h5("Select split variables (as.numeric - as.ordered - as.factor)"),
-                       column(width = 4,  style = "padding-left:0px; padding-right:0px;", 
+                       column(width = 4,  style = "padding-left:0px; padding-right:0px;",
                               selectInput('split_var_num_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) , multiple = TRUE),
                        ),
-                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;",
                               selectInput('split_var_ord_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor )) , multiple = TRUE),
                        ),
-                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;",
                               selectInput('split_var_fact_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor )) , multiple = TRUE),
                        ),
                        selectInput('index_rt', 'Splitting index:', choices = c("gini", "information")),
                        sliderInput(inputId = "maxdepth_rt", label = "Max depth:", min = 1, max = 20, value = 4),
                        sliderInput(inputId = "cp_rt", label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
-                       column(width = 4,  style = "padding-left:0px; padding-right:0px;", 
+                       column(width = 4,  style = "padding-left:0px; padding-right:0px;",
                               numericInput(inputId = "minsplit_rt", label = "Min split:", min = 1, max = 10, value = 0),
                        ),
-                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;",
                               numericInput(inputId = "minbucket_rt", label = "Min bucket:", min = 1, max = 100, value = 30), # input numerico default e suggestions info
                        ),
-                       column(width = 4,  style = "padding-left:10px; padding-right:0px;", 
+                       column(width = 4,  style = "padding-left:10px; padding-right:0px;",
                               numericInput(inputId = "xval_rt", label = "Cross validation:", min = 0,  value = 10), # input numerico default e suggestions info
                        )
       ),
@@ -1088,20 +1094,23 @@ server <- function(input, output, session) {
   })
   
   # 5.3) CART process ----------------------------------------------------------------------
+  
+  
+  #ttt <-  cartServer("cart", data[[input$dataframe]])
   observeEvent(input$cart_button,{
     # validation
     req(input$file)                                                   # require a uploaded file                                                # stops execution if no datetime found
-    
+
     # notification of process
     id <- showNotification("Performing CART...", duration = NULL, closeButton = FALSE, type = "message")
     on.exit(removeNotification(id), add = TRUE)
-    
+
     # select the dataframe to perform CART on
     dfct <- data[[input$dataframe]] %>%
       select(c(input$target_var_rt, input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt) ) %>% # keep only selected variables
       mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
       mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
-    
+
     if (input$cart_type == "rpart") {
       data_results[["cart_df"]] <- rpart(
         reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
@@ -1113,26 +1122,24 @@ server <- function(input, output, session) {
                                 # xval = (dim(dfct)[1] - 1 ),                        # k-fold leave one out LOOCV
                                 xval = input$xval_rt,
                                 maxdepth = input$maxdepth_rt
-        )) 
-      
-      
-      
+        ))
+
     }
-    
-    
+
   })
   
+  
   output$out_cart_tree <- renderPlot({
-    req(input$cart_button, data_results[["cart_df"]])
-    
+    req(input[["cart_button"]], data_results[["cart_df"]])
+
     ct_party <- as.party(data_results[["cart_df"]])
     #names(ct_party$data) <- c(input$target_var_rt, input$split_var_rt) # change labels to plot
     plot(ct_party, tnex = input$out_cart_tree_tnex,  gp = gpar(fontsize = input$out_cart_tree_fontsize))
-    
+
   })
   
   output$out_cart_cp <- renderPlot({
-    req(input$cart_button, data_results[["cart_df"]])
+    req(input[["cart_button"]], data_results[["cart_df"]])
     plotcp(data_results[["cart_df"]], 
            lty = input$out_cart_cp_lty, 
            col = input$out_cart_cp_color, 
@@ -1140,7 +1147,7 @@ server <- function(input, output, session) {
   })
   
   output$out_cart_cptable <- renderPrint({
-    req(input$cart_button, data_results[["cart_df"]])
+    req(input[["cart_button"]], data_results[["cart_df"]])
     data_results[["cart_df"]][["cptable"]]
   })
   
