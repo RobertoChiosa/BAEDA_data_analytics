@@ -9,8 +9,8 @@ chartTypes <- c("","Carpet","Line Plot","Scatter Plot", "Box Plot","Histogram") 
 loadingGifColor <- "#0dc5c1"
 body <- dashboardBody(
   useShinyalert(),                                   # use html popups
-  useShinyjs(),
-  useShinyFeedback(),                 # use html feedbacks
+  useShinyjs(),                                      # add dependencies to js
+  useShinyFeedback(),                                # use html feedbacks
   tags$style(".fa-plus {color:green}"),              # change plus icon color
   tags$style(".fa-calendar-alt {color:green}"),      # change calendar icon color
   tags$style(".fa-backspace {color:red}"),           # change backspace icon color
@@ -46,21 +46,21 @@ body <- dashboardBody(
                    #conditionalPanel("input.chart != ''",  loadingButton("plot_button", "Plot", class = "btn btn-success", loadingLabel = "Plotting...", loadingSpinner = "spinner", style = "width: 100%;")),
                    conditionalPanel("input.chart != ''",  actionButton("plot_button", "Plot", class = "btn-success", icon = icon("chart-bar"), width = "100%")),
                    helpText("Note: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
-                   conditionalPanel("input.chart == 'Histogram'", uiOutput("inBoxHistogram")), # Histogram
-                   conditionalPanel("input.chart == 'Line Plot'", uiOutput("inBoxLineplot")), # Line Plot
-                   conditionalPanel("input.chart == 'Scatter Plot'", uiOutput("inBoxScatterplot")), # Scatter Plot
-                   conditionalPanel("input.chart == 'Box Plot'", uiOutput("inBoxBoxplot")), # Boxplot
-                   conditionalPanel("input.chart == 'Carpet'", uiOutput("inBoxCarpet")), # Carpet
+                   conditionalPanel("input.chart == 'Histogram'",     uiOutput("inBoxHistogram")),    # Histogram
+                   conditionalPanel("input.chart == 'Line Plot'",     uiOutput("inBoxLineplot")),     # Line Plot
+                   conditionalPanel("input.chart == 'Scatter Plot'",  uiOutput("inBoxScatterplot")),  # Scatter Plot
+                   conditionalPanel("input.chart == 'Box Plot'",      uiOutput("inBoxBoxplot")),      # Boxplot
+                   conditionalPanel("input.chart == 'Carpet'",        uiOutput("inBoxCarpet")),       # Carpet
                    # actionButton("plotButton", "Plot", width = '100%', style = "color: #fff; background-color: red; border-color: #red"),
                    downloadButton('downloadplotButton', 'Download', style = "width:100%;"),
               ), 
               # OUTPUT BOX
               box(width = 8,
-                  conditionalPanel("input.chart == 'Histogram'", plotlyOutput("outBoxHistogram", height = "600px") %>% withSpinner(color = loadingGifColor)), # Histogram
-                  conditionalPanel("input.chart == 'Line Plot'", plotlyOutput("outBoxLineplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Line Plot
+                  conditionalPanel("input.chart == 'Histogram'",    plotlyOutput("outBoxHistogram", height = "600px") %>% withSpinner(color = loadingGifColor)), # Histogram
+                  conditionalPanel("input.chart == 'Line Plot'",    plotlyOutput("outBoxLineplot",  height = "600px") %>% withSpinner(color = loadingGifColor)), # Line Plot
                   conditionalPanel("input.chart == 'Scatter Plot'", plotOutput("outBoxScatterplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Scatter Plot
-                  conditionalPanel("input.chart == 'Box Plot'", plotOutput("outBoxBoxplot", height = "600px") %>% withSpinner(color = loadingGifColor)), # Boxplot
-                  conditionalPanel("input.chart == 'Carpet'", plotlyOutput("outBoxCarpet", height = "600px") %>% withSpinner(color = loadingGifColor)), # Carpet
+                  conditionalPanel("input.chart == 'Box Plot'",     plotOutput("outBoxBoxplot",     height = "600px") %>% withSpinner(color = loadingGifColor)), # Boxplot
+                  conditionalPanel("input.chart == 'Carpet'",       plotlyOutput("outBoxCarpet",    height = "600px") %>% withSpinner(color = loadingGifColor)), # Carpet
               ), 
             )
     ), # END 5th (SUB)TAB "Visualize"

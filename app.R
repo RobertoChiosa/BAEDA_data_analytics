@@ -837,11 +837,11 @@ server <- function(input, output, session) {
     
     # normalize data given input command
     switch(input$cluster_normalization,
-           none = df1 <- df1,
-           zscore = df1 <- df1 %>% dplyr::mutate(X = (X-mean(X))/sd(X) ) ,
-           max = df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = X/max(X)) %>% dplyr::ungroup(),
-           min = df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = X/min(X)) %>% dplyr::ungroup(),
-           maxmin = df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = (X-min(X))/(max(X)-min(X)) )  %>% dplyr::ungroup()
+           none =    df1 <- df1,
+           zscore =  df1 <- df1 %>% dplyr::mutate(X = (X-mean(X))/sd(X) ) ,
+           max =     df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = X/max(X)) %>% dplyr::ungroup(),
+           min =     df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = X/min(X)) %>% dplyr::ungroup(),
+           maxmin =  df1 <- df1 %>% dplyr::group_by(Date) %>% dplyr::mutate(X = (X-min(X))/(max(X)-min(X)) )  %>% dplyr::ungroup()
     )
     
     # create M N matrix
@@ -879,8 +879,11 @@ server <- function(input, output, session) {
       df2$Cluster <- cutree(hcl, input$cluster_number)                                # add labels to dataframe
     }
     
+    # reconstruct the variable column name
+    colnames(df1)[3] <- input$cluster_variable
     # merge cluster information with the original dataframe
     df1 <- merge.data.frame(df1, df2[c("Date", "Cluster")])
+    df1$Cluster <- as.factor(df1$Cluster)
     # saves df1 in memory as result
     data_results[["Clustering_df"]] <- df1
     
@@ -932,6 +935,7 @@ server <- function(input, output, session) {
     
     df1 <- data_results[["Clustering_df"]] # load actual cluster dataframe
     
+    colnames(df1)[colnames(df1) == input$cluster_variable] <- "X"
     # manipulates the dataframe to add cluster label with count 
     conteggio <- df1 %>% 
       pivot_wider(names_from = Time, values_from = X)  %>%
@@ -1064,10 +1068,10 @@ server <- function(input, output, session) {
                               selectInput('split_var_num_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) , multiple = TRUE),
                        ),
                        column(width = 4,  style = "padding-left:10px; padding-right:0px;",
-                              selectInput('split_var_ord_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor )) , multiple = TRUE),
+                              selectInput('split_var_ord_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], function(col) is.factor(col) | is.integer(col) )) , multiple = TRUE),
                        ),
                        column(width = 4,  style = "padding-left:10px; padding-right:0px;",
-                              selectInput('split_var_fact_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.factor )) , multiple = TRUE),
+                              selectInput('split_var_fact_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], function(col) is.factor(col) | is.integer(col) )) , multiple = TRUE),
                        ),
                        selectInput('index_rt', 'Splitting index:', choices = c("gini", "information")),
                        sliderInput(inputId = "maxdepth_rt", label = "Max depth:", min = 1, max = 20, value = 4),

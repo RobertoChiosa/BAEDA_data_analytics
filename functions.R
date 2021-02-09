@@ -28,52 +28,72 @@ add_calendar_variables <- function(timestamp, timezone, df) {
   id <- showNotification("Calculating...", duration = NULL, closeButton = FALSE, type = "message")
   on.exit(removeNotification(id), add = TRUE)
   
-  # allowed time formats - update accordingly
-  dateFormats <- c("%Y-%m-%d %H:%M:%S",       # ISO date format
-                   "%m/%d %H:%M:%S",          # energy+
-                   "%m/%d  %H:%M:%S",         # energy+ 2 spazi
-                   " %m/%d    %H:%M:%S",      # energy+ 2 spazi +1
-                   "%d/%m/%y %H:%M")          # accepted date formats
+  # allowed datetime formats - update accordingly
+  datetimeFormats <- c("%Y-%m-%d %H:%M:%S",       # ISO date format
+                       "%m/%d %H:%M:%S",          # energy+
+                       "%m/%d  %H:%M:%S",         # energy+ 2 spazi
+                       " %m/%d    %H:%M:%S",      # energy+ 2 spazi +1
+                       "%d/%m/%y %H:%M"
+  )          
+  # allowed date formats - update accordingly
+  dateFormats <- c("%Y-%m-%d"
+  )          
   
   if (timestamp == T) {
+    # function to automatically find datetime column
+    coldatetime <- sapply(df,   function(x) !all(is.na(as.Date(as.character(x), format = datetimeFormats))))
     # function to automatically find date column
     coldate <- sapply(df,   function(x) !all(is.na(as.Date(as.character(x), format = dateFormats))))
     
+    
     # in no timestamp column can be found notify the user
-    if (any(coldate) == FALSE) {
+    if (any(coldatetime) == FALSE & any(coldate) == FALSE) {
       df_out <- df
       # warning notification
       shinyalert(title = "No timestamp column found!",
-                 paste("It was not possible to add the desired columns"),
+                 paste("It was not possible to add calendar variables"),
                  type = "error",
                  closeOnEsc = TRUE,
                  closeOnClickOutside = TRUE,
                  html = TRUE
       )
-    } else if (sum(coldate[TRUE])>1)  { # if timestamp columns found create date time columns
+    } else if (sum(coldatetime[TRUE])>1 | sum(coldate[TRUE])>1)  { # if timestamp columns found create date time columns
       df_out <- df
       # warning notification
       shinyalert(title = "Multiple timestamp column found!",
-                 paste("It was not possible to add the desired columns"),
+                 paste("It was not possible to add the calendar variables"),
                  type = "error",
                  closeOnEsc = TRUE,
                  closeOnClickOutside = TRUE,
                  html = TRUE
       )
     }else{
-      df_out <- df %>%
-        mutate(
-          Date_Time = as.POSIXct(df[,coldate] , format = "%Y-%m-%d %H:%M:%S" , tz = timezone), # depend on selected timezone
-          Date = as.Date(Date_Time), # week start on monday
-          Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
-          Month = month(Date_Time, label = TRUE), # ordered factor
-          Month_Day = mday(Date_Time), # numeric
-          Year = as.ordered(year(Date_Time)), # ordered factor
-          Year_Day = mday(Date_Time), # numeric
-          Hour = hour(Date_Time), # numeric
-          Minute = minute(Date_Time), # numeric
-          min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
-        )%>% na.omit()
+      
+      if (any(coldatetime) == TRUE) { # if datetime found give priority to this transformation
+        df_out <- df %>%
+          mutate(
+            Date_Time = as.POSIXct(df[,coldatetime] , format = "%Y-%m-%d %H:%M:%S" , tz = timezone), # depend on selected timezone
+            Date = as.Date(Date_Time), # week start on monday
+            Week_Day = wday(Date_Time, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
+            Month = month(Date_Time, label = TRUE), # ordered factor
+            Month_Day = mday(Date_Time), # numeric
+            Year = as.ordered(year(Date_Time)), # ordered factor
+            Year_Day = mday(Date_Time), # numeric
+            Hour = hour(Date_Time), # numeric
+            Minute = minute(Date_Time), # numeric
+            min_dec = as.numeric(paste(Hour, Minute*100/60, sep = ".")) # numeric
+          )%>% na.omit()
+      } else { # perform date
+        df_out <- df %>%
+          mutate(
+            Date = as.Date(df[,coldate]), # week start on monday
+            Week_Day = wday(Date, label = TRUE, week_start = getOption("lubridate.week.start", 1)), # week start on monday
+            Month = month(Date, label = TRUE), # ordered factor
+            Month_Day = mday(Date), # numeric
+            Year = as.ordered(year(Date)), # ordered factor
+            Year_Day = mday(Date) # numeric
+          )%>% na.omit()
+      }
       # success notification
       shinyalert(title = "Columns successfully added",
                  text = paste("You can find the updated dataframe in the dataframe dropdown"),
