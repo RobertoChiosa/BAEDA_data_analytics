@@ -1,5 +1,5 @@
 #################################################################################
-###############            Copyright © BAEDA Lab 2020             ###############
+###############            Copyright © BAEDA Lab 2021             ###############
 ###############                     -------                       ###############
 ###############                  Roberto Chiosa                   ###############
 ###############             roberto.chiosa@polito.it              ###############
@@ -618,8 +618,6 @@ server <- function(input, output, session) {
       
       plot <- ggplotly(plot, tooltip = c("text"), dynamicTicks = TRUE) 
       
-      resetLoadingButton("plot_button")         # reset the loading button
-      
       plot %>%
         layout(hovermode = "x unified",
                showlegend = T,
@@ -879,13 +877,25 @@ server <- function(input, output, session) {
       df2$Cluster <- cutree(hcl, input$cluster_number)                                # add labels to dataframe
     }
     
+    
     # reconstruct the variable column name
     colnames(df1)[3] <- input$cluster_variable
+    
+    # create color palette
+    color_palette <- brewer.pal(12, "Paired")
+    
+    data_results[["Clustering_df_color"]] <- data.frame(Cluster = unique(df2$Cluster), 
+                                                        Color = color_palette[c( 1:length(unique(df2$Cluster)))] 
+    )
+    
+    # save small dataframe
+    data_results[["Clustering_df_date"]] <- df2 %>%
+      select(Date, Cluster) %>%
+      mutate(Cluster = as.factor(Cluster))
+    
     # merge cluster information with the original dataframe
-    df1 <- merge.data.frame(df1, df2[c("Date", "Cluster")])
-    df1$Cluster <- as.factor(df1$Cluster)
-    # saves df1 in memory as result
-    data_results[["Clustering_df"]] <- df1
+    data_results[["Clustering_df"]] <- merge.data.frame(df1, df2[,c("Date", "Cluster") ]) %>%
+      mutate(Cluster = as.factor(Cluster))
     
     # validation of nbclust function
     validate_nbclust <- input$radio_nbclust == "Yes" # if TRUE the user has checkes yes
@@ -933,8 +943,10 @@ server <- function(input, output, session) {
     validate_df <- "Date_Time" %in% colnames(data[[input$dataframe]]) # require this column to be created
     req(input$cluster_button, data_results[["Clustering_df"]], validate_df)
     
-    df1 <- data_results[["Clustering_df"]] # load actual cluster dataframe
+    # load actual cluster dataframe and add color info
+    df1 <-  merge(data_results[["Clustering_df"]], data_results[["Clustering_df_color"]]) 
     
+    # go back to the original notation
     colnames(df1)[colnames(df1) == input$cluster_variable] <- "X"
     # manipulates the dataframe to add cluster label with count 
     conteggio <- df1 %>% 
@@ -949,10 +961,9 @@ server <- function(input, output, session) {
     df1 <- merge.data.frame(df1, conteggio[c("Cluster", "Cluster_lab")])
     
     # calculates the centroid for each cluster
-    centr <- ddply(df1, c("Cluster_lab","Time"), summarise, X = mean(X))
+    centr <- ddply(df1, c("Cluster_lab","Time", "Color"), summarise, X = mean(X))
     
     # graphical parameters
-    clusters_colors <- brewer.pal(12, "Paired")
     line_color <- "gray"
     line_size <- 0.5
     line_alpha <- 0.7
@@ -970,9 +981,8 @@ server <- function(input, output, session) {
       geom_line(data = centr,
                 aes(x = as.POSIXct(Time, format="%H:%M:%S" , tz = input[[timezone]]) ,
                     y = X,
-                    color = as.factor(Cluster_lab)),
+                    color = Color),
                 size = line_size*2, na.rm = T) +
-      scale_color_manual(values = clusters_colors[c(1:input$cluster_number)]) +
       scale_x_datetime(
         breaks = date_breaks("4 hour"),                     # specify breaks every 4 hours
         labels = date_format(("%H:%M") , tz = input[[timezone]]),  # specify format of labels
@@ -995,7 +1005,7 @@ server <- function(input, output, session) {
       facet_wrap(~Cluster_lab)
     
     plot
-  
+    
   })
   
   
@@ -1104,17 +1114,18 @@ server <- function(input, output, session) {
   observeEvent(input$cart_button,{
     # validation
     req(input$file)                                                   # require a uploaded file                                                # stops execution if no datetime found
-
+    
     # notification of process
     id <- showNotification("Performing CART...", duration = NULL, closeButton = FALSE, type = "message")
     on.exit(removeNotification(id), add = TRUE)
-
+    
     # select the dataframe to perform CART on
     dfct <- data[[input$dataframe]] %>%
       select(c(input$target_var_rt, input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt) ) %>% # keep only selected variables
       mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
       mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
-
+    
+    
     if (input$cart_type == "rpart") {
       data_results[["cart_df"]] <- rpart(
         reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
@@ -1127,19 +1138,19 @@ server <- function(input, output, session) {
                                 xval = input$xval_rt,
                                 maxdepth = input$maxdepth_rt
         ))
-
+      
     }
-
+    
   })
   
   
   output$out_cart_tree <- renderPlot({
     req(input[["cart_button"]], data_results[["cart_df"]])
-
+    # cols <- as.vector(data_results[["Clustering_df_color"]]$Color)
     ct_party <- as.party(data_results[["cart_df"]])
     #names(ct_party$data) <- c(input$target_var_rt, input$split_var_rt) # change labels to plot
     plot(ct_party, tnex = input$out_cart_tree_tnex,  gp = gpar(fontsize = input$out_cart_tree_fontsize))
-
+    
   })
   
   output$out_cart_cp <- renderPlot({
