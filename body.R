@@ -14,7 +14,7 @@ body <- dashboardBody(
   tags$style(".fa-plus {color:green}"),              # change plus icon color
   tags$style(".fa-calendar-alt {color:green}"),      # change calendar icon color
   tags$style(".fa-backspace {color:red}"),           # change backspace icon color
-  # shinyDashboardThemes(theme = "purple_gradient"), # cool dashboard theme
+  #shinyDashboardThemes(theme = "poor_mans_flatly"), # cool dashboard theme
   
   load_file_modal(),      # modal dialog window that permits the input of file
   tabItems(
@@ -68,75 +68,96 @@ body <- dashboardBody(
     
     ###### TAB "Advanced" ----------------------------------------------------------------------
     tabItem(tabName = "clustering",
+            
             fluidRow( 
               # INPUT BOX
-              box( title = "Clustering options", width = 4, 
-                   helpText("Note 1: In this section we perform a daily load profile clustering. It is not intended to be a generical clustering process."),
-                   helpText("Note 2: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
-                   uiOutput("clustering_inbox"),
-                   uiOutput("clustering_inbox_nbclust"),
-                   uiOutput("clustering_results_nbclust"),
-                   actionButton("cluster_button", "Perform cluster", class = "btn-success", icon = icon("chart-bar"), width = "100%"),
-                   uiOutput("clustering_inbox_postprocessing")),
-              # OUTPUT BOX
-              box( width = 8, 
-                   plotOutput("out_clustering_preview", height = "400px") %>% withSpinner(color = loadingGifColor),
-                   plotOutput("out_clustering_dendogram", height = "400px")
-              ) 
+              column(width = 4,
+                     # INPUT BOX
+                     box( title = "Clustering options", width = 12, 
+                          helpText("Note 1: In this section we perform a daily load profile clustering. It is not intended to be a generical clustering process."),
+                          helpText("Note 2: We require the column Date_Time, Date, Year, Month, min_dec, Hours. If an error displays add them by clicking the button \"Add calendar variables\" in the sidebar."),
+                          uiOutput("clustering_inbox"),
+                          uiOutput("clustering_inbox_nbclust"),
+                          uiOutput("clustering_results_nbclust"),
+                          actionButton("cluster_button", "Perform cluster", class = "btn-success", icon = icon("chart-bar"), width = "100%"),
+                          uiOutput("clustering_inbox_postprocessing")),
+              ),
+              column(width = 8,
+                     # INPUT BOX
+                     box( width = 12, 
+                          dropdownButton( size = "sm",
+                                          tags$h3("Graphical parameters"),
+                                          numericInput(inputId = 'out_clustering_fontsize', label = 'Fontsize:', value = 15),
+                                          numericInput(inputId = 'out_clustering_linesize', label = 'Line size:', value = 0.5),
+                                          numericInput(inputId = 'out_clustering_alpha', label = 'Line alpha:', value = 0.7),
+                                          circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                                          tooltip = tooltipOptions(title = "Click to modify plot inputs")
+                          ),
+                          plotOutput("out_clustering_preview", height = "600px") %>% withSpinner(color = loadingGifColor)
+                     ),
+                     box( width = 12, 
+                          plotOutput("out_clustering_dendogram", height = "600px")
+                     )
+              )
             )
     ),
     tabItem(tabName = "cart",
             fluidRow( 
               # INPUT BOX
-              box( title = "CART options", width = 4, 
-                   uiOutput("cart_inbox"),
-                   actionButton("cart_button", "Perform CART", class = "btn-success", icon = icon("chart-bar"), width = "100%"),
+              column(width = 4,
+                     box( width = 12, 
+                          title = "CART options",
+                          uiOutput("cart_inbox"),
+                          actionButton("cart_button", "Perform CART", class = "btn-success", icon = icon("chart-bar"), width = "100%"),
+                     )
               ),
-              # OUTPUT BOX
-              box( width = 8,
-                   dropdownButton( size = "sm",
-                     tags$h3("Graphical parameters"),
-                     numericInput(inputId = 'out_cart_tree_fontsize', label = 'Fontsize:', value = 11),
-                     numericInput(inputId = 'out_cart_tree_tnex', label = 'Terminal nodes extension:', value = 2.5),
-                     circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
-                     tooltip = tooltipOptions(title = "Click to modify plot inputs")
-                   ),
-                   plotOutput("out_cart_tree", height = "400px") %>% withSpinner(color = loadingGifColor),
-                   column(width = 6, style = "padding-left:0px; padding-right:0px;",
-                          dropdownButton( size = "sm",
-                            tags$h3("Graphical parameters"),
-                            selectInput("out_cart_cp_color", "Line color",choices = c("red", "green", "blue")),
-                            selectInput("out_cart_cp_upper", "Upper",choices = c("size", "splits", "none")),
-                            numericInput('out_cart_cp_lty', label = 'Line Type:', value = 2),
-                            circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
-                            tooltip = tooltipOptions(title = "Click to see plot inputs")
-                          ),
-                          plotOutput("out_cart_cp", height = "400px") %>% withSpinner(color = loadingGifColor)
-                   ),
-                   column(width = 6,
-                          verbatimTextOutput("out_cart_cptable")%>% withSpinner(color = loadingGifColor)
-                   )
-                   
-              ) 
+              column(width = 8,
+                     # OUTPUT BOX
+                     box( width = 12,
+                       dropdownButton( size = "sm",
+                                       tags$h3("Graphical parameters"),
+                                       numericInput(inputId = 'out_cart_tree_fontsize', label = 'Fontsize:', value = 11),
+                                       numericInput(inputId = 'out_cart_tree_tnex', label = 'Terminal nodes extension:', value = 2.5),
+                                       circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                                       tooltip = tooltipOptions(title = "Click to modify plot inputs")
+                       ),
+                       plotOutput("out_cart_tree", height = "400px") %>% withSpinner(color = loadingGifColor),
+                     ),
+                     box( width = 6,
+                       dropdownButton( size = "sm",
+                                       tags$h3("Graphical parameters"),
+                                       selectInput("out_cart_cp_color", "Line color",choices = c("red", "green", "blue")),
+                                       selectInput("out_cart_cp_upper", "Upper",choices = c("size", "splits", "none")),
+                                       numericInput('out_cart_cp_lty', label = 'Line Type:', value = 2),
+                                       circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                                       tooltip = tooltipOptions(title = "Click to see plot inputs")
+                       ),
+                       plotOutput("out_cart_cp", height = "400px") %>% withSpinner(color = loadingGifColor),
+                       verbatimTextOutput("out_cart_cptable")%>% withSpinner(color = loadingGifColor)
+                     ),
+                     box( width = 6, 
+                       plotOutput("out_cart_cm") %>% withSpinner(color = loadingGifColor)
+                     )
+              )
             )
     ),
-    
-    # documentation
-    tabItem(tabName = "help",  includeMarkdown("docs/wiki/complete.md") )
-  ),
   
-  # © e link alle istituzioni
-  absolutePanel(
-    HTML(
-      "© 2020 
+  # documentation
+  tabItem(tabName = "help",  includeMarkdown("docs/wiki/complete.md") )
+),
+
+# © e link alle istituzioni
+absolutePanel(
+  HTML(
+    "© 2020 
       <a href='https://www.denerg.polito.it/'>BAEDA Lab</a> | 
       <a href='https://www.denerg.polito.it/'>Dipartimento Energia</a> | 
       <a href='https://www.denerg.polito.it/'>Politecnico di Torino</a>
       "
-    ),
-    bottom = "1%", 
-    right = "1%", 
-    fixed = TRUE,
-    color = "#3c4c54"
-  )
+  ),
+  bottom = "1%", 
+  right = "1%", 
+  fixed = TRUE,
+  color = "#3c4c54"
+)
 )

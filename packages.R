@@ -44,7 +44,7 @@ library('partykit')             # regression and classification tree plot and to
 library('MLmetrics')            # measure regression) classification and ranking performance.
 # library('imputeTS')             # manage missing values
 # library('jmotif')               # sax manipulations
-# library('ggpubr')               # multiple plots in line or column
+library('ggpubr')               # multiple plots in line or column
 # library('stringr')              # multiple plots in line or column
 library(caret)
 library(dendextend) # color clusters

@@ -19,13 +19,15 @@ source("body.R")        # load body script
 source("./modules/module_cart.R")        # load body script
 
 # USER INTERFACE ----------------------------------------------------------------------
-ui <- dashboardPage(skin = "black",                             # sets overall appearance 
-                    header,                                     # loaded from external script
-                    sidebar,                                    # loaded from external script
-                    body,                                        # loaded from external script
-                    tags$style(type="text/css",
-                               ".shiny-output-error { visibility: hidden; }",
-                               ".shiny-output-error:before { visibility: hidden; }")
+ui <- dashboardPage(
+  header,                                     # loaded from external script
+  sidebar,                                    # loaded from external script
+  body,                                        # loaded from external script
+  # tags$style(type="text/css",
+  #            ".shiny-output-error { visibility: hidden; }",
+  #            ".shiny-output-error:before { visibility: hidden; }"),
+  skin = "black",                             # sets overall appearance 
+  title = "eDASH - Student Version"
 )
 
 # SERVER FUNCTION ----------------------------------------------------------------------
@@ -221,7 +223,25 @@ server <- function(input, output, session) {
   output$addColumn <- renderUI({
     req(input$file)
     tagList(
-      textInput("expression", "IF ELSE expression", placeholder = "if_else(CONDITION, TRUE, FALSE)"),
+      h5("Please compose the expression"),
+      column(width = 5, style = "padding-left:0px; padding-right:10px;",
+             selectInput(label = NULL, "condition_LHS", choices = colnames( data[[input$dataframe]]  ) )
+      ),
+      column(width = 2, style = "padding-left:0px; padding-right:10px;",
+             selectInput(label = NULL, "condition_operator", choices = c(">",">=","<", "<=","==") )
+      ),
+      column(width = 5, style = "padding-left:0px; padding-right:0px;",
+             textInput(label = NULL, "condition_RHS", placeholder = "(e.g., 1200)", value = NULL)
+      ),
+      column(width = 6, style = "padding-left:0px; padding-right:10px;",
+             textInput(label = NULL, "condition_true", placeholder = "IF TRUE", value = NULL)
+      ),
+      column(width = 6, style = "padding-left:0px; padding-right:10px;",
+             textInput(label = NULL, "condition_false", placeholder = "ELSE (FALSE)", value = NULL)
+      ),
+      
+      verbatimTextOutput("expression"),
+      
       searchInput(inputId = "add_columnName", label = NULL, 
                   placeholder = "Column name..", 
                   value = NULL, # initial value
@@ -230,11 +250,48 @@ server <- function(input, output, session) {
     )
   })
   # SERVER side
+  # 
+  observe(
+    output$expression <- renderText(
+      paste(
+        "if_else(",
+        input$condition_LHS, input$condition_operator, input$condition_RHS, ",",
+        input$condition_true,",", input$condition_false, ")"
+      )
+    )
+  )
   observeEvent(input$add_columnName_search,{
     
-    # # if_else(festivo == "S",1,2)
-    # data[[input$dataframe]] <-  data[[input$dataframe]] %>%
-    #   mutate( New = parse_quo(input$expression, env = caller_env())  )
+    validated <- TRUE                          # validated is TRUE if the value is acceptable FALSE if not acceptable
+    
+    shinyFeedback::hideFeedback("condition_false")
+    shinyFeedback::hideFeedback("condition_true")
+    shinyFeedback::hideFeedback("condition_RHS")
+    shinyFeedback::hideFeedback("add_columnName")
+    
+    if (input$condition_false == "") { shinyFeedback::feedbackWarning("condition_false", TRUE, "Please fill")
+      validated = FALSE} 
+    if (input$condition_true == "") { shinyFeedback::feedbackWarning("condition_true", TRUE, "Please fill")
+      validated = FALSE} 
+    if (input$condition_RHS== "") { shinyFeedback::feedbackWarning("condition_RHS", TRUE, "Please fill")
+      validated = FALSE} 
+    if (input$add_columnName == "") { shinyFeedback::feedbackWarning("add_columnName", TRUE, "Please fill")
+      validated = FALSE} 
+    
+    req(validated)
+    
+    expression_toeval <- paste(
+      "ifelse(",
+      input$condition_LHS, input$condition_operator, input$condition_RHS, ",",
+      input$condition_true,",", input$condition_false, ")"
+    )
+    
+    # if_else(festivo == "S",1,2)
+    data[[input$dataframe]] <-  data[[input$dataframe]] %>%
+      mutate( New = eval(parse(text = expression_toeval)))
+    
+    colnames(data[[input$dataframe]])[colnames(data[[input$dataframe]]) == "New"] <- input$add_columnName
+    
     
     shinyalert(title = "Column successfully added",
                text = paste("Column <b>", input$add_columnName, "</b> added to <b>", input$dataframe, "</b>"), 
@@ -965,8 +1022,8 @@ server <- function(input, output, session) {
     
     # graphical parameters
     line_color <- "gray"
-    line_size <- 0.5
-    line_alpha <- 0.7
+    line_size <- input$out_clustering_linesize
+    line_alpha <- input$out_clustering_alpha
     timezone <- gsub(" ", "", paste("timezone_", input$type))
     
     plot <- ggplot() +
@@ -995,11 +1052,11 @@ server <- function(input, output, session) {
       theme_bw() +                                           # white bakground with lines
       ggplot2::theme(
         legend.position = "none",                     # legend position on the top of the graph
-        strip.text = element_text(size = 12), # facet wrap title fontsize
-        axis.title.x = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
-        axis.title.y = element_text(size=15,margin = margin(t = 20, r = 20, b = 0, l = 0)),
-        axis.text.x = element_text(size=12, angle=45, vjust = .5),
-        axis.text.y = element_text(size=12 , vjust=.3),
+        strip.text = element_text(size = eval(input$out_clustering_fontsize-3)), # facet wrap title fontsize
+        axis.title.x = element_text(size = input$out_clustering_fontsize, margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.title.y = element_text(size = input$out_clustering_fontsize, margin = margin(t = 20, r = 20, b = 0, l = 0)),
+        axis.text.x = element_text(size = eval(input$out_clustering_fontsize-3), angle=45, vjust = .5),
+        axis.text.y = element_text(size = eval(input$out_clustering_fontsize-3) , vjust=.3),
       ) +
       labs(x = "Time", y = isolate(input$cluster_variable), color = "Cluster") +
       facet_wrap(~Cluster_lab)
@@ -1059,21 +1116,30 @@ server <- function(input, output, session) {
     tagList(
       selectInput('cart_type', 'Select algorithm:', choices = c("rpart", "evtree") ),
       radioGroupButtons( inputId = "cart_objective", label = NULL, choices = c("Descriptive", "Predictive"), selected = "Descriptive", justified = TRUE),
+      # if predictive constructed i build a test and train sample
       conditionalPanel("input.cart_objective == 'Predictive' ",
-                       p("additional parameters..."),
-                       ## predictive train test
-                       # percentuale
+                       column(width = 6,  style = "padding-left:0px; padding-right:10px;",
+                              numericInput("train_size", "Train Size [%]:", 70, min = 0, max = 100, step = 1), # train size percentage
+                       ),
+                       column(width = 6,  style = "padding-left:0px; padding-right:0px;",
+                              numericInput(inputId = "seed_predictive", label = "Sample Seed:", 1234) # seed sul sample
+                       ),
                        # 70 30 continua oppure random sample sbilanciato rispetto variabile categorica
-                       # seed sul sample
                        # modello su train e prediction confusion matrix
                        # predict per testarlo confusion matrix
-                       # seed per evtree
+                       
                        ## descriptive tutto
                        # campionamento random test train
       ),
+      # if descriptive selected i only describe the whole dataset
       conditionalPanel("input.cart_type == 'rpart' ",
-                       selectInput('target_var_rt', 'Target variable:', choices = colnames(data[[input$dataframe]]) ),
-                       h5("Select split variables (as.numeric - as.ordered - as.factor)"),
+                       column(width = 6,  style = "padding-left:0px; padding-right:10px;",
+                              selectInput('target_var_rt', 'Target variable:', choices = colnames(data[[input$dataframe]]) )
+                       ),
+                       column(width = 6,  style = "padding-left:0px; padding-right:0px;",
+                              selectInput('target_var_rt_class', 'Coerce to class:', choices = c("numeric", "factor", "ordered") )
+                       ),
+                       h5("Select split variables (coerce to 1) numeric 2) ordered 3) factor)"),
                        column(width = 4,  style = "padding-left:0px; padding-right:0px;",
                               selectInput('split_var_num_rt', NULL, choices = colnames(dplyr::select_if( data[[input$dataframe]], is.numeric)) , multiple = TRUE),
                        ),
@@ -1125,45 +1191,138 @@ server <- function(input, output, session) {
       mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
       mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
     
+    switch (input$target_var_rt_class,
+      numeric = mutate_at(dfct, input$target_var_rt, ~numeric(., order = F)),
+      factor = mutate_at(dfct, input$target_var_rt, ~factor(., order = F)),
+      ordered = mutate_at(dfct, input$target_var_rt, ~factor(., order = T))
+    )
     
-    if (input$cart_type == "rpart") {
-      data_results[["cart_df"]] <- rpart(
-        reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
-        data = dfct ,                                                               # data to be used
-        parms = list(split = input$index_rt),
-        #method = input$method_rt,
-        control = rpart.control(minbucket = input$minbucket_rt,  # 120 min 15 minutes sampling*number of days
-                                cp = input$cp_rt ,                                          # nessun vincolo sul cp permette lo svoluppo completo dell'albero
-                                # xval = (dim(dfct)[1] - 1 ),                        # k-fold leave one out LOOCV
-                                xval = input$xval_rt,
-                                maxdepth = input$maxdepth_rt
-        ))
+    
+    if (input$cart_objective == "Descriptive") {
       
+      if (input$cart_type == "rpart") {
+        ct.rpart <- rpart(
+          reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
+          data = dfct ,                                                               # data to be used
+          parms = list(split = input$index_rt),
+          #method = input$method_rt,
+          control = rpart.control(minbucket = input$minbucket_rt,  # 120 min 15 minutes sampling*number of days
+                                  cp = input$cp_rt ,                                          # nessun vincolo sul cp permette lo svoluppo completo dell'albero
+                                  # xval = (dim(dfct)[1] - 1 ),                        # k-fold leave one out LOOCV
+                                  xval = input$xval_rt,
+                                  maxdepth = input$maxdepth_rt
+          ))
+        # save to global environment
+        data_results[["cart_model"]] <- ct.rpart
+        data_results[["cart_type"]] <- "Descriptive"
+        data_results[["cart_train_size"]] <- 100
+      }
+      
+      
+    } else { # predictive
+      
+      smp_size <- floor(input$train_size/100 * nrow(dfct)) # sample size 
+      set.seed(as.numeric(input$seed_predictive)) # set the seed to make your partition reproducible
+      
+      train_ind <- sample(seq_len(nrow(dfct)), size = smp_size, replace = F) # train index
+      
+      # definisco train set
+      dfct_train <- dfct[train_ind, ]
+      # definisco test set
+      dfct_test <- dfct[-train_ind, ]
+      
+      if (input$cart_type == "rpart") {
+        ct.rpart <- rpart(
+          reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
+          data = dfct_train ,                                                               # data to be used
+          parms = list(split = input$index_rt),
+          #method = input$method_rt,
+          control = rpart.control(minbucket = input$minbucket_rt,  # 120 min 15 minutes sampling*number of days
+                                  cp = input$cp_rt ,                                          # nessun vincolo sul cp permette lo svoluppo completo dell'albero
+                                  # xval = (dim(dfct)[1] - 1 ),                        # k-fold leave one out LOOCV
+                                  xval = input$xval_rt,
+                                  maxdepth = input$maxdepth_rt
+          ))
+        # save to global environment
+        data_results[["cart_model"]] <- ct.rpart
+        data_results[["cart_type"]] <- "Predictive"
+        data_results[["cart_train_size"]] <- input$train_size
+      }
+      
+      # calculate accuracy parameters
+      
+      if (class( dfct_train[[input$target_var_rt]]) == "factor" ) {
+        dfct_train$pred.rpart <- predict(object = ct.rpart, dfct_train, type = "class")
+      } else {
+        dfct_train$pred.rpart <- predict(object = ct.rpart, dfct_train)
+      }
+      dfct_train$node.rpart <- predict.party(object = as.party(ct.rpart), dfct_train , type = "node")
+      
+      if (class( dfct_test[[input$target_var_rt]]) == "factor" ) {
+        dfct_test$pred.rpart <- predict(object = ct.rpart, dfct_test, type = "class")
+      } else {
+        dfct_test$pred.rpart <- predict(object = ct.rpart, dfct_test)
+      }
+      dfct_test$node.rpart <- predict.party(object = as.party(ct.rpart), dfct_test , type = "node")
+      
+      # evaluation metrics
+      if (class( dfct_train[[input$target_var_rt]]) == "factor" ) {
+        data_results[["cart_cm"]]   <- ConfusionMatrix(  dfct_test$pred.rpart, dfct_test[[input$target_var_rt]]  )
+      } 
+      
+      
+      data_results[["accuracy"]]  <- Accuracy(         dfct_test$pred.rpart, dfct_test[[input$target_var_rt]]  )*100
+      data_results[["recall"]]    <- Recall(           dfct_test$pred.rpart, dfct_test[[input$target_var_rt]]  )*100
+      #data_results[["precision"]] <- Precision(        dfct_test$pred.rpart, dfct_test[[input$target_var_rt]])*100
     }
     
   })
   
   
   output$out_cart_tree <- renderPlot({
-    req(input[["cart_button"]], data_results[["cart_df"]])
+    req(input[["cart_button"]], data_results[["cart_model"]])
     # cols <- as.vector(data_results[["Clustering_df_color"]]$Color)
-    ct_party <- as.party(data_results[["cart_df"]])
+    ct_party <- as.party(data_results[["cart_model"]])
     #names(ct_party$data) <- c(input$target_var_rt, input$split_var_rt) # change labels to plot
-    plot(ct_party, tnex = input$out_cart_tree_tnex,  gp = gpar(fontsize = input$out_cart_tree_fontsize))
+    plot(ct_party, 
+         main = paste(data_results[["cart_type"]], "\nTrain size", data_results[["cart_train_size"]], "%"),
+         tnex = input$out_cart_tree_tnex,  gp = gpar(fontsize = input$out_cart_tree_fontsize))
     
   })
   
   output$out_cart_cp <- renderPlot({
-    req(input[["cart_button"]], data_results[["cart_df"]])
-    plotcp(data_results[["cart_df"]], 
+    req(input[["cart_button"]], data_results[["cart_model"]])
+    plotcp(data_results[["cart_model"]], 
            lty = input$out_cart_cp_lty, 
            col = input$out_cart_cp_color, 
            upper = input$out_cart_cp_upper)
   })
   
   output$out_cart_cptable <- renderPrint({
-    req(input[["cart_button"]], data_results[["cart_df"]])
-    data_results[["cart_df"]][["cptable"]]
+    req(input[["cart_button"]], data_results[["cart_model"]])
+    data_results[["cart_model"]][["cptable"]]
+  })
+  
+  output$out_cart_cm <- renderPlot({
+    req(input[["cart_button"]], data_results[["cart_cm"]])
+    
+    ggplot(data =  as.data.frame(data_results[["cart_cm"]]), 
+           mapping = aes(x = y_pred, y = rev(y_true), 
+                         fill = Freq)) +
+      geom_tile(colour = "white") +
+      geom_text(aes(label = sprintf("%1.0f",Freq)), vjust = 1) +
+      scale_fill_gradient(low = "white", high = "steelblue") +
+      labs( title = "Confusion Matrix",
+            subtitle = paste("Accuracy:", data_results[["accuracy"]], "%\n", 
+                             "Recall:", data_results[["recall"]], "%\n"
+                             
+            ),
+            x = paste("Predicted", input$target_var_rt ), 
+            y = paste("Actual", input$target_var_rt), fill = ""
+      ) + 
+      scale_y_discrete( expand = c(0,0)) +
+      scale_x_discrete( expand = c(0,0)) 
+    
   })
   
 }

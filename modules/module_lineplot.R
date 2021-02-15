@@ -113,7 +113,7 @@ testApp <- function(){
     df$data <- readRDS("./modules/data.rds")
     
     output$UI1 <- renderUI(lineplotInput("input", df$data ) )
-    output$UI2 <- renderUI( lineplotOutput("input") )
+    output$UI2 <- renderUI(lineplotOutput("input") )
     
     callModule(lineplotServer, "input", reactive({df$data}))
   }
