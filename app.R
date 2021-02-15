@@ -288,7 +288,7 @@ server <- function(input, output, session) {
     
     # if_else(festivo == "S",1,2)
     data[[input$dataframe]] <-  data[[input$dataframe]] %>%
-      mutate( New = eval(parse(text = expression_toeval)))
+      mutate( New = as.factor( eval(parse(text = expression_toeval))) )
     
     colnames(data[[input$dataframe]])[colnames(data[[input$dataframe]]) == "New"] <- input$add_columnName
     
