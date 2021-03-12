@@ -13,4 +13,5 @@ app_server <- function( input, output, session ) {
   # modules advanced
   mod_cart_server("cart_ui_1",data_rv$df_tot)
   
+  mod_load_ext_file_server("load_ext_file_ui_1")
 }
