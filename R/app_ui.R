@@ -19,6 +19,11 @@ app_ui <- function(request) {
         shiny::tags$style(".fa-plus {color:green}"),              # change plus icon color
         shiny::tags$style(".fa-calendar-alt {color:green}"),      # change calendar icon color
         shiny::tags$style(".fa-backspace {color:red}"),           # change backspace icon color
+        
+        # modal opens
+        mod_load_ext_file_ui_modal("load_ext_file_ui_1"),
+        
+        # rest of the tabs
         tabItems(
           tabItem(tabName = "visualize",
                   box( title = "Chart options", width = 4,

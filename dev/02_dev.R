@@ -32,6 +32,7 @@ usethis::use_package( "stats" )# predict evaluation
 usethis::use_package( "knitr" ) # to compile rmarkdown
 usethis::use_package( "rmarkdown" ) # to compile rmarkdown
 usethis::use_package( "ggplot2" ) # to compile rmarkdown
+usethis::use_package( "shinyBS" ) # to compile rmarkdown
 
 
 ## Add modules ----
