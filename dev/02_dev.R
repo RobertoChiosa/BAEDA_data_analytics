@@ -22,6 +22,7 @@ usethis::use_package( "shinydashboard" )
 usethis::use_package( "shinyWidgets" )
 usethis::use_package( "magrittr" )
 usethis::use_package( "dplyr" )
+usethis::use_package( "utils" )
 usethis::use_package( "ggplot2" )
 usethis::use_package( "rpart" )# make classification tree
 usethis::use_package( "rpart.plot" )# plot classification tree

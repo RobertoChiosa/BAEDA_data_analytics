@@ -21,7 +21,7 @@ app_ui <- function(request) {
         shiny::tags$style(".fa-backspace {color:red}"),           # change backspace icon color
         
         # modal opens
-        mod_load_ext_file_ui_modal("load_ext_file_ui_1"),
+        mod_load_ext_file_ui_modal("load_ext_file_ui_1" ),
         
         # rest of the tabs
         tabItems(
