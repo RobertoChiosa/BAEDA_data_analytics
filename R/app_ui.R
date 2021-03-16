@@ -4,6 +4,7 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @import shinydashboard
+#' @importFrom  shinyBS bsPopover
 #' @noRd
 
 app_ui <- function(request) {
@@ -41,15 +42,22 @@ app_ui <- function(request) {
                   fluidRow(
                     column(width = 4,
                            # INPUT BOX
-                           box( title = "Classification options", width = 12, 
-                                mod_cart_ui_input("cart_ui_1")
+                           shinydashboard::box(title = shiny::HTML("Classification options
+                                                                  <a 
+                                                                    id=\"classification_box\" 
+                                                                    class=\"dropdown\"> 
+                                                                    <i class=\"fa fa-info-circle\"></i> 
+                                                                  </a>"
+                           ), 
+                           width = 12, 
+                           mod_cart_ui_input("cart_ui_1")
                            )
                     ),
                     column(width = 8,
                            # INPUT BOX
-                           box( width = 12,  mod_cart_ui_output("cart_ui_1", type = "tree")  ),
-                           box( width = 6,   mod_cart_ui_output("cart_ui_1", type = "cp")    ),
-                           box( width = 6,   mod_cart_ui_output("cart_ui_1", type = "CM")    )
+                           shinydashboard::box( width = 12,  mod_cart_ui_output("cart_ui_1", type = "tree")  ),
+                           shinydashboard::box( width = 6,   mod_cart_ui_output("cart_ui_1", type = "cp")    ),
+                           shinydashboard::box( width = 6,   mod_cart_ui_output("cart_ui_1", type = "CM")    )
                     )
                   )
           )

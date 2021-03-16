@@ -16,10 +16,11 @@
 ## Dependencies ----
 ## Add one line by package you want to add as dependency
 usethis::use_package( "shiny" )
-usethis::use_package( "shinyBS" )
+usethis::use_package( "shinyBS" ) 
 usethis::use_package( "shinyFeedback" )
 usethis::use_package( "shinydashboard" )
 usethis::use_package( "shinyWidgets" )
+
 usethis::use_package( "magrittr" )
 usethis::use_package( "dplyr" )
 usethis::use_package( "utils" )
@@ -33,7 +34,6 @@ usethis::use_package( "stats" )# predict evaluation
 usethis::use_package( "knitr" ) # to compile rmarkdown
 usethis::use_package( "rmarkdown" ) # to compile rmarkdown
 usethis::use_package( "ggplot2" ) # to compile rmarkdown
-usethis::use_package( "shinyBS" ) # to compile rmarkdown
 
 
 ## Add modules ----

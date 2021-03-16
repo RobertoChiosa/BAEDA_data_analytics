@@ -9,7 +9,7 @@
 #' @import shiny
 #' @import ggplot2
 #' @import magrittr
-#' @importFrom shinyBS bsTooltip
+#' @importFrom shinyBS bsTooltip addPopover
 #' @importFrom shinyWidgets radioGroupButtons dropdownButton tooltipOptions
 #' @importFrom dplyr select_if select mutate_if mutate_at
 #' @importFrom rpart rpart rpart.control plotcp
@@ -32,7 +32,7 @@ mod_cart_ui_input <- function(id){
            shinyBS::bsTooltip(ns("algorithm"), title = "Algorithm to perform cart", placement = "right", options = list(container = "body"), trigger = "hover")
     ),
     column(width = 6,  style = style_RCol,
-           selectInput(ns('objective'), 'Objective:', choices = c("Descriptive", "Predictive") ),
+           selectInput(ns('objective'), 'Objective:', choices = c("Descriptive", "Predictive") )
     ),
     
     # # if predictive constructed i build a test and train sample
@@ -138,6 +138,7 @@ mod_cart_ui_output<- function(id, type){
 mod_cart_server <- function(id, rvs){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    
     
     # updates ui do for all
     observe({

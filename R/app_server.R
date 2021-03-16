@@ -3,9 +3,20 @@
 #' @param input,output,session Internal parameters for {shiny}. 
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @importFrom shinyBS addPopover
 #' @noRd
 app_server <- function( input, output, session ) {
-
+  
+  ###### 2) "MANAGE" TAB ----------------------------------------------------------------------
+  shinyBS::addPopover(session, 
+                      id =  "classification_box", 
+                      title = "Objective", 
+                      content = HTML('<h4> description </h4>'),
+                      placement = "right",
+                      trigger = "hover"
+  )
+  
+  
   ###### 2) "MANAGE" TAB ----------------------------------------------------------------------
   # global environment and global options
   data_rv <- reactiveValues()                 # reactive value to store the loaded dataframes
