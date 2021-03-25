@@ -16,7 +16,6 @@ mod_manage_ui_input <- function(id){
     # 2.7) Rename column ----------------------------------------------------------------------
     checkboxInput(ns("modifyColumns_chackbox"), "Rename column", value = FALSE),
     conditionalPanel(condition = sprintf("input['%s'] == true", ns('modifyColumns_chackbox')), # if we want to rename 
-           selectInput(ns("ergs"), "Label", choices = "A")          
     ),
     # 2.9) summariza table ----------------------------------------------------------------------
     checkboxInput(ns("summarizeVar_chackbox"), "Summarize column", value = FALSE),
