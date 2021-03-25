@@ -26,6 +26,12 @@ app_ui <- function(request) {
         
         # rest of the tabs
         tabItems(
+          tabItem(tabName = "preprocessing",
+                  box( title = "Preprocessing options", width = 4,
+                  ),
+                  box( width = 8,
+                  )
+          ),
           tabItem(tabName = "visualize",
                   box( title = "Chart options", width = 4,
                        selectInput("chart", label = "Chart Type:", 
@@ -60,8 +66,21 @@ app_ui <- function(request) {
                            shinydashboard::box( width = 6,   mod_cart_ui_output("cart_ui_1", type = "CM")    )
                     )
                   )
+          ),
+          tabItem(tabName = "clustering",
+                  box( title = "Clustering options", width = 4,
+                  ),
+                  box( width = 8,
+                  )
+          ),
+          tabItem(tabName = "ann",
+                  box( title = "ANN options", width = 4,
+                  ),
+                  box( width = 8,
+                  )
           )
-        )
+        ),
+        mod_footer_ui()
       )
     )
   )
