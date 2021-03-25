@@ -26,6 +26,13 @@ app_ui <- function(request) {
         
         # rest of the tabs
         tabItems(
+          tabItem(tabName = "manage",
+                  box( title = "Manage data", width = 4,
+                       mod_manage_ui_input("manage_ui_1")
+                  ),
+                  box( width = 8,
+                  )
+          ),
           tabItem(tabName = "preprocessing",
                   box( title = "Preprocessing options", width = 4,
                   ),

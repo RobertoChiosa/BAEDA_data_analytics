@@ -30,6 +30,9 @@ app_server <- function( input, output, session ) {
   # modules advanced
   mod_cart_server("cart_ui_1",data_rv$df_tot)
   
+  # modules manage
+  mod_manage_server("manage_ui_1", data_rv$df_tot)
+  
   # server to load external file
   mod_load_ext_file_server("load_ext_file_ui_1", reactive({ input$upload }), data_rv, data_rv_results)
   
