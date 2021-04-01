@@ -36,7 +36,8 @@ app_server <- function( input, output, session ) {
   # server to load external file
   mod_load_ext_file_server("load_ext_file_ui_1", reactive({ input$upload }), data_rv, data_rv_results)
   
-  
+  # module clustering
+  mod_clustering_server("clustering_ui_1",data_rv$df_tot)
   # 2.2) Dataframe dropdown creation ----------------------------------------------------------------------
   # create a reactive list of loaded dataframes. When new file loaded the list is updated
   reactive_list <- reactive({ 

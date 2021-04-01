@@ -35,7 +35,14 @@ usethis::use_package( "knitr" ) # to compile rmarkdown
 usethis::use_package( "rmarkdown" ) # to compile rmarkdown
 usethis::use_package( "ggplot2" ) # to compile rmarkdown
 usethis::use_package( "DT" ) # to compile rmarkdown
+usethis::use_package( "data.table" ) # to compile rmarkdown
 
+# clustering algorithm
+usethis::use_package( "LICORS" ) 
+usethis::use_package( "amap" ) 
+usethis::use_package( "NbClust" ) 
+
+usethis::use_package( "scales" ) 
 
 ## Add modules ----
 ## Create a module infrastructure in R/

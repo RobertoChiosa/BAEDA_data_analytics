@@ -54,7 +54,7 @@ mod_manage_ui_input <- function(id){
 mod_manage_ui_output <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(
+    wellPanel(
       DT::DTOutput(ns("table"))
     )
    
@@ -78,8 +78,12 @@ mod_manage_server <- function(id, rvs){
       )
     })
     
+    
+    
+    
     output$table <- DT::renderDT({
-      DT::datatable(
+      
+      dt_table <- DT::datatable(
         rvs,
         selection = "none",
         rownames = FALSE,
@@ -89,7 +93,7 @@ mod_manage_server <- function(id, rvs){
         ## must use fillContainer = FALSE to address
         ## see https://github.com/rstudio/DT/issues/367
         ## https://github.com/rstudio/DT/issues/379
-        # fillContainer = FALSE,
+        fillContainer = FALSE,
         ## works with client-side processing
         extensions = "KeyTable",
         options = list(
@@ -101,7 +105,7 @@ mod_manage_server <- function(id, rvs){
           # fixedColumns = list(leftColumns = 2),
           # fixedHeader = TRUE
           keys = TRUE,
-          autoWidth = TRUE, # permits to adapt the columns to the width of the box
+          autoWidth = FALSE, # permits to adapt the columns to the width of the box
           scrollX = 500, # permits to scroll along x
           search = list(regex = TRUE),
           columnDefs = list(
@@ -111,12 +115,23 @@ mod_manage_server <- function(id, rvs){
             ),
             list(className = "dt-center", targets = "_all")
           ),
-          autoWidth = TRUE,
           processing = FALSE,
-          pageLength = 10,
+          pageLength = 25,
           lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
         )
       )
+      
+      # isInt <- sapply(rvs, is.integer)
+      # isDbl <- sapply(rvs, is.double)
+      # 
+      # ## rounding as needed
+      # if (sum(isDbl) > 0)
+      #   dt_table <- DT::formatRound(dt_table, colnames(rvs)[isDbl], digits = 2)
+      # if (sum(isInt) > 0)
+      #   dt_table <- DT::formatRound(dt_table, colnames(rvs)[isInt], digits = 0)
+      
+      dt_table
+      
     })
     
     
