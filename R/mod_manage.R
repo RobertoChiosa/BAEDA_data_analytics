@@ -54,7 +54,10 @@ mod_manage_ui_input <- function(id){
 mod_manage_ui_output <- function(id){
   ns <- NS(id)
   tagList(
-    
+    fluidRow(
+      DT::DTOutput(ns("table"))
+    )
+   
   )
 }
 
@@ -74,6 +77,49 @@ mod_manage_server <- function(id, rvs){
                                   options = list(`actions-box` = TRUE), multiple = T) 
       )
     })
+    
+    output$table <- DT::renderDT({
+      DT::datatable(
+        rvs,
+        selection = "none",
+        rownames = FALSE,
+        style = "bootstrap",
+        filter = "top", #fbox
+        escape = FALSE,
+        ## must use fillContainer = FALSE to address
+        ## see https://github.com/rstudio/DT/issues/367
+        ## https://github.com/rstudio/DT/issues/379
+        # fillContainer = FALSE,
+        ## works with client-side processing
+        extensions = "KeyTable",
+        options = list(
+          # autoWidth = TRUE, # permits to adapt the columns to the width of the box
+          # scrollX = 500, # permits to scroll along x
+          # deferRender = TRUE,
+          # scroller = TRUE,
+          # dom = 'lBfrtip',
+          # fixedColumns = list(leftColumns = 2),
+          # fixedHeader = TRUE
+          keys = TRUE,
+          autoWidth = TRUE, # permits to adapt the columns to the width of the box
+          scrollX = 500, # permits to scroll along x
+          search = list(regex = TRUE),
+          columnDefs = list(
+            list(
+              orderSequence = c("desc", "asc"),
+              targets = "_all"
+            ),
+            list(className = "dt-center", targets = "_all")
+          ),
+          autoWidth = TRUE,
+          processing = FALSE,
+          pageLength = 10,
+          lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
+        )
+      )
+    })
+    
+    
     
     
   })

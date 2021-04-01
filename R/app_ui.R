@@ -31,6 +31,7 @@ app_ui <- function(request) {
                        mod_manage_ui_input("manage_ui_1")
                   ),
                   box( width = 8,
+                       mod_manage_ui_output("manage_ui_1")
                   )
           ),
           tabItem(tabName = "preprocessing",

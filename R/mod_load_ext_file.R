@@ -15,64 +15,7 @@
 
 mod_load_ext_file_ui_modal <- function(id){
   ns <- shiny::NS(id)
-  # this is the modal shown when the session starts and when the button is clcked
-  shiny::tagList(
-    shinyBS::bsModal(id = ns('startupModal'),
-                     trigger = ns('open'),
-                     size = 'medium',
-                     shiny::tags$head(shiny::tags$style("#startupModal .modal-footer{ display:none}")), # removes footer default
-                     title = shiny::HTML('
-                        <p align="center">
-                          <a href="https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli">
-                            <img src="www/BAEDA-logo-dashboard.png" alt="Logo" height="80">
-                          </a>
-                          <h3 align="center"> <i> Student Version </i> </h3>
-                          <p align="center">
-                            Now you can perform advanced data analytics tasks on your energy data.
-                          </p>
-                        </p>'),
-                     tagList(
-                       shiny::column(width = 12, align = 'center',
-                                     # type of files that can be loaded
-                                     shiny::selectInput(ns("type"), "Chose the type of file:",
-                                                        c("", 
-                                                          "Comma-separated values (.csv)" = "csv",
-                                                          "R object (.rds)"="rds"
-                                                        )
-                                     ),
-                                     # the user wants to load a csv file
-                                     shiny::conditionalPanel(sprintf("input['%s'] == 'csv'", ns('type')),
-                                                             column(width = 6, shiny::selectInput(   ns("separator"),    "Separator:",  c("Comma (,)" = ",", "Semicolon (;)" = ";")) ),
-                                                             column(width = 6, shiny::selectInput(   ns("decimal"),      "Decimal:",    c("Point (.)" = ".","Comma (,)" = ",")) ),
-                                                             column(width = 4, shiny::checkboxInput( ns("header"),       "Header?",     value = TRUE) ),
-                                                             column(width = 4, shiny::checkboxInput( ns("timestamp_csv"),"Timestamp column?", value = TRUE) ),
-                                                             column(width = 4, shiny::checkboxInput( ns("strAsFact"),    "String as Factor?", value = TRUE) ),
-                                                             shiny::conditionalPanel(sprintf("input['%s'] == true", ns('timestamp_csv')),
-                                                                                     shiny::selectInput(ns("timezone_csv"), "Timezone:", choices = OlsonNames(), selected = "Europe/Rome"),
-                                                             ),
-                                     ),
-                                     # the user wants to load a rds file
-                                     shiny::conditionalPanel(sprintf("input['%s'] == 'rds'", ns('type')),
-                                                             shiny::checkboxInput(ns("timestamp_rds"), "Timestamp column?", value = TRUE),
-                                                             shiny::conditionalPanel(sprintf("input['%s'] == true", ns('timestamp_rds')),
-                                                                                     shiny::selectInput(ns("timezone_rds"), "Timezone:",
-                                                                                                        choices = OlsonNames(),
-                                                                                                        selected = "Europe/Rome"
-                                                                                     ),
-                                                             ),
-                                     ),
-                                     shiny::conditionalPanel(sprintf("input['%s'] != ''", ns('type')),
-                                                             shiny::fileInput(ns("file"), paste("Upload file:") )
-                                     )
-                       )
-                       # CORRECT IF POSSIBLE
-                       # # dont' know why but i have to create a footer with a transparent action button
-                       # footer = shiny::tagList(column(12, align = "center",  modalButton(ns("Cancel"))),
-                       #                         shiny::actionButton(ns("upload"), "", style = "color: #ffffff; background-color: #ffffff; border-color: #ffffff")
-                       # )
-                     )
-    )
-  )
+  tagList()
 }
 
 #' load_ext_file Server Functions
@@ -87,13 +30,74 @@ mod_load_ext_file_server <- function(id, toggle_button_input, data_rv, data_rv_r
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
+    
+    # this is the modal shown when the session starts and when the button is clcked
+    
+    modal_custom <- function(failed = FALSE){
+      modalDialog(
+        fluidRow(
+          shiny::column(width = 12, align = 'center',
+                        # type of files that can be loaded
+                        shiny::selectInput(ns("type"), "Chose the type of file:",
+                                           c("", 
+                                             "Comma-separated values (.csv)" = "csv",
+                                             "R object (.rds)"="rds"
+                                           )
+                        ),
+                        # the user wants to load a csv file
+                        shiny::conditionalPanel(sprintf("input['%s'] == 'csv'", ns('type')),
+                                                column(width = 6, shiny::selectInput(   ns("separator"),    "Separator:",  c("Comma (,)" = ",", "Semicolon (;)" = ";")) ),
+                                                column(width = 6, shiny::selectInput(   ns("decimal"),      "Decimal:",    c("Point (.)" = ".","Comma (,)" = ",")) ),
+                                                column(width = 4, shiny::checkboxInput( ns("header"),       "Header?",     value = TRUE) ),
+                                                column(width = 4, shiny::checkboxInput( ns("timestamp_csv"),"Timestamp column?", value = TRUE) ),
+                                                column(width = 4, shiny::checkboxInput( ns("strAsFact"),    "String as Factor?", value = TRUE) ),
+                                                shiny::conditionalPanel(sprintf("input['%s'] == true", ns('timestamp_csv')),
+                                                                        shiny::selectInput(ns("timezone_csv"), "Timezone:", choices = OlsonNames(), selected = "Europe/Rome"),
+                                                ),
+                        ),
+                        # the user wants to load a rds file
+                        shiny::conditionalPanel(sprintf("input['%s'] == 'rds'", ns('type')),
+                                                shiny::checkboxInput(ns("timestamp_rds"), "Timestamp column?", value = TRUE),
+                                                shiny::conditionalPanel(sprintf("input['%s'] == true", ns('timestamp_rds')),
+                                                                        shiny::selectInput(ns("timezone_rds"), "Timezone:",
+                                                                                           choices = OlsonNames(),
+                                                                                           selected = "Europe/Rome"
+                                                                        ),
+                                                ),
+                        ),
+                        shiny::conditionalPanel(sprintf("input['%s'] != ''", ns('type')),
+                                                shiny::fileInput(ns("file"), paste("Upload file:") )
+                        )
+          )
+          
+        ),
+        size = 'm',
+        easyClose = TRUE,
+        fade = TRUE,
+        shiny::tags$head(shiny::tags$style("#startupModal .modal-footer{ display:none}")), # removes footer default
+        title = shiny::HTML('
+                        <p align="center">
+                          <a href="https://www.researchgate.net/lab/Building-Automation-and-Energy-Data-Analytics-Lab-Alfonso-Capozzoli">
+                            <img src="www/BAEDA-logo-dashboard.png" alt="Logo" height="80">
+                          </a>
+                          <h3 align="center"> <i> Student Version </i> </h3>
+                          <p align="center">
+                            Now you can perform advanced data analytics tasks on your energy data.
+                          </p>
+                        </p>')
+      )
+    }
+    
+    
     # 1) When the session starts show the modal ----------------------------------------------------------------------
-    shinyBS::toggleModal(session, "startupModal", toggle = ns("open"))
+    #observeEvent(session, {
+     # showModal( modal_custom() )
+    #})
     
     # 2) Reopens when requested by the user ----------------------------------------------------------------------
     shiny::observeEvent(toggle_button_input(),{
       shinyFeedback::hideFeedback("file")                             # hides previous file feedback
-      shinyBS::toggleModal(session, "startupModal", toggle = "open")  # reopens modal
+      showModal( modal_custom() )  # reopens modal
     })
     
     # 3) Load external file ----------------------------------------------------------------------
@@ -107,7 +111,7 @@ mod_load_ext_file_server <- function(id, toggle_button_input, data_rv, data_rv_r
       
       # gives error feedback if the file is not in the format required/selected and STOPS the execution
       shinyFeedback::hideFeedback("file")
-      if (validated == TRUE) { shinyFeedback::feedbackSuccess("file", TRUE, "Format accepted")} 
+      if (validated == TRUE) { shinyFeedback::feedbackSuccess("file", TRUE, "Format accepted")}
       else { shinyFeedback::feedbackDanger("file", TRUE, "Format not accepted") }
       
       # the execution CONTINUES only if the file is accepted
@@ -121,20 +125,21 @@ mod_load_ext_file_server <- function(id, toggle_button_input, data_rv, data_rv_r
       ## Return values
       # reads the input file and assigns it to the reactive value data
       data_rv[[nome]] <- switch(input$type, # condition on the file type
-                             csv = read.csv(file = inFile$datapath, header = input$header, sep = input$separator, 
-                                            dec = input$decomal, stringsAsFactors = input$strAsFact, check.names = FALSE),
-                             rds = readRDS(file = inFile$datapath)
-                             # xls = read_excel(path = inFile$datapath)
+                                csv = read.csv(file = inFile$datapath, header = input$header, sep = input$separator,
+                                               dec = input$decomal, stringsAsFactors = input$strAsFact, check.names = FALSE),
+                                rds = readRDS(file = inFile$datapath)
+                                # xls = read_excel(path = inFile$datapath)
       )
       # saves the selected timezone and timestamp column in the global environment
       data_rv_results[["timestamp"]] <- base::gsub(" ", "", paste("timestamp_", input$type))
       data_rv_results[["timezone"]] <- base::gsub(" ", "", paste("timezone_", input$type))
+      
+      removeModal()  # remove modal
     })
   })
 }
 
 # library(shiny)
-# library(shinyBS)
 # 
 # ui<-fluidPage(
 #   mod_load_ext_file_ui_modal("load_ext_file_ui_1")
