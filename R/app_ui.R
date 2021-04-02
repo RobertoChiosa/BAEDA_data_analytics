@@ -21,6 +21,8 @@ app_ui <- function(request) {
         shiny::tags$style(".fa-plus {color:green}"),
         # change plus icon color
         shiny::tags$style(".fa-calendar-alt {color:green}"),
+        # change plus icon color
+        shiny::tags$style(".fa-refresh {color:green}"),
         # change calendar icon color
         shiny::tags$style(".fa-backspace {color:red}"),
         # change backspace icon color
@@ -44,7 +46,8 @@ app_ui <- function(request) {
                                          </a>"
                       ),
                       width = 4,
-                      mod_manage_ui_input("manage_ui_1")
+                      mod_manage_ui_input("manage_ui_1"),
+                      mod_manage_renameColumn_ui("manage_renameColumn_ui_1")
                     ),
                     box(width = 8,
                         mod_manage_ui_output("manage_ui_1"))

@@ -20,6 +20,7 @@ usethis::use_package( "shinyBS" )
 usethis::use_package( "shinyFeedback" )
 usethis::use_package( "shinydashboard" )
 usethis::use_package( "shinyWidgets" )
+usethis::use_package( "shinyalert" )
 
 usethis::use_package( "magrittr" )
 usethis::use_package( "dplyr" )
@@ -36,6 +37,7 @@ usethis::use_package( "rmarkdown" ) # to compile rmarkdown
 usethis::use_package( "ggplot2" ) # to compile rmarkdown
 usethis::use_package( "DT" ) # to compile rmarkdown
 usethis::use_package( "data.table" ) # to compile rmarkdown
+usethis::use_package( "rlang" ) # to compile rmarkdown
 
 # clustering algorithm
 usethis::use_package( "LICORS" ) 

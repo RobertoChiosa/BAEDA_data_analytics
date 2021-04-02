@@ -7,58 +7,30 @@
 #' @noRd 
 #'
 #' @import shiny
-#' @importFrom shinyWidgets searchInput pickerInput
+#' @importFrom shinyWidgets searchInput pickerInput 
 
 mod_manage_ui_input <- function(id){
   ns <- NS(id)
   tagList(
     uiOutput(ns("keepColumns")),
-    # 2.7) Rename column ----------------------------------------------------------------------
-    checkboxInput(ns("modifyColumns_chackbox"), "Rename column", value = FALSE),
-    conditionalPanel(condition = sprintf("input['%s'] == true", ns('modifyColumns_chackbox')), # if we want to rename 
-    ),
-    # 2.9) summariza table ----------------------------------------------------------------------
-    checkboxInput(ns("summarizeVar_chackbox"), "Summarize column", value = FALSE),
-    conditionalPanel(condition = sprintf("input['%s'] == true", ns('summarizeVar_chackbox')), # if we want to rename 
-                     
-    ),
-    # 2.9) transform table ----------------------------------------------------------------------
-    checkboxInput(ns("transformVar_chackbox"), "Transform column", value = FALSE),
-    conditionalPanel(condition = sprintf("input['%s'] == true", ns('transformVar_chackbox')), # if we want to rename 
-                     
-    ),
-    # 2.8) Add column ----------------------------------------------------------------------
-    checkboxInput(ns("addColumns_chackbox"), "Add column", value = FALSE),
-    conditionalPanel(condition = sprintf("input['%s'] == true", ns('addColumns_chackbox')), # if we want to rename 
-                     
-    ),
-    # 2.9) Pivot table ----------------------------------------------------------------------
-    checkboxInput(ns("pivotTable_chackbox"), "Pivot table", value = FALSE),
-    conditionalPanel(condition = sprintf("input['%s'] == true", ns('pivotTable_chackbox')), # if we want to rename 
-                     
-    ),
-    # 2.4) Rename dataframe ----------------------------------------------------------------------
-    shinyWidgets::searchInput(inputId = ns("new_dataframe_name"), label = "Save current dataframe", 
-                              placeholder = "New name..", 
-                              value = NULL, # initial value
-                              btnSearch = icon("plus"), btnReset = icon("backspace"), # icons
-                              width = "100%"),
-    # 2.10) Download filtered dataframe ----------------------------------------------------------------------
-    downloadButton("download_filtered", "Download Filtered Dataframe (as csv)", style = "width:100%;"),   
+    
+    # 2.3) Value boxes ----------------------------------------------------------------------
+    # 2.3.1) number of rows in the current dataframe value box
+    valueBoxOutput(ns("valueBox_rows"), width = 12),
+    # 2.3.2) number of columns in the current dataframe value box
+    valueBoxOutput(ns("valueBox_columns"), width = 12)
   )
+  
 }
 
 #' manage UI output
 #'
 #' @noRd 
-mod_manage_ui_output <- function(id){
+mod_manage_ui_output <- function(id) {
   ns <- NS(id)
-  tagList(
-    wellPanel(
-      DT::DTOutput(ns("table"))
-    )
-   
-  )
+  # 2.5) Display datatable ----------------------------------------------------------------------
+  # displays through datatable function the actual selected dataframe
+  tagList(wellPanel(DT::DTOutput(ns("table"))))
 }
 
 
@@ -69,21 +41,33 @@ mod_manage_server <- function(id, rvs){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
-    output$keepColumns <- renderUI({
-      tagList(
-        shinyWidgets::pickerInput(ns("keepColumnName"), label = "Select column to keep:",
-                                  choices = colnames( rvs  ), # all available columns in the original dataframe
-                                  selected = colnames( rvs ), # by default all selected
-                                  options = list(`actions-box` = TRUE), multiple = T) 
+    # 2.3) Value boxes ----------------------------------------------------------------------
+    # 2.3.1) number of rows in the current dataframe value box
+    output$valueBox_rows <- renderValueBox({
+      #req(input$file) # requires that a file is loaded
+      valueBox(
+        length(input$table_rows_all),
+        "Number of rows",
+        icon = icon("arrows-alt-v"),
+        color = "orange"
       )
     })
-    
-    
-    
-    
+    # 2.3.2) number of columns in the current dataframe value box
+    output$valueBox_columns <- renderValueBox({
+      #req(input$file) # requires that a file is loaded
+      valueBox(
+        length(input$keepColumnName),
+        "Number of columns",
+        icon = icon("arrows-alt-h"),
+        color = "blue"
+      )
+    })
+    # 2.5) Display datatable ----------------------------------------------------------------------
+    # displays through datatable function the actual selected dataframe
     output$table <- DT::renderDT({
       
       dt_table <- DT::datatable(
+        #rvs[,input$keepColumnName],
         rvs,
         selection = "none",
         rownames = FALSE,
@@ -133,7 +117,23 @@ mod_manage_server <- function(id, rvs){
       dt_table
       
     })
-    
+    # 2.6) Keep column ----------------------------------------------------------------------
+    # selection of all the available columns and possibility to exclude some
+    output$keepColumns <- renderUI({
+      # req(input$file) # requires that a file is loaded
+      tagList(
+        shinyWidgets::pickerInput(
+          "keepColumnName",
+          label = "Select column to keep:",
+          choices = colnames(rvs),
+          # all available columns in the original dataframe
+          selected = colnames(rvs),
+          # by default all selected
+          options = list(`actions-box` = TRUE),
+          multiple = T
+        )
+      )
+    })
     
     
     

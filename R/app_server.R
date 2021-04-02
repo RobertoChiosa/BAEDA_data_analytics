@@ -24,7 +24,12 @@ app_server <- function( input, output, session ) {
   options(shiny.maxRequestSize = 100*1024^2)  # this option permits to read larger files than shiny default
   
   
+  
   data_rv$df_tot <- data
+  
+  mod_manage_renameColumn_server("manage_renameColumn_ui_1", data_rv$df_tot)
+  
+  
   # plot modules
   mod_histogram_server("histogram_ui_1")
   # modules advanced
@@ -38,6 +43,7 @@ app_server <- function( input, output, session ) {
   
   # module clustering
   mod_clustering_server("clustering_ui_1",data_rv$df_tot)
+  
   # 2.2) Dataframe dropdown creation ----------------------------------------------------------------------
   # create a reactive list of loaded dataframes. When new file loaded the list is updated
   reactive_list <- reactive({ 
