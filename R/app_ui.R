@@ -18,13 +18,13 @@ app_ui <- function(request) {
       header,
       sidebar,
       dashboardBody(
-        shiny::tags$style(".fa-plus {color:green}"),
+        # shiny::tags$style(".fa-plus {color:green}"),
         # change plus icon color
-        shiny::tags$style(".fa-calendar-alt {color:green}"),
+        # shiny::tags$style(".fa-calendar-alt {color:green}"),
         # change plus icon color
-        shiny::tags$style(".fa-refresh {color:green}"),
+        # shiny::tags$style(".fa-refresh {color:green}"),
         # change calendar icon color
-        shiny::tags$style(".fa-backspace {color:red}"),
+        #shiny::tags$style(".fa-backspace {color:red}"),
         # change backspace icon color
         
         # modal opens

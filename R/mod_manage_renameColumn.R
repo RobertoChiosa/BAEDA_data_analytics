@@ -7,6 +7,7 @@
 #' @noRd
 #'
 #' @import shiny
+#' @import shinydashboard
 #' @importFrom shinyalert shinyalert
 #' @importFrom rlang is_empty
 mod_manage_renameColumn_ui <- function(id) {
@@ -14,9 +15,7 @@ mod_manage_renameColumn_ui <- function(id) {
   
   tagList(
     shiny::tags$style(".fa-refresh {color:white}"),
-    shiny::checkboxInput(ns("checkbox"), "Rename column", value = FALSE),
-    shiny::conditionalPanel(
-      condition = sprintf("input['%s'] == true", ns('checkbox')),
+    box(
       column(
         width = 6,
         style = "padding-left:0px; padding-right:5px;",
@@ -62,8 +61,10 @@ mod_manage_renameColumn_ui <- function(id) {
             width = "100%"
           )
         )
-      )
-    ),
+      ),
+      solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
+      title = "Modify Column name", status = "primary"
+    )
   )
 }
 
@@ -80,7 +81,7 @@ mod_manage_renameColumn_server <- function(id, rvs_dataset) {
       updateSelectInput(session, "actual_name", choices = choices)
     })
     
-   
+    
     
     # Define the ReactiveValue to return : "toReturn"
     # with slots "rvs_dataset" & "trigger"
@@ -104,20 +105,23 @@ mod_manage_renameColumn_server <- function(id, rvs_dataset) {
 
 
 # test module
-ui <- fluidPage(
-  column(width = 4,
-         mod_manage_renameColumn_ui("manage_renameColumn_ui_1")),
-  
-  column(width = 8,
-         DT::DTOutput("table"))
+# 
+ui <- dashboardPage(
+  dashboardHeader(disable = TRUE),
+  dashboardSidebar(disable = TRUE),
+  dashboardBody(
+    column(width = 4,
+           mod_manage_renameColumn_ui("manage_renameColumn_ui_1")),
+    column(width = 8,
+           DT::DTOutput("table"))
+  )
 )
-
 server <- function(input, output, session) {
   
   data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
   
   output$table <- DT::renderDT({
-      data_rv$df_tot
+    data_rv$df_tot
   })
   
   data_rename <-  mod_manage_renameColumn_server("manage_renameColumn_ui_1", rvs_dataset = data_rv$df_tot)
