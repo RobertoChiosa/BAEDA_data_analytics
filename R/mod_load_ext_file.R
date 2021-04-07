@@ -29,10 +29,8 @@ mod_load_ext_file_ui_modal <- function(id){
 mod_load_ext_file_server <- function(id, toggle_button_input, data_rv, data_rv_results){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    
-    
+  
     # this is the modal shown when the session starts and when the button is clcked
-    
     modal_custom <- function(failed = FALSE){
       modalDialog(
         fluidRow(

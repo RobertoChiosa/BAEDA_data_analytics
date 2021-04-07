@@ -47,6 +47,7 @@ app_ui <- function(request) {
                       ),
                       width = 4,
                       mod_manage_ui_input("manage_ui_1"),
+                      # rename column / variable from a dataset
                       mod_manage_renameColumn_ui("manage_renameColumn_ui_1")
                     ),
                     box(width = 8,

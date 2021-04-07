@@ -13,7 +13,6 @@ mod_manage_ui_input <- function(id){
   ns <- NS(id)
   tagList(
     uiOutput(ns("keepColumns")),
-    
     # 2.3) Value boxes ----------------------------------------------------------------------
     # 2.3.1) number of rows in the current dataframe value box
     valueBoxOutput(ns("valueBox_rows"), width = 12),
@@ -28,6 +27,7 @@ mod_manage_ui_input <- function(id){
 #' @noRd 
 mod_manage_ui_output <- function(id) {
   ns <- NS(id)
+  
   # 2.5) Display datatable ----------------------------------------------------------------------
   # displays through datatable function the actual selected dataframe
   tagList(wellPanel(DT::DTOutput(ns("table"))))

@@ -6,45 +6,19 @@
 #' @importFrom shinyBS addPopover
 #' @noRd
 app_server <- function( input, output, session ) {
-  
-  ###### 2) "MANAGE" TAB ----------------------------------------------------------------------
-  shinyBS::addPopover(session, 
-                      id =  "classification_box", 
-                      title = "Objective", 
-                      content = HTML('<h4> description </h4>'),
-                      placement = "right",
-                      trigger = "hover"
-  )
-  
-  
-  ###### 2) "MANAGE" TAB ----------------------------------------------------------------------
+  ###### 1) DATA STRUCTURE ----------------------------------------------------------------------
   # global environment and global options
-  data_rv <- reactiveValues()                 # reactive value to store the loaded dataframes
-  data_rv_results <- reactiveValues()             # reactive value where we will store all the loaded dataframes
   options(shiny.maxRequestSize = 100*1024^2)  # this option permits to read larger files than shiny default
+  data_rv <- reactiveValues()                 # reactive value to store the loaded dataframes
+  data_rv_results <- reactiveValues()         # reactive value where we will store all the loaded dataframes
+  data_rv$df_tot <- data                      # upload as default a well known dataset
   
-  
-  
-  data_rv$df_tot <- data
-  
-  mod_manage_renameColumn_server("manage_renameColumn_ui_1", data_rv$df_tot)
-  
-  
-  # plot modules
-  mod_histogram_server("histogram_ui_1")
-  # modules advanced
-  mod_cart_server("cart_ui_1",data_rv$df_tot)
-  
-  # modules manage
-  mod_manage_server("manage_ui_1", data_rv$df_tot)
-  
-  # server to load external file
-  mod_load_ext_file_server("load_ext_file_ui_1", reactive({ input$upload }), data_rv, data_rv_results)
-  
-  # module clustering
-  mod_clustering_server("clustering_ui_1",data_rv$df_tot)
-  
-  # 2.2) Dataframe dropdown creation ----------------------------------------------------------------------
+  ######  2) DATA LOADING ----------------------------------------------------------------------
+  # # server to load external file
+  mod_load_ext_file_server(id = "load_ext_file_ui_1", 
+                           toggle_button_input = reactive({ input$upload }), 
+                           data_rv             = data_rv, 
+                           data_rv_results     = data_rv_results)
   # create a reactive list of loaded dataframes. When new file loaded the list is updated
   reactive_list <- reactive({ 
     names(data_rv)
@@ -58,6 +32,28 @@ app_server <- function( input, output, session ) {
     )
   })
   
+  ###### 3) "MANAGE" TAB ----------------------------------------------------------------------
+  # modules manage
+  mod_manage_server("manage_ui_1", data_rv$df_tot)
   
+  ###### 3.1) change column name/variable name
+  data_rename <-   mod_manage_renameColumn_server(id = "manage_renameColumn_ui_1", 
+                                                  rvs_dataset = data_rv$df_tot)
+  # When applied function (data_rename$trigger change) :
+  #   - Update rvs$variable with module output "dataset"
+  observeEvent(data_rename$trigger, {
+    req(data_rename$trigger > 0) # requires a trigger
+    data_rv$df_tot <- data_rename$dataset
+  })
+  
+  ###### 4) "VISUALIZE" TAB ----------------------------------------------------------------------
+  # plot modules
+  mod_histogram_server(id = "histogram_ui_1")
+  
+  ###### 2) "CLASSIFICATION" TAB ----------------------------------------------------------------------
+  mod_cart_server(id = "cart_ui_1",data_rv$df_tot)
+  
+  ###### 2) "CLUSTERING" TAB ----------------------------------------------------------------------
+  mod_clustering_server(id = "clustering_ui_1",data_rv$df_tot)
   
 }
