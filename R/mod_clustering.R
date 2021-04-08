@@ -29,7 +29,7 @@ mod_clustering_ui_input <- function(id) {
       selectInput(
         ns('cluster_variable'),
         'Variable:',
-        choices = c("") # updated according to the input
+        choices = NULL # updated according to the input
       ),
       selectInput(
         ns('cluster_distance'),

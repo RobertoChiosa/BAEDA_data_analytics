@@ -131,7 +131,7 @@ mod_load_ext_file_server <- function(id, toggle_button_input, data_rv, data_rv_r
       # saves the selected timezone and timestamp column in the global environment
       data_rv_results[["timestamp"]] <- base::gsub(" ", "", paste("timestamp_", input$type))
       data_rv_results[["timezone"]] <- base::gsub(" ", "", paste("timezone_", input$type))
-      
+      data_rv_results$infile <- TRUE # signal that one file has been loaded
       removeModal()  # remove modal
     })
   })

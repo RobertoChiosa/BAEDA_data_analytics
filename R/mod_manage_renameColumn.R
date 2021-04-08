@@ -36,7 +36,7 @@ mod_manage_renameColumn_ui <- function(id) {
         style = " padding-left:5px;padding-right:0px;",
         shiny::selectizeInput(
           ns("units"),
-          label = "Units of measurements:",
+          label = "Units:",
           choices = list("NULL", "Energy" = list("kWh"), "Power" = list("kW") ), # improve
           # all admitted unit # implement with groups
           selected = NULL,
@@ -57,13 +57,7 @@ mod_manage_renameColumn_ui <- function(id) {
             placeholder = "New name...",
             width = "100%"
           ),
-          shiny::actionButton(
-            ns("new_name_submit"),
-            label = NULL,
-            icon = icon("refresh"),
-            class = "btn-success",
-            width = "100%"
-          )
+          uiOutput(ns("button_js"))
         )
       ),
       solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
@@ -74,9 +68,32 @@ mod_manage_renameColumn_ui <- function(id) {
 
 #' manage_renameColumn Server Function
 #' @noRd
-mod_manage_renameColumn_server <- function(id, rvs_dataset) {
+mod_manage_renameColumn_server <- function(id, infile = NULL, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
+    # apply button
+    output$button_js <- renderUI({
+      if (is.null(infile())) {
+        shinyjs::disabled(
+          shiny::actionButton(
+            ns("new_name_submit"),
+            label = NULL,
+            icon = icon("refresh"),
+            class = "btn-success",
+            width = "100%"
+          )
+        )
+      } else {
+        shiny::actionButton(
+          ns("new_name_submit"),
+          label = NULL,
+          icon = icon("refresh"),
+          class = "btn-success",
+          width = "100%"
+        )
+      }
+    })
     
     # reactive value to evaluate the string name
     # it is true if some special values are found
@@ -89,18 +106,18 @@ mod_manage_renameColumn_server <- function(id, rvs_dataset) {
     
     # Update selectInput according to dataset
     observe({
-      
-      # creates list with class
-      var_name <- colnames(rvs_dataset())
-      var_fct <- unlist(sapply(rvs_dataset(),list_function) ) 
-      var_list <- as.list(var_name)
-      var_part1 <- var_name
-      var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
-      names(var_list) <- paste(var_part1, var_part2)
-      
+      req( !is.null(infile())  )
+      # # creates list with class
+      # var_name <- colnames(rvs_dataset())
+      # var_fct <- unlist(sapply(rvs_dataset(),list_function) ) 
+      # var_list <- as.list(var_name)
+      # var_part1 <- var_name
+      # var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
+      # #names(var_list) <- paste(var_part1, var_part2)
+      # 
       # gets rvs_dataset as reactive value to solve update inputs
       choices <- colnames(rvs_dataset())
-      updateSelectInput(session, "actual_name", choices = var_list)
+      updateSelectInput(session, "actual_name", choices = choices)
     })
     
     # Define the ReactiveValue to return : "toReturn"
@@ -109,12 +126,13 @@ mod_manage_renameColumn_server <- function(id, rvs_dataset) {
     
     # (Re)load button
     observeEvent(input$new_name_submit, {
-
+      validated <- TRUE 
+      
       if (input$new_name == "") { shinyFeedback::feedbackWarning("new_name", TRUE, "Please fill")
         validated = FALSE} 
       
       # requires no special character in string and the name to be filled
-      req(validated, !name_val()) #if validation passed do
+      req(validated, !name_val(),  !is.null(infile())  ) #if validation passed do
     
       # add unit of measures if units selected
       unitsString <- if (input$units == "NULL") {NULL} else { gsub(" ", "", paste("[", input$units, "]")) } 
@@ -145,7 +163,7 @@ list_function <- function(x){
   }
 }
 
-
+# 
 # # test module
 # library(shiny)
 # library(shinydashboard)
@@ -153,6 +171,7 @@ list_function <- function(x){
 #   dashboardHeader(disable = TRUE),
 #   dashboardSidebar(disable = TRUE),
 #   dashboardBody(
+#     shinyjs::useShinyjs(),
 #     shinyFeedback::useShinyFeedback(),
 #     column(width = 4,
 #            mod_manage_renameColumn_ui("manage_renameColumn_ui_1")),
@@ -161,14 +180,15 @@ list_function <- function(x){
 #   )
 # )
 # server <- function(input, output, session) {
-#   
+# 
 #   data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:5)])                 # reactive value to store the loaded dataframes
-#   
+# 
 #   output$table <- DT::renderDT({
 #     data_rv$df_tot
 #   })
-#   
+# 
 #   data_rename <-  mod_manage_renameColumn_server("manage_renameColumn_ui_1",
+#                                                  infile = reactive({NULL}), 
 #                                                  rvs_dataset = reactive({ data_rv$df_tot })
 #   )
 #   # When applied function (data_mod2$trigger change) :
@@ -179,8 +199,8 @@ list_function <- function(x){
 #     data_rv$df_tot <- data_rename$dataset                 # reactive value to store the loaded dataframes
 #     a <- 2
 #   })
-#   
-#   
+# 
+# 
 # }
 # 
 # shinyApp(ui, server)

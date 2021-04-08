@@ -46,6 +46,7 @@ app_ui <- function(request) {
                                          </a>"
                       ),
                       width = 4,
+                     
                       # mod_manage_ui_input("manage_ui_1"),
                       # rename column / variable from a dataset
                       mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
@@ -209,5 +210,6 @@ golem_add_external_resources <- function() {
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
     shinyFeedback::useShinyFeedback(),
+    shinyjs::useShinyjs()
   )
 }

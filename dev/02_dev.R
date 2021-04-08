@@ -21,6 +21,7 @@ usethis::use_package( "shinyFeedback" )
 usethis::use_package( "shinydashboard" )
 usethis::use_package( "shinyWidgets" )
 usethis::use_package( "shinyalert" )
+usethis::use_package( "shinyjs" )
 
 usethis::use_package( "magrittr" )
 usethis::use_package( "dplyr" )

@@ -35,7 +35,8 @@ Imports:
     LICORS,
     NbClust,
     shinyalert,
-    rlang
+    rlang,
+    shinyjs
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

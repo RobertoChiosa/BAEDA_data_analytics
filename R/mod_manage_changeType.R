@@ -62,13 +62,7 @@ mod_manage_manage_changeType_ui <- function(id) {
             placeholder = "New name...",
             width = "100%"
           ),
-          shiny::actionButton(
-            ns("new_name_submit"),
-            label = NULL,
-            icon = icon("refresh"),
-            class = "btn-success",
-            width = "100%"
-          )
+          uiOutput(ns("button_js"))
         )
       ),
       solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
@@ -80,9 +74,33 @@ mod_manage_manage_changeType_ui <- function(id) {
 #' manage_manage_changeType Server Functions
 #'
 #' @noRd
-mod_manage_manage_changeType_server <- function(id, rvs_dataset) {
+mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    
+    # apply button
+    output$button_js <- renderUI({
+      if (is.null(infile())) {
+        shinyjs::disabled(
+          shiny::actionButton(
+            ns("new_name_submit"),
+            label = NULL,
+            icon = icon("refresh"),
+            class = "btn-success",
+            width = "100%"
+          )
+        )
+      } else {
+        shiny::actionButton(
+          ns("new_name_submit"),
+          label = NULL,
+          icon = icon("refresh"),
+          class = "btn-success",
+          width = "100%"
+        )
+      }
+    })
+    
     
     # reactive value to evaluate the string name
     # it is true if some special values are found
@@ -95,18 +113,18 @@ mod_manage_manage_changeType_server <- function(id, rvs_dataset) {
     
     # Update selectInput according to dataset
     observe({
-      
-      # creates list with class
-      var_name <- colnames(rvs_dataset())
-      var_fct <- unlist(sapply(rvs_dataset(),list_function) ) 
-      var_list <- as.list(var_name)
-      var_part1 <- var_name
-      var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
-      names(var_list) <- paste(var_part1, var_part2)
+      req( !is.null(infile())  )
+      # # creates list with class
+      # var_name <- colnames(rvs_dataset())
+      # var_fct <- unlist(sapply(rvs_dataset(),list_function) ) 
+      # var_list <- as.list(var_name)
+      # var_part1 <- var_name
+      # var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
+      # names(var_list) <- paste(var_part1, var_part2)
       
       # gets rvs_dataset as reactive value to solve update inputs
       choices <- colnames(rvs_dataset())
-      updateSelectInput(session, "actual_name", choices = var_list)
+      updateSelectInput(session, "actual_name", choices = choices)
     })
     
     # Define the ReactiveValue to return : "toReturn"
