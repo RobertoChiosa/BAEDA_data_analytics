@@ -36,14 +36,33 @@ app_server <- function( input, output, session ) {
   # modules manage
   mod_manage_server("manage_ui_1", data_rv$df_tot)
   
+  # Update selectInput according to dataset
+  observeEvent({
+    choices <- colnames(data_rv$df_tot)
+    updateSelectInput(session, "column", choices = choices)
+    # validate new name
+    # shinyFeedback::feedbackWarning("new_name", name_val(), "Please don't use special characters")
+  })
+  
+  
   ###### 3.1) change column name/variable name
   data_rename <-   mod_manage_renameColumn_server(id = "manage_renameColumn_ui_1", 
                                                   rvs_dataset = data_rv$df_tot)
   # When applied function (data_rename$trigger change) :
-  #   - Update rvs$variable with module output "dataset"
+  #   - Update data_rv$df_tot with module output "dataset"
   observeEvent(data_rename$trigger, {
     req(data_rename$trigger > 0) # requires a trigger
     data_rv$df_tot <- data_rename$dataset
+  })
+  
+  ###### 3.2) change column name/variable name
+  data_add <-   mod_manage_addColumn_server(id = "manage_addColumn_ui_1", 
+                                                  rvs_dataset = data_rv$df_tot)
+  # When applied function (data_rename$trigger change) :
+  #   - Update data_rv$df_tot with module output "dataset"
+  observeEvent(data_add$trigger, {
+    req(data_add$trigger > 0) # requires a trigger
+    data_rv$df_tot <- data_add$dataset
   })
   
   ###### 4) "VISUALIZE" TAB ----------------------------------------------------------------------

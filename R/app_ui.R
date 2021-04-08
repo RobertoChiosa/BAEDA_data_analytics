@@ -46,12 +46,15 @@ app_ui <- function(request) {
                                          </a>"
                       ),
                       width = 4,
-                      mod_manage_ui_input("manage_ui_1"),
+                      # mod_manage_ui_input("manage_ui_1"),
                       # rename column / variable from a dataset
-                      mod_manage_renameColumn_ui("manage_renameColumn_ui_1")
+                      mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
+                      # add column / variable from a dataset
+                      mod_manage_addColumn_ui("manage_addColumn_ui_1")
                     ),
                     box(width = 8,
-                        mod_manage_ui_output("manage_ui_1"))
+                        mod_manage_ui_output("manage_ui_1")
+                        )
                   )),
           tabItem(tabName = "preprocessing",
                   fluidRow(

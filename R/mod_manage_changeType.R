@@ -1,4 +1,4 @@
-#' manage_renameColumn UI Function
+#' manage_manage_changeType UI Function
 #'
 #' @description This module permits to modify the column name by adding units of measure as well
 #'
@@ -10,8 +10,7 @@
 #' @import shinydashboard
 #' @importFrom shinyalert shinyalert
 #' @importFrom rlang is_empty
-#' @importFrom shinyFeedback feedbackWarning hideFeedback
-mod_manage_renameColumn_ui <- function(id) {
+mod_manage_manage_changeType_ui <- function(id) {
   ns <- NS(id)
   
   tagList(
@@ -24,7 +23,7 @@ mod_manage_renameColumn_ui <- function(id) {
         style = "padding-left:0px; padding-right:5px;",
         shiny::selectInput(
           ns("actual_name"),
-          label = "Select column:",
+          label = "Select column to modify:",
           choices = NULL,
           selected = NULL,
           width = "100%"
@@ -34,16 +33,22 @@ mod_manage_renameColumn_ui <- function(id) {
         width = 6,
         style = " padding-left:5px;padding-right:0px;",
         shiny::selectizeInput(
-          ns("units"),
-          label = "Units of measurements:",
-          choices = list("NULL", "Energy" = list("kWh"), "Power" = list("kW") ), # improve
+          ns("type"),
+          label = "Type:",
+          choices = c("as.factor", 
+                      "as.numeric", 
+                      "as.integer",
+                      "as.character",
+                      "as.Date",
+                      "as.POSIXct"
+                      ),
           # all admitted unit # implement with groups
           selected = NULL,
           multiple = FALSE,
           options = list(maxOptions = 5),
           width = "100%"
         )
-      ),
+      ), 
       column(
         width = 12,
         style = "padding-left:0px; padding-right:0px;",
@@ -66,61 +71,34 @@ mod_manage_renameColumn_ui <- function(id) {
         )
       ),
       solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
-      title = "Rename Column", status = "primary"
+      title = "Change Column Type", status = "primary"
     )
   )
 }
 
-#' manage_renameColumn Server Functions
+#' manage_manage_changeType Server Functions
 #'
 #' @noRd
-mod_manage_renameColumn_server <- function(id, rvs_dataset) {
+mod_manage_manage_changeType_server <- function(id, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-  
-    
-    # reactive value to evaluate the string name
-    # it is true if some special values are found
-    name_val <- reactive({
-      grepl('[^[:alnum:]]', input$new_name)
-    })
     
     # Update selectInput according to dataset
     observe({
-
-      choices <- colnames(rvs_dataset())
+      choices <- colnames(rvs_dataset)
       updateSelectInput(session, "actual_name", choices = choices)
-      # validate new name
-      # shinyFeedback::feedbackWarning("new_name", name_val(), "Please don't use special characters")
     })
     
-    
     # Define the ReactiveValue to return : "toReturn"
-    # with slots "dataset" & "trigger"
+    # with slots "rvs_dataset" & "trigger"
     toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
     
     # (Re)load button
     observeEvent(input$new_name_submit, {
       
-      # requires no special character in string
-      req(!name_val())
-      unitsString <-
-        if (input$units == "NULL") {
-          NULL
-        } else {
-          paste("[", input$units, "]")
-        } # add unit of measures if units selected
-      nameString <-
-        if (input$new_name == "") {
-          NULL
-        } else {
-          input$new_name
-        } # change column name if new name in input
-      new_name_string <-
-        gsub(" ", "", paste(nameString, unitsString)) # combine strings in format *NAME* [*UNIT*]
+      toReturn$dataset <- rvs_dataset %>%
+        dplyr::mutate_at(.vars = vars(input$actual_name), .funs = input$type)
       
-      toReturn$dataset   <- dplyr::rename(rvs_dataset(), !!new_name_string := !!input$actual_name )
-     
       toReturn$trigger  <- toReturn$trigger + 1
     })
     
@@ -137,32 +115,27 @@ ui <- dashboardPage(
   dashboardHeader(disable = TRUE),
   dashboardSidebar(disable = TRUE),
   dashboardBody(
-    shinyFeedback::useShinyFeedback(),
     column(width = 4,
-           mod_manage_renameColumn_ui("manage_renameColumn_ui_1")),
+           mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")),
     column(width = 8,
            DT::DTOutput("table"))
   )
 )
 server <- function(input, output, session) {
   
-  data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:5)])                 # reactive value to store the loaded dataframes
+  data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
   
   output$table <- DT::renderDT({
     data_rv$df_tot
   })
   
-  
-  data_rename <-  mod_manage_renameColumn_server("manage_renameColumn_ui_1", 
-                                                 rvs_dataset = reactive({ data_rv$df_tot })
-                                                 )
+  data_rename <-  mod_manage_manage_changeType_server("manage_manage_changeType_ui_1", rvs_dataset = data_rv$df_tot)
   # When applied function (data_mod2$trigger change) :
   #   - Update rv$variable with module output "variable"
   #   - Update rv$fun_history with module output "fun"
   observeEvent(data_rename$trigger, {
     req(data_rename$trigger > 0)
-    data_rv$df_tot <- data_rename$dataset                 # reactive value to store the loaded dataframes
-    a <- 2
+    data_rv$df_tot    <- data_rename$dataset
   })
   
   
@@ -171,7 +144,8 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 
 ## To be copied in the UI
-# mod_manage_renameColumn_ui("manage_renameColumn_ui_1")
+# mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")
 
 ## To be copied in the server
-# mod_manage_renameColumn_server("manage_renameColumn_ui_1", rvs_dataset = reactiveValues())
+# mod_manage_manage_changeType_server("manage_manage_changeType_ui_1", rvs_dataset = reactiveValues())
+
