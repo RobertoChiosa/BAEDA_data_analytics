@@ -1,6 +1,7 @@
 #' manage_renameColumn UI Function
 #'
 #' @description This module permits to modify the column name by adding units of measure as well
+#' It is composed of a select input for variables, units of measure choiche and input text for new name.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
@@ -71,29 +72,36 @@ mod_manage_renameColumn_ui <- function(id) {
   )
 }
 
-#' manage_renameColumn Server Functions
-#'
+#' manage_renameColumn Server Function
 #' @noRd
 mod_manage_renameColumn_server <- function(id, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-  
     
     # reactive value to evaluate the string name
     # it is true if some special values are found
-    name_val <- reactive({
-      grepl('[^[:alnum:]]', input$new_name)
+    # observe this reactive value and show warning live
+    name_val <- reactive({ grepl('[^[:alnum:]]', input$new_name) })
+    observe( {
+      # validate new name
+      shinyFeedback::feedbackWarning("new_name", name_val(), "Please don't use special characters")
     })
     
     # Update selectInput according to dataset
     observe({
-
+      
+      # creates list with class
+      var_name <- colnames(rvs_dataset())
+      var_fct <- unlist(sapply(rvs_dataset(),list_function) ) 
+      var_list <- as.list(var_name)
+      var_part1 <- var_name
+      var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
+      names(var_list) <- paste(var_part1, var_part2)
+      
+      # gets rvs_dataset as reactive value to solve update inputs
       choices <- colnames(rvs_dataset())
-      updateSelectInput(session, "actual_name", choices = choices)
-      # validate new name
-      # shinyFeedback::feedbackWarning("new_name", name_val(), "Please don't use special characters")
+      updateSelectInput(session, "actual_name", choices = var_list)
     })
-    
     
     # Define the ReactiveValue to return : "toReturn"
     # with slots "dataset" & "trigger"
@@ -101,77 +109,84 @@ mod_manage_renameColumn_server <- function(id, rvs_dataset) {
     
     # (Re)load button
     observeEvent(input$new_name_submit, {
+
+      if (input$new_name == "") { shinyFeedback::feedbackWarning("new_name", TRUE, "Please fill")
+        validated = FALSE} 
       
-      # requires no special character in string
-      req(!name_val())
-      unitsString <-
-        if (input$units == "NULL") {
-          NULL
-        } else {
-          paste("[", input$units, "]")
-        } # add unit of measures if units selected
-      nameString <-
-        if (input$new_name == "") {
-          NULL
-        } else {
-          input$new_name
-        } # change column name if new name in input
-      new_name_string <-
-        gsub(" ", "", paste(nameString, unitsString)) # combine strings in format *NAME* [*UNIT*]
+      # requires no special character in string and the name to be filled
+      req(validated, !name_val()) #if validation passed do
+    
+      # add unit of measures if units selected
+      unitsString <- if (input$units == "NULL") {NULL} else { gsub(" ", "", paste("[", input$units, "]")) } 
       
+      # change column name if new name in input
+      nameString <- if (input$new_name == "") {NULL} else {input$new_name}
+      
+      # combine strings in format *NAME* [*UNIT*]
+      new_name_string <- paste(nameString, unitsString)
+      
+      # update toReturn reactiveValues
       toReturn$dataset   <- dplyr::rename(rvs_dataset(), !!new_name_string := !!input$actual_name )
-     
       toReturn$trigger  <- toReturn$trigger + 1
     })
-    
     return(toReturn)
     
   })
 }
 
-
-# test module
-library(shiny)
-library(shinydashboard)
-ui <- dashboardPage(
-  dashboardHeader(disable = TRUE),
-  dashboardSidebar(disable = TRUE),
-  dashboardBody(
-    shinyFeedback::useShinyFeedback(),
-    column(width = 4,
-           mod_manage_renameColumn_ui("manage_renameColumn_ui_1")),
-    column(width = 8,
-           DT::DTOutput("table"))
-  )
-)
-server <- function(input, output, session) {
-  
-  data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:5)])                 # reactive value to store the loaded dataframes
-  
-  output$table <- DT::renderDT({
-    data_rv$df_tot
-  })
-  
-  
-  data_rename <-  mod_manage_renameColumn_server("manage_renameColumn_ui_1", 
-                                                 rvs_dataset = reactive({ data_rv$df_tot })
-                                                 )
-  # When applied function (data_mod2$trigger change) :
-  #   - Update rv$variable with module output "variable"
-  #   - Update rv$fun_history with module output "fun"
-  observeEvent(data_rename$trigger, {
-    req(data_rename$trigger > 0)
-    data_rv$df_tot <- data_rename$dataset                 # reactive value to store the loaded dataframes
-    a <- 2
-  })
-  
-  
+# this is the function that looks for classes and gets only first class
+# used for selec tinputs
+list_function <- function(x){
+  a <- class(x)
+  if (length(class(x)) == 1) {
+    a
+  } else {
+    a[1]
+  }
 }
 
-shinyApp(ui, server)
+
+# # test module
+# library(shiny)
+# library(shinydashboard)
+# ui <- dashboardPage(
+#   dashboardHeader(disable = TRUE),
+#   dashboardSidebar(disable = TRUE),
+#   dashboardBody(
+#     shinyFeedback::useShinyFeedback(),
+#     column(width = 4,
+#            mod_manage_renameColumn_ui("manage_renameColumn_ui_1")),
+#     column(width = 8,
+#            DT::DTOutput("table"))
+#   )
+# )
+# server <- function(input, output, session) {
+#   
+#   data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:5)])                 # reactive value to store the loaded dataframes
+#   
+#   output$table <- DT::renderDT({
+#     data_rv$df_tot
+#   })
+#   
+#   data_rename <-  mod_manage_renameColumn_server("manage_renameColumn_ui_1",
+#                                                  rvs_dataset = reactive({ data_rv$df_tot })
+#   )
+#   # When applied function (data_mod2$trigger change) :
+#   #   - Update rv$variable with module output "variable"
+#   #   - Update rv$fun_history with module output "fun"
+#   observeEvent(data_rename$trigger, {
+#     req(data_rename$trigger > 0)
+#     data_rv$df_tot <- data_rename$dataset                 # reactive value to store the loaded dataframes
+#     a <- 2
+#   })
+#   
+#   
+# }
+# 
+# shinyApp(ui, server)
 
 ## To be copied in the UI
 # mod_manage_renameColumn_ui("manage_renameColumn_ui_1")
 
 ## To be copied in the server
-# mod_manage_renameColumn_server("manage_renameColumn_ui_1", rvs_dataset = reactiveValues())
+# mod_manage_renameColumn_server("manage_renameColumn_ui_1", rvs_dataset = reactive({ rvs }))

@@ -19,7 +19,7 @@ mod_manage_ui_input <- function(id){
     # 2.3.2) number of columns in the current dataframe value box
     valueBoxOutput(ns("valueBox_columns"), width = 12)
   )
-  
+
 }
 
 #' manage UI output
@@ -65,10 +65,9 @@ mod_manage_server <- function(id, rvs){
     # 2.5) Display datatable ----------------------------------------------------------------------
     # displays through datatable function the actual selected dataframe
     output$table <- DT::renderDT({
-      
-      dt_table <- DT::datatable(
+      DT::datatable(
         #rvs[,input$keepColumnName],
-        rvs,
+        rvs(),
         selection = "none",
         rownames = FALSE,
         style = "bootstrap",
@@ -105,35 +104,33 @@ mod_manage_server <- function(id, rvs){
         )
       )
       
-      # isInt <- sapply(rvs, is.integer)
-      # isDbl <- sapply(rvs, is.double)
+      # isInt <- sapply(rvs(), is.integer)
+      # isDbl <- sapply(rvs(), is.double)
       # 
       # ## rounding as needed
       # if (sum(isDbl) > 0)
-      #   dt_table <- DT::formatRound(dt_table, colnames(rvs)[isDbl], digits = 2)
+      #   dt_table <- DT::formatRound(dt_table, colnames(rvs())[isDbl], digits = 2)
       # if (sum(isInt) > 0)
-      #   dt_table <- DT::formatRound(dt_table, colnames(rvs)[isInt], digits = 0)
-      
-      dt_table
+      #   dt_table <- DT::formatRound(dt_table, colnames(rvs())[isInt], digits = 0)
       
     })
-    # 2.6) Keep column ----------------------------------------------------------------------
-    # selection of all the available columns and possibility to exclude some
-    output$keepColumns <- renderUI({
-      # req(input$file) # requires that a file is loaded
-      tagList(
-        shinyWidgets::pickerInput(
-          "keepColumnName",
-          label = "Select column to keep:",
-          choices = colnames(rvs),
-          # all available columns in the original dataframe
-          selected = colnames(rvs),
-          # by default all selected
-          options = list(`actions-box` = TRUE),
-          multiple = T
-        )
-      )
-    })
+    # # 2.6) Keep column ----------------------------------------------------------------------
+    # # selection of all the available columns and possibility to exclude some
+    # output$keepColumns <- renderUI({
+    #   # req(input$file) # requires that a file is loaded
+    #   tagList(
+    #     shinyWidgets::pickerInput(
+    #       "keepColumnName",
+    #       label = "Select column to keep:",
+    #       choices = colnames(rvs()),
+    #       # all available columns in the original dataframe
+    #       selected = colnames(rvs()),
+    #       # by default all selected
+    #       options = list(`actions-box` = TRUE),
+    #       multiple = T
+    #     )
+    #   )
+    # })
     
     
     
@@ -144,4 +141,4 @@ mod_manage_server <- function(id, rvs){
 # mod_manage_ui("manage_ui_1")
 
 ## To be copied in the server
-# mod_manage_server("manage_ui_1", rvs)
+# mod_manage_server("manage_ui_1", reactive({ rvs}) )

@@ -34,20 +34,12 @@ app_server <- function( input, output, session ) {
   
   ###### 3) "MANAGE" TAB ----------------------------------------------------------------------
   # modules manage
-  mod_manage_server("manage_ui_1", data_rv$df_tot)
-  
-  # Update selectInput according to dataset
-  observeEvent({
-    choices <- colnames(data_rv$df_tot)
-    updateSelectInput(session, "column", choices = choices)
-    # validate new name
-    # shinyFeedback::feedbackWarning("new_name", name_val(), "Please don't use special characters")
-  })
-  
+  mod_manage_server("manage_ui_1", reactive({data_rv$df_tot})  )
   
   ###### 3.1) change column name/variable name
   data_rename <-   mod_manage_renameColumn_server(id = "manage_renameColumn_ui_1", 
-                                                  rvs_dataset = data_rv$df_tot)
+                                                  rvs_dataset = reactive({data_rv$df_tot})  
+  )
   # When applied function (data_rename$trigger change) :
   #   - Update data_rv$df_tot with module output "dataset"
   observeEvent(data_rename$trigger, {
@@ -55,9 +47,21 @@ app_server <- function( input, output, session ) {
     data_rv$df_tot <- data_rename$dataset
   })
   
-  ###### 3.2) change column name/variable name
+  ###### 3.2) change column type
+  data_type <-   mod_manage_manage_changeType_server(id = "manage_manage_changeType_ui_1", 
+                                                     rvs_dataset = reactive({data_rv$df_tot})  
+  )
+  # When applied function (data_rename$trigger change) :
+  #   - Update data_rv$df_tot with module output "dataset"
+  observeEvent(data_type$trigger, {
+    req(data_type$trigger > 0) # requires a trigger
+    data_rv$df_tot <- data_type$dataset
+  })
+  
+  ###### 3.2) change column type
   data_add <-   mod_manage_addColumn_server(id = "manage_addColumn_ui_1", 
-                                                  rvs_dataset = data_rv$df_tot)
+                                            rvs_dataset = reactive({data_rv$df_tot})  
+  )
   # When applied function (data_rename$trigger change) :
   #   - Update data_rv$df_tot with module output "dataset"
   observeEvent(data_add$trigger, {

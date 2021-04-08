@@ -41,14 +41,14 @@ mod_manage_addColumn_ui <- function(id) {
         shiny::splitLayout(
           cellWidths = c("80%", "20%"),
           shiny::textInput(
-            ns("add_columnName"),
+            ns("new_name"),
             label = NULL,
             value = "",
-            placeholder = "Column name...",
+            placeholder = "New name...",
             width = "100%"
           ),
           shiny::actionButton(
-            ns("add_submit"),
+            ns("new_name_submit"),
             label = NULL,
             icon = icon("refresh"),
             class = "btn-success",
@@ -69,9 +69,19 @@ mod_manage_addColumn_server <- function(id, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
+    # reactive value to evaluate the string name
+    # it is true if some special values are found
+    # observe this reactive value and show warning live
+    name_val <- reactive({ grepl('[^[:alnum:]]', input$new_name) })
+    observe( {
+      # validate new name
+      shinyFeedback::feedbackWarning("new_name", name_val(), "Please don't use special characters")
+    })
+    
     # Update selectInput according to dataset
     observe({
-      choices <- colnames(rvs_dataset)
+      # gets rvs_dataset as reactive value to solve update inputs
+      choices <- colnames(rvs_dataset())
       updateSelectInput(session, "condition_LHS", choices = choices)
     })
     
@@ -92,7 +102,7 @@ mod_manage_addColumn_server <- function(id, rvs_dataset) {
     toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
     
     # (Re)load button
-    observeEvent(input$add_submit, {
+    observeEvent(input$new_name_submit, {
       
       validated <- TRUE                          # validated is TRUE if the value is acceptable FALSE if not acceptable
       
@@ -108,7 +118,7 @@ mod_manage_addColumn_server <- function(id, rvs_dataset) {
         validated = FALSE} 
       if (input$condition_RHS== "") { shinyFeedback::feedbackWarning("condition_RHS", TRUE, "Please fill")
         validated = FALSE} 
-      if (input$add_columnName == "") { shinyFeedback::feedbackWarning("add_columnName", TRUE, "Please fill")
+      if (input$new_name == "") { shinyFeedback::feedbackWarning("new_name", TRUE, "Please fill")
         validated = FALSE} 
       
       req(validated) #if validation passed do
@@ -119,8 +129,8 @@ mod_manage_addColumn_server <- function(id, rvs_dataset) {
         input$condition_true,",", input$condition_false, ")"
       )
       
-      toReturn$dataset    <- dplyr::mutate( rvs_dataset, 
-                                             !!input$add_columnName := as.factor( eval(parse(text = expression_toeval))) )
+      toReturn$dataset    <- dplyr::mutate( rvs_dataset(), 
+                                             !!input$new_name := as.factor( eval(parse(text = expression_toeval))) )
       toReturn$trigger    <- toReturn$trigger + 1
     })
     
@@ -129,42 +139,42 @@ mod_manage_addColumn_server <- function(id, rvs_dataset) {
   })
 }
 
-
-# test module
-library(shiny)
-library(shinydashboard)
-library(shinyFeedback)
-library(magrittr)
-library(dplyr)
-ui <- dashboardPage(
-  dashboardHeader(disable = TRUE),
-  dashboardSidebar(disable = TRUE),
-  dashboardBody(
-    column(width = 4,
-           mod_manage_addColumn_ui("manage_addColumn_ui_1")),
-    column(width = 8,
-           DT::DTOutput("table"))
-  )
-)
-server <- function(input, output, session) {
-
-  data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
-
-  output$table <- DT::renderDT({
-    data_rv$df_tot
-  })
-
-  data_add <-  mod_manage_addColumn_server("manage_addColumn_ui_1", rvs_dataset = data_rv$df_tot)
-  # When applied function (data_mod2$trigger change) :
-  #   - Update rv$variable with module output "variable"
-  #   - Update rv$fun_history with module output "fun"
-  observeEvent(data_add$trigger, {
-    req(data_add$trigger > 0)
-    data_rv$df_tot    <- data_add$dataset
-  })
-}
-
-shinyApp(ui, server)
+# 
+# # test module
+# library(shiny)
+# library(shinydashboard)
+# library(shinyFeedback)
+# library(magrittr)
+# library(dplyr)
+# ui <- dashboardPage(
+#   dashboardHeader(disable = TRUE),
+#   dashboardSidebar(disable = TRUE),
+#   dashboardBody(
+#     column(width = 4,
+#            mod_manage_addColumn_ui("manage_addColumn_ui_1")),
+#     column(width = 8,
+#            DT::DTOutput("table"))
+#   )
+# )
+# server <- function(input, output, session) {
+# 
+#   data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
+# 
+#   output$table <- DT::renderDT({
+#     data_rv$df_tot
+#   })
+# 
+#   data_add <-  mod_manage_addColumn_server("manage_addColumn_ui_1", rvs_dataset = data_rv$df_tot)
+#   # When applied function (data_mod2$trigger change) :
+#   #   - Update rv$variable with module output "variable"
+#   #   - Update rv$fun_history with module output "fun"
+#   observeEvent(data_add$trigger, {
+#     req(data_add$trigger > 0)
+#     data_rv$df_tot    <- data_add$dataset
+#   })
+# }
+# 
+# shinyApp(ui, server)
 
 ## To be copied in the UI
 # mod_manage_addColumn_ui("manage_addColumn_ui_1")
