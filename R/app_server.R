@@ -78,7 +78,18 @@ app_server <- function( input, output, session ) {
   mod_histogram_server(id = "histogram_ui_1")
   
   ###### 2) "CLASSIFICATION" TAB ----------------------------------------------------------------------
-  mod_cart_server(id = "cart_ui_1",data_rv[[input$dataframe]])
+  data_cart <-   mod_manage_renameColumn_server(id = "cart_ui_1", 
+                                                  infile = reactive({data_rv_results$infile}), 
+                                                  rvs_dataset = reactive({data_rv[[input$dataframe]]})  
+  )
+  # When applied function (data_rename$trigger change) :
+  #   - Update data_rv[[input$dataframe]] with module output "dataset"
+  observeEvent(data_cart$trigger, {
+    req(data_cart$trigger > 0) # requires a trigger
+    data_rv[[input$dataframe]] <- data_cart$dataset
+  })
+  
+  
   
   ###### 2) "CLUSTERING" TAB ----------------------------------------------------------------------
   mod_clustering_server(id = "clustering_ui_1",data_rv[[input$dataframe]])

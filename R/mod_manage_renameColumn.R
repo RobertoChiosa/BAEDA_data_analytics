@@ -12,6 +12,7 @@
 #' @importFrom shinyalert shinyalert
 #' @importFrom rlang is_empty
 #' @importFrom shinyFeedback feedbackWarning hideFeedback
+#' @importFrom shinyjs  disabled
 mod_manage_renameColumn_ui <- function(id) {
   ns <- NS(id)
   
@@ -107,14 +108,14 @@ mod_manage_renameColumn_server <- function(id, infile = NULL, rvs_dataset) {
     # Update selectInput according to dataset
     observe({
       req( !is.null(infile())  )
-      # # creates list with class
+      # creates list with class
       # var_name <- colnames(rvs_dataset())
-      # var_fct <- unlist(sapply(rvs_dataset(),list_function) ) 
+      # var_fct <- unlist(sapply(rvs_dataset(),list_function) )
       # var_list <- as.list(var_name)
       # var_part1 <- var_name
       # var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
-      # #names(var_list) <- paste(var_part1, var_part2)
-      # 
+      #names(var_list) <- paste(var_part1, var_part2)
+
       # gets rvs_dataset as reactive value to solve update inputs
       choices <- colnames(rvs_dataset())
       updateSelectInput(session, "actual_name", choices = choices)
@@ -163,7 +164,7 @@ list_function <- function(x){
   }
 }
 
-# 
+
 # # test module
 # library(shiny)
 # library(shinydashboard)
@@ -188,7 +189,7 @@ list_function <- function(x){
 #   })
 # 
 #   data_rename <-  mod_manage_renameColumn_server("manage_renameColumn_ui_1",
-#                                                  infile = reactive({NULL}), 
+#                                                  infile = reactive({TRUE}),
 #                                                  rvs_dataset = reactive({ data_rv$df_tot })
 #   )
 #   # When applied function (data_mod2$trigger change) :

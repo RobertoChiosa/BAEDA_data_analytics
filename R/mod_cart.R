@@ -18,6 +18,7 @@
 #' @importFrom partykit predict.party as.party
 #' @importFrom MLmetrics Accuracy Recall ConfusionMatrix
 #' @importFrom grid gpar
+#' @importFrom shinyjs  disabled
 
 mod_cart_ui_input <- function(id){
   ns <- NS(id)
@@ -27,13 +28,29 @@ mod_cart_ui_input <- function(id){
   style_RCol <- "padding-left:0px; padding-right:0px;"
   
   tagList(
-    column(width = 6,  style = style_LCol,
-           selectInput(ns('algorithm'), 'Algorithm:', choices = c("rpart") ), # add evtree
-           shinyBS::bsTooltip(ns("algorithm"), title = "Algorithm to perform cart", placement = "right", options = list(container = "body"), trigger = "hover")
+    column(
+      width = 6,
+      style = style_LCol,
+      selectInput(ns('algorithm'), 'Algorithm:', choices = c("rpart")),
+      # add evtree
+      shinyBS::bsTooltip(
+        ns("algorithm"),
+        title = "Algorithm to perform cart",
+        placement = "right",
+        options = list(container = "body"),
+        trigger = "hover"
+      )
     ),
-    column(width = 6,  style = style_RCol,
-           selectInput(ns('objective'), 'Objective:', choices = c("Descriptive", "Predictive") )
+    column(
+      width = 6,
+      style = style_RCol,
+      selectInput(
+        ns('objective'),
+        'Objective:',
+        choices = c("Descriptive", "Predictive")
+      )
     ),
+    
     
     # # if predictive constructed i build a test and train sample
     conditionalPanel(condition = sprintf("input['%s'] == 'Predictive'", ns('objective')),
@@ -92,7 +109,7 @@ mod_cart_ui_input <- function(id){
     #                  sliderInput(ns("maxdepth_ev"), label = "Max depth:", min = 1, max = 100, value = 30),
     #                  textInput(ns("seed_ev"), label = "Seed:", placeholder = "(ex.) 1234")
     # ),
-    actionButton(ns("cart_button"), "Perform CART", class = "btn-success", icon = icon("chart-bar"), width = "100%"),
+    uiOutput(ns("cart_button_js"))
   )
 }
 
@@ -135,16 +152,54 @@ mod_cart_ui_output<- function(id, type){
 #' cart Server Functions
 #'
 #' @noRd 
-mod_cart_server <- function(id, rvs){
+mod_cart_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
-    
-    # updates ui do for all
-    observe({
-      updateSelectInput(session, inputId = 'target_var_rt', choices = colnames(rvs))
+    # apply button
+    output$cart_button_js <- renderUI({
+      if (is.null(infile())) {
+        shinyjs::disabled(
+          actionButton(
+            ns("cart_button_disabled"),
+            "Perform CART",
+            class = "btn-success",
+            icon = icon("chart-bar"),
+            width = "100%"
+          )
+        )
+      } else {
+        actionButton(
+          ns("cart_button"),
+          "Perform CART",
+          class = "btn-success",
+          icon = icon("chart-bar"),
+          width = "100%"
+        )
+      }
     })
     
+    
+    # Update selectInput according to dataset
+    observe({
+      req( !is.null(infile())  )
+      # creates list with class
+      # var_name <- colnames(rvs_dataset())
+      # var_fct <- unlist(sapply(rvs_dataset(),list_function) )
+      # var_list <- as.list(var_name)
+      # var_part1 <- var_name
+      # var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
+      #names(var_list) <- paste(var_part1, var_part2)
+      
+      # gets rvs_dataset as reactive value to solve update inputs
+      choices <- colnames(rvs_dataset())
+      updateSelectInput(session, "target_var_rt", choices = choices)
+    })
+    
+    
+    # Define the ReactiveValue to return : "toReturn"
+    # with slots "dataset" & "trigger"
+    toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
     
     cart_results <- reactiveValues()
     
@@ -183,7 +238,7 @@ mod_cart_server <- function(id, rvs){
       
       
       # select the dataframe to perform CART on
-      dfct <- rvs %>%
+      dfct <- rvs_dataset() %>%
         dplyr::select(c(input$target_var_rt, input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt) ) %>% # keep only selected variables
         dplyr::mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
         dplyr::mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
@@ -334,4 +389,4 @@ mod_cart_server <- function(id, rvs){
 # mod_cart_ui_output("cart_ui_1", type = "CM")
 
 ## To be copied in the server
-# mod_cart_server("cart_ui_1", rvs)
+# mod_cart_server("cart_ui_1", rvs_dataset())
