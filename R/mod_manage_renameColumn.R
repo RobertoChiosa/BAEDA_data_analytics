@@ -129,7 +129,7 @@ mod_manage_renameColumn_server <- function(id, infile = NULL, rvs_dataset) {
     observeEvent(input$new_name_submit, {
       validated <- TRUE 
       
-      if (input$new_name == "") { shinyFeedback::feedbackWarning("new_name", TRUE, "Please fill")
+      if (input$new_name == "") { shinyFeedback::feedbackWarning("new_name", TRUE, "Please choose  name")
         validated = FALSE} 
       
       # requires no special character in string and the name to be filled

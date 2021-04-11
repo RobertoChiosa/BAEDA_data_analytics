@@ -93,17 +93,21 @@ mod_cart_ui_input <- function(id){
                      #                    choices = NULL)
                      #        #choices = c("as.factor()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
                      # ),
-                     selectInput(ns('index_rt'), 'Splitting index:', choices = c("gini", "information")),
-                     sliderInput(ns("maxdepth_rt"), label = "Max depth:", min = 1, max = 20, value = 4),
-                     sliderInput(ns("cp_rt"), label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
-                     column(width = 4,  style = style_LCol,
-                            numericInput( ns("minsplit_rt"), label = "Min split:", min = 1, max = 10, value = 0),
-                     ),
-                     column(width = 4,  style = style_LCol,
-                            numericInput(ns("minbucket_rt"), label = "Min bucket:", min = 1, max = 100, value = 30), # input numerico default e suggestions info
-                     ),
-                     column(width = 4,  style = style_RCol,
-                            numericInput(ns("xval_rt"), label = "Cross validation:", min = 0,  value = 10), # input numerico default e suggestions info
+                     box(
+                       selectInput(ns('index_rt'), 'Splitting index:', choices = c("gini", "information")),
+                       sliderInput(ns("maxdepth_rt"), label = "Max depth:", min = 1, max = 20, value = 4),
+                       sliderInput(ns("cp_rt"), label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
+                       column(width = 4,  style = style_LCol,
+                              numericInput( ns("minsplit_rt"), label = "Min split:", min = 1, max = 10, value = 0),
+                       ),
+                       column(width = 4,  style = style_LCol,
+                              numericInput(ns("minbucket_rt"), label = "Min bucket:", min = 1, max = 100, value = 30), # input numerico default e suggestions info
+                       ),
+                       column(width = 4,  style = style_RCol,
+                              numericInput(ns("xval_rt"), label = "Cross validation:", min = 0,  value = 10), # input numerico default e suggestions info
+                       ),
+                       solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
+                       title = "Hyper-parameters", status = "primary"
                      )
     ),
     # conditionalPanel(condition = sprintf("input['%s'] == 'evtree'", ns('algorithm')),
@@ -169,7 +173,7 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
             ns("cart_button_disabled"),
             "Perform CART",
             class = "btn-success",
-            icon = icon("chart-bar"),
+            icon = icon("sitemap"),
             width = "100%"
           )
         )
@@ -178,7 +182,7 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
           ns("cart_button"),
           "Perform CART",
           class = "btn-success",
-          icon = icon("chart-bar"),
+          icon = icon("sitemap"),
           width = "100%"
         )
       }
@@ -243,8 +247,8 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
       # select the dataframe to perform CART on
       dfct <- rvs_dataset() %>%
         dplyr::select(c(input$target_var_rt, input$split_var_rt) ) # keep only selected variables
-        #dplyr::mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
-        #dplyr::mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
+      #dplyr::mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
+      #dplyr::mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
       
       # switch (input$target_var_rt_class,
       #         numeric = dfct <- dplyr::mutate_at(dfct, input$target_var_rt, ~numeric()),
@@ -386,61 +390,67 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
 }
 
 
-# test module
-library(shiny)
-library(shinydashboard)
-library(shiny)
-library(ggplot2)
-library(magrittr)
-library(shinyBS)
-library(shinyWidgets)
-library(dplyr)
-library(rpart)
-library(stats)
-library(shinyFeedback)
-library(partykit)
-library(MLmetrics)
-library(grid)
-library(shinyjs)
-
-ui <- dashboardPage(
-  dashboardHeader(disable = TRUE),
-  dashboardSidebar(disable = TRUE),
-  dashboardBody(
-    shinyjs::useShinyjs(),
-    shinyFeedback::useShinyFeedback(),
-    column(width = 4,
-           box(width = 12, 
-               mod_cart_ui_input("cart_ui_1")
-           )
-    ),
-    column(width = 8,
-           box(width = 12, 
-               mod_cart_ui_output("cart_ui_1", type = "tree")
-           )
-    )
-  )
-)
-server <- function(input, output, session) {
-  
-  data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
-  data_rv_results <- reactiveValues(infile = TRUE)  # NULL to simulate no dataset added, TRUE to simulate dataset added
-  
-  data_cart <-  mod_cart_server("cart_ui_1",
-                                infile = reactive({data_rv_results$infile}), 
-                                rvs_dataset = reactive({data_rv$df_tot}) )
-  # When applied function (data_mod2$trigger change) :
-  #   - Update rv$variable with module output "variable"
-  #   - Update rv$fun_history with module output "fun"
-  # observeEvent(data_rename$trigger, {
-  #   req(data_rename$trigger > 0)
-  #   data_rv$df_tot    <- data_rename$dataset
-  # })
-  
-  
-}
-
-shinyApp(ui, server)
+# # test module
+# library(shiny)
+# library(shinydashboard)
+# library(shiny)
+# library(ggplot2)
+# library(magrittr)
+# library(shinyBS)
+# library(shinyWidgets)
+# library(dplyr)
+# library(rpart)
+# library(stats)
+# library(shinyFeedback)
+# library(partykit)
+# library(MLmetrics)
+# library(grid)
+# library(shinyjs)
+# 
+# ui <- dashboardPage(
+#   dashboardHeader(disable = TRUE),
+#   dashboardSidebar(disable = TRUE),
+#   dashboardBody(
+#     shinyjs::useShinyjs(),
+#     shinyFeedback::useShinyFeedback(),
+#     column(width = 4,
+#            box(width = 12,
+#                mod_cart_ui_input("cart_ui_1")
+#            )
+#     ),
+#     column(width = 8,
+#            box(width = 12,
+#                mod_cart_ui_output("cart_ui_1", type = "tree")
+#            ),
+#            box(width = 12,
+#                mod_cart_ui_output("cart_ui_1", type = "cp")
+#            ),
+#            box(width = 12,
+#                mod_cart_ui_output("cart_ui_1", type = "CM")
+#            )
+#     )
+#   )
+# )
+# server <- function(input, output, session) {
+#   
+#   data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
+#   data_rv_results <- reactiveValues(infile = TRUE)  # NULL to simulate no dataset added, TRUE to simulate dataset added
+#   
+#   data_cart <-  mod_cart_server("cart_ui_1",
+#                                 infile = reactive({data_rv_results$infile}),
+#                                 rvs_dataset = reactive({data_rv$df_tot}) )
+#   # When applied function (data_mod2$trigger change) :
+#   #   - Update rv$variable with module output "variable"
+#   #   - Update rv$fun_history with module output "fun"
+#   # observeEvent(data_rename$trigger, {
+#   #   req(data_rename$trigger > 0)
+#   #   data_rv$df_tot    <- data_rename$dataset
+#   # })
+#   
+#   
+# }
+# 
+# shinyApp(ui, server)
 
 
 ## To be copied in the UI

@@ -59,7 +59,7 @@ mod_manage_manage_changeType_ui <- function(id) {
             ns("new_name"),
             label = NULL,
             value = "",
-            placeholder = "New name...",
+            placeholder = "(Optional) New name...",
             width = "100%"
           ),
           uiOutput(ns("button_js"))

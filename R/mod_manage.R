@@ -99,7 +99,7 @@ mod_manage_server <- function(id, rvs){
             list(className = "dt-center", targets = "_all")
           ),
           processing = FALSE,
-          pageLength = 25,
+          pageLength = 10,
           lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
         )
       )

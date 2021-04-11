@@ -11,7 +11,6 @@
 #' @importFrom tidyr pivot_wider
 #' @importFrom dplyr select mutate distinct
 #' @importFrom stats na.omit cutree hclust
-#' 
 #' @importFrom LICORS kmeanspp
 #' @importFrom amap Kmeans
 #' @importFrom RColorBrewer brewer.pal

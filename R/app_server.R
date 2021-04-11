@@ -8,10 +8,10 @@
 app_server <- function( input, output, session ) {
   ###### 1) DATA STRUCTURE ----------------------------------------------------------------------
   # global environment and global options
-  options(shiny.maxRequestSize = 100*1024^2)  # this option permits to read larger files than shiny default
-  data_rv <- reactiveValues()                 # reactive value to store the loaded dataframes, 
-  data_rv_results <- reactiveValues(infile = NULL)         # reactive value where we will store all the loaded dataframes force loaded
-  #data_rv$df_tot <- data                      # upload as default a well known dataset
+  options(shiny.maxRequestSize = 100*1024^2)            # this option permits to read larger files than shiny default
+  data_rv <- reactiveValues()                           # reactive value to store the loaded dataframes, 
+  data_rv_results <- reactiveValues(infile = NULL)      # reactive value where we will store all the loaded dataframes force loaded
+  #data_rv$df_tot <- data                               # upload as default a well known dataset
   
   ######  2) DATA LOADING ----------------------------------------------------------------------
   # # server to load external file
@@ -19,6 +19,7 @@ app_server <- function( input, output, session ) {
                            toggle_button_input = reactive({ input$upload }), 
                            data_rv             = data_rv, 
                            data_rv_results     = data_rv_results)
+  
   # create a reactive list of loaded dataframes. When new file loaded the list is updated
   reactive_list <- reactive({ 
     req(!is.null(data_rv_results$infile))
@@ -34,6 +35,7 @@ app_server <- function( input, output, session ) {
   })
   
   ###### 3) "MANAGE" TAB ----------------------------------------------------------------------
+  
   # modules manage
   mod_manage_server("manage_ui_1", reactive({data_rv[[input$dataframe]]})  )
   
@@ -78,16 +80,16 @@ app_server <- function( input, output, session ) {
   mod_histogram_server(id = "histogram_ui_1")
   
   ###### 2) "CLASSIFICATION" TAB ----------------------------------------------------------------------
-  data_cart <-   mod_manage_renameColumn_server(id = "cart_ui_1", 
-                                                  infile = reactive({data_rv_results$infile}), 
-                                                  rvs_dataset = reactive({data_rv[[input$dataframe]]})  
+  data_cart <-   mod_cart_server(id = "cart_ui_1", 
+                                 infile = reactive({data_rv_results$infile}), 
+                                 rvs_dataset = reactive({data_rv[[input$dataframe]]})  
   )
   # When applied function (data_rename$trigger change) :
   #   - Update data_rv[[input$dataframe]] with module output "dataset"
-  observeEvent(data_cart$trigger, {
-    req(data_cart$trigger > 0) # requires a trigger
-    data_rv[[input$dataframe]] <- data_cart$dataset
-  })
+  # observeEvent(data_cart$trigger, {
+  #   req(data_cart$trigger > 0) # requires a trigger
+  #   data_rv[[input$dataframe]] <- data_cart$dataset
+  # })
   
   
   

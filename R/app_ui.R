@@ -46,7 +46,7 @@ app_ui <- function(request) {
                                          </a>"
                       ),
                       width = 4,
-                     
+                      
                       # mod_manage_ui_input("manage_ui_1"),
                       # rename column / variable from a dataset
                       mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
@@ -57,8 +57,9 @@ app_ui <- function(request) {
                     ),
                     box(width = 8,
                         mod_manage_ui_output("manage_ui_1")
-                        )
-                  )),
+                    )
+                  )
+          ),
           tabItem(tabName = "preprocessing",
                   fluidRow(
                     box(
@@ -76,7 +77,7 @@ app_ui <- function(request) {
                     ),
                     box(width = 8, )
                   )),
-          tabItem(tabName = "visualize",
+          tabItem(tabName = "visualization",
                   fluidRow(
                     box(
                       title = shiny::HTML(
@@ -138,19 +139,20 @@ app_ui <- function(request) {
                       width = 8,
                       # INPUT BOX
                       fluidRow(
-                      shinydashboard::box(width = 12,  mod_cart_ui_output("cart_ui_1", type = "tree"))
+                        shinydashboard::box(width = 12,  mod_cart_ui_output("cart_ui_1", type = "tree"))
                       ),
                       fluidRow(
-                      shinydashboard::box(width = 6,   mod_cart_ui_output("cart_ui_1", type = "cp")),
-                      shinydashboard::box(width = 6,   mod_cart_ui_output("cart_ui_1", type = "CM"))
+                        shinydashboard::box(width = 6,   mod_cart_ui_output("cart_ui_1", type = "cp")),
+                        shinydashboard::box(width = 6,   mod_cart_ui_output("cart_ui_1", type = "CM"))
                       )
                     )
-                  )),
+                  )
+          ),
           tabItem(tabName = "clustering",
                   fluidRow(
-                    box(
-                      title = shiny::HTML(
-                        "Clustering options
+                    box(width = 4,
+                        title = shiny::HTML(
+                          "Clustering options
                                          <a
                                          id=\"button\"
                                          data-toggle=\"tooltip\"
@@ -158,18 +160,19 @@ app_ui <- function(request) {
                                          class=\"dropdown\">
                                          <i class=\"fa fa-info-circle\"></i>
                                          </a>"
-                      ),
-                      width = 4,
-                      mod_clustering_ui_input("clustering_ui_1")
+                        ),
+                        mod_clustering_ui_input("clustering_ui_1")
                     ),
                     box(width = 8,
-                        mod_clustering_ui_output("clustering_ui_1"))
-                  )),
+                        mod_clustering_ui_output("clustering_ui_1")
+                    )
+                  )
+          ),
           tabItem(tabName = "ann",
                   fluidRow(
-                    box(
-                      title = shiny::HTML(
-                        "ANN options
+                    box( width = 4,
+                         title = shiny::HTML(
+                           "ANN options
                                          <a
                                          id=\"button\"
                                          data-toggle=\"tooltip\"
@@ -177,13 +180,66 @@ app_ui <- function(request) {
                                          class=\"dropdown\">
                                          <i class=\"fa fa-info-circle\"></i>
                                          </a>"
-                      )
-                      ,
-                      width = 4,
-                      
+                         )
                     ),
-                    box(width = 8, )
-                  ))
+                    box(width = 8, 
+                    )
+                  )
+          ),
+          tabItem(tabName = "forecasting",
+                  fluidRow(
+                    box(width = 4,
+                        title = shiny::HTML(
+                          "Forecasting options
+                                         <a
+                                         id=\"button\"
+                                         data-toggle=\"tooltip\"
+                                         title=\" Artificial Neural Network options.\"
+                                         class=\"dropdown\">
+                                         <i class=\"fa fa-info-circle\"></i>
+                                         </a>"
+                        )
+                    ),
+                    box(width = 8, 
+                    )
+                  )
+          ),
+          tabItem(tabName = "mv",
+                  fluidRow(
+                    box( width = 4,
+                         title = shiny::HTML(
+                           "M&V options
+                                         <a
+                                         id=\"button\"
+                                         data-toggle=\"tooltip\"
+                                         title=\" Artificial Neural Network options.\"
+                                         class=\"dropdown\">
+                                         <i class=\"fa fa-info-circle\"></i>
+                                         </a>"
+                         )
+                    ),
+                    box(width = 8,
+                    )
+                  )
+          ),
+          tabItem(tabName = "add",
+                  fluidRow(
+                    box(width = 4,
+                        title = shiny::HTML(
+                          "ADD options
+                                         <a
+                                         id=\"button\"
+                                         data-toggle=\"tooltip\"
+                                         title=\" Artificial Neural Network options.\"
+                                         class=\"dropdown\">
+                                         <i class=\"fa fa-info-circle\"></i>
+                                         </a>"
+                        )
+                    ),
+                    box(width = 8,
+                    )
+                  )
+          )
         ),
         mod_footer_ui()
       )
