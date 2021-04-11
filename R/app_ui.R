@@ -34,7 +34,7 @@ app_ui <- function(request) {
         tabItems(
           tabItem(tabName = "manage",
                   fluidRow(
-                    box(
+                    box(width = 4,
                       title = shiny::HTML(
                         "Data Handling options
                                          <a
@@ -45,8 +45,6 @@ app_ui <- function(request) {
                                          <i class=\"fa fa-info-circle\"></i>
                                          </a>"
                       ),
-                      width = 4,
-                      
                       # mod_manage_ui_input("manage_ui_1"),
                       # rename column / variable from a dataset
                       mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
