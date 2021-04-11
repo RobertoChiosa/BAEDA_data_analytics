@@ -51,7 +51,6 @@ mod_cart_ui_input <- function(id){
       )
     ),
     
-    
     # # if predictive constructed i build a test and train sample
     conditionalPanel(condition = sprintf("input['%s'] == 'Predictive'", ns('objective')),
                      column(width = 6,  style = style_LCol,
@@ -69,25 +68,31 @@ mod_cart_ui_input <- function(id){
     ),
     # # if descriptive selected i only describe the whole dataset
     conditionalPanel(condition = sprintf("input['%s'] == 'rpart'", ns('algorithm')),
-                     column(width = 6,  style = style_LCol,
-                            selectInput(ns('target_var_rt'), 'Target variable:', choices = c("") )
-                     ),
-                     column(width = 6,  style = style_RCol,
-                            selectInput(ns('target_var_rt_class'), 'Coerce to class:', choices = c("numeric", "factor", "ordered") )
-                     ),
-                     h5("Select split variables (coerce to)"),
-                     column(width = 4,  style = style_LCol,
-                            selectInput(ns('split_var_num_rt'), NULL, 
-                                        choices = c("as.numeric()"="", colnames(dplyr::select_if( data, is.numeric))) , multiple = TRUE),
-                     ),
-                     column(width = 4,  style = style_RCol,
-                            selectInput(ns('split_var_ord_rt'), NULL, 
-                                        choices = c("as.ordered()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
-                     ),
-                     column(width = 4,  style = style_RCol,
-                            selectInput(ns('split_var_fact_rt'), NULL, 
-                                        choices = c("as.factor()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
-                     ),
+                     #column(width = 6,  style = style_LCol,
+                     selectInput(ns('target_var_rt'), 'Target variable:', choices = NULL ),
+                     #),
+                     # column(width = 6,  style = style_RCol,
+                     #        selectInput(ns('target_var_rt_class'), 'Coerce to class:', choices = c("numeric", "factor", "ordered") )
+                     # ),
+                     # 
+                     selectInput(ns('split_var_rt'), "Split variable(s)", multiple = TRUE, choices = NULL),
+                     ### old
+                     # h5("Select split variables (coerce to)"),
+                     # column(width = 4,  style = style_LCol,
+                     #        selectInput(ns('split_var_num_rt'), NULL,
+                     #                    choices = NULL)
+                     #        #choices = c("as.numeric()"="", colnames(dplyr::select_if( data, is.numeric))) , multiple = TRUE),
+                     # ),
+                     # column(width = 4,  style = style_RCol,
+                     #        selectInput(ns('split_var_ord_rt'), NULL,
+                     #                    choices = NULL)
+                     #        #choices = c("as.ordered()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
+                     # ),
+                     # column(width = 4,  style = style_RCol,
+                     #        selectInput(ns('split_var_fact_rt'), NULL,
+                     #                    choices = NULL)
+                     #        #choices = c("as.factor()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
+                     # ),
                      selectInput(ns('index_rt'), 'Splitting index:', choices = c("gini", "information")),
                      sliderInput(ns("maxdepth_rt"), label = "Max depth:", min = 1, max = 20, value = 4),
                      sliderInput(ns("cp_rt"), label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
@@ -101,7 +106,7 @@ mod_cart_ui_input <- function(id){
                             numericInput(ns("xval_rt"), label = "Cross validation:", min = 0,  value = 10), # input numerico default e suggestions info
                      )
     ),
-    # conditionalPanel(condition = sprintf("input['%s'] == 'evtree'", ns('algorithm')), 
+    # conditionalPanel(condition = sprintf("input['%s'] == 'evtree'", ns('algorithm')),
     #                  selectInput(ns('target_var_ev'), 'Select target variable (categorical):', choices = colnames(dplyr::select_if( data, is.factor)) ),
     #                  selectInput(ns('split_var_ev'), 'Select categorical split variables:', choices = colnames(dplyr::select_if( data, is.factor)) , multiple = TRUE),
     #                  numericInput(ns("minsplit_ev"), label = "Min split:", min = 1, max = 100, value = 30), # numeric
@@ -193,7 +198,8 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
       
       # gets rvs_dataset as reactive value to solve update inputs
       choices <- colnames(rvs_dataset())
-      updateSelectInput(session, "target_var_rt", choices = choices)
+      updateSelectInput(session, 'target_var_rt', choices = choices)
+      updateSelectInput(session, 'split_var_rt', choices = choices)
     })
     
     
@@ -207,23 +213,20 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
       
       # remove feedback if any
       shinyFeedback::hideFeedback("target_var_rt") 
-      shinyFeedback::hideFeedback("split_var_num_rt") 
-      shinyFeedback::hideFeedback("split_var_ord_rt") 
-      shinyFeedback::hideFeedback("split_var_fact_rt") 
+      shinyFeedback::hideFeedback("split_var_rt") 
       
       # validation part
-      validation_split_var <- is.null(input$split_var_num_rt) & is.null(input$split_var_ord_rt) & is.null(input$split_var_fact_rt)
+      validation_split_var <- is.null(input$split_var_rt)
       
       if ( validation_split_var == TRUE ) { # incompatible condition
-        shinyFeedback::feedbackWarning("split_var_num_rt", TRUE, "Empty") 
-        shinyFeedback::feedbackWarning("split_var_ord_rt", TRUE, "Empty") 
-        shinyFeedback::feedbackWarning("split_var_fact_rt", TRUE, "Empty") 
+        shinyFeedback::feedbackWarning("split_var_rt", TRUE, "No split variable(s) selected") 
       } 
       
-      validation_duplicate_var <- input$target_var_rt %in% c(input$split_var_num_rt, input$split_var_ord_rt, input$split_var_fact_rt)
+      validation_duplicate_var <- input$target_var_rt %in% input$split_var_rt
       
       if ( validation_duplicate_var == TRUE ) { # incompatible condition
-        shinyFeedback::feedbackWarning("target_var_rt", TRUE, "Conflicting") 
+        shinyFeedback::feedbackWarning("split_var_rt", TRUE, "Choiche(s) onflicting with target variable.") 
+        shinyFeedback::feedbackWarning("target_var_rt", TRUE, NULL) 
       } 
       
       # condition to continue if validation conditions admitted
@@ -239,9 +242,9 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
       
       # select the dataframe to perform CART on
       dfct <- rvs_dataset() %>%
-        dplyr::select(c(input$target_var_rt, input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt) ) %>% # keep only selected variables
-        dplyr::mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
-        dplyr::mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
+        dplyr::select(c(input$target_var_rt, input$split_var_rt) ) # keep only selected variables
+        #dplyr::mutate_at(input$split_var_fact_rt, ~factor(., order = F)) %>% # remove order for those variables for which I DON'T WANT ORDER
+        #dplyr::mutate_at(input$split_var_ord_rt, ~factor(., order = T)) # remove order for those variables for which I WANT ORDER
       
       # switch (input$target_var_rt_class,
       #         numeric = dfct <- dplyr::mutate_at(dfct, input$target_var_rt, ~numeric()),
@@ -254,7 +257,7 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
         
         if (input$algorithm == "rpart") {
           ct.rpart <- rpart::rpart(
-            stats::reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
+            stats::reformulate(response = input$target_var_rt , termlabels = c(input$split_var_rt)),                                                  # target attribute based on training attributes
             data = dfct ,                                                               # data to be used
             parms = list(split = input$index_rt),
             #method = input$method_rt,
@@ -285,7 +288,7 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
         
         if (input$algorithm == "rpart") {
           ct.rpart <- rpart::rpart(
-            stats::reformulate(response = input$target_var_rt , termlabels = c(input$split_var_num_rt, input$split_var_fact_rt, input$split_var_ord_rt)),                                                  # target attribute based on training attributes
+            stats::reformulate(response = input$target_var_rt , termlabels = c(input$split_var_rt)),                                                  # target attribute based on training attributes
             data = dfct_train ,                                                               # data to be used
             parms = list(split = input$index_rt),
             #method = input$method_rt,
@@ -381,6 +384,64 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
     })
   })
 }
+
+
+# test module
+library(shiny)
+library(shinydashboard)
+library(shiny)
+library(ggplot2)
+library(magrittr)
+library(shinyBS)
+library(shinyWidgets)
+library(dplyr)
+library(rpart)
+library(stats)
+library(shinyFeedback)
+library(partykit)
+library(MLmetrics)
+library(grid)
+library(shinyjs)
+
+ui <- dashboardPage(
+  dashboardHeader(disable = TRUE),
+  dashboardSidebar(disable = TRUE),
+  dashboardBody(
+    shinyjs::useShinyjs(),
+    shinyFeedback::useShinyFeedback(),
+    column(width = 4,
+           box(width = 12, 
+               mod_cart_ui_input("cart_ui_1")
+           )
+    ),
+    column(width = 8,
+           box(width = 12, 
+               mod_cart_ui_output("cart_ui_1", type = "tree")
+           )
+    )
+  )
+)
+server <- function(input, output, session) {
+  
+  data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
+  data_rv_results <- reactiveValues(infile = TRUE)  # NULL to simulate no dataset added, TRUE to simulate dataset added
+  
+  data_cart <-  mod_cart_server("cart_ui_1",
+                                infile = reactive({data_rv_results$infile}), 
+                                rvs_dataset = reactive({data_rv$df_tot}) )
+  # When applied function (data_mod2$trigger change) :
+  #   - Update rv$variable with module output "variable"
+  #   - Update rv$fun_history with module output "fun"
+  # observeEvent(data_rename$trigger, {
+  #   req(data_rename$trigger > 0)
+  #   data_rv$df_tot    <- data_rename$dataset
+  # })
+  
+  
+}
+
+shinyApp(ui, server)
+
 
 ## To be copied in the UI
 # mod_cart_ui_input("cart_ui_1")
