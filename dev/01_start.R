@@ -26,7 +26,7 @@ golem::fill_desc(
   author_last_name = "Chiosa", # Your Last Name
   author_email = "roberto.chiosa@polito.it", # Your Email
   repo_url = "https://github.com/RobertoChiosa/eDASH.git" # The URL of the GitHub Repo (optional) 
-)     
+)
 
 ## Set {golem} options ----
 golem::set_golem_options()
@@ -36,11 +36,13 @@ golem::set_golem_options()
 # usethis::use_mit_license( name = "Golem User" )  # You can set another license here
 usethis::use_readme_rmd( open = FALSE ) # creates a readme
 # usethis::use_code_of_conduct() # creates a code of conduct
-# usethis::use_lifecycle_badge( "Experimental" )
+usethis::use_lifecycle_badge( "Experimental" )
 # usethis::use_news_md( open = FALSE )
 
 ## Use git ---- 
 # usethis::use_git() # I already connected to github
+usethis::use_github_action("pkgdown") # automatically deploys website documentation
+
 
 ## Init Testing Infrastructure ----
 ## Create a template for tests

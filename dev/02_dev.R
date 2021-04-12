@@ -23,6 +23,8 @@ usethis::use_package( "shinyWidgets" )
 usethis::use_package( "shinyalert" )
 usethis::use_package( "shinyjs" )
 
+usethis::use_package( "pkgdown" )
+
 usethis::use_package( "magrittr" )
 usethis::use_package( "dplyr" )
 usethis::use_package( "utils" )

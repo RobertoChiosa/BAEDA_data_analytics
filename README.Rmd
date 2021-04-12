@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # eDASH
 
 <!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 The goal of eDASH is to ...
@@ -32,7 +33,7 @@ And the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("RobertoChiosa/eDASH")
+devtools::install_github("https://github.com/baeda-polito/dashboard-student")
 ```
 ## Example
 
