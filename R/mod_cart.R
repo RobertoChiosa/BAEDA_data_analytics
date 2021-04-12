@@ -261,7 +261,8 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
         
         if (input$algorithm == "rpart") {
           ct.rpart <- rpart::rpart(
-            stats::reformulate(response = input$target_var_rt , termlabels = c(input$split_var_rt)),                                                  # target attribute based on training attributes
+            stats::reformulate(response = sprintf("`%s`", input$target_var_rt) , 
+                               termlabels = sprintf("`%s`", input$split_var_rt)),                                                  # target attribute based on training attributes
             data = dfct ,                                                               # data to be used
             parms = list(split = input$index_rt),
             #method = input$method_rt,
@@ -292,7 +293,8 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
         
         if (input$algorithm == "rpart") {
           ct.rpart <- rpart::rpart(
-            stats::reformulate(response = input$target_var_rt , termlabels = c(input$split_var_rt)),                                                  # target attribute based on training attributes
+            stats::reformulate(response = sprintf("`%s`", input$target_var_rt) , 
+                               termlabels = sprintf("`%s`", input$split_var_rt)),                                                  # target attribute based on training attributes
             data = dfct_train ,                                                               # data to be used
             parms = list(split = input$index_rt),
             #method = input$method_rt,
