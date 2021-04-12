@@ -36,9 +36,9 @@ app_ui <- function(request) {
                   fluidRow(
                     box(width = 4,
                       title = shiny::HTML(
-                        "Data Handling options
+                        "Data Wrangling options
                                          <a
-                                         id=\"button\"
+                                         id=\"button_wrangling\"
                                          data-toggle=\"tooltip\"
                                          title=\" Data Handling options.\"
                                          class=\"dropdown\">

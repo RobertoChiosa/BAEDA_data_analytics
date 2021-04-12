@@ -96,4 +96,7 @@ app_server <- function( input, output, session ) {
   ###### 2) "CLUSTERING" TAB ----------------------------------------------------------------------
   mod_clustering_server(id = "clustering_ui_1",data_rv[[input$dataframe]])
   
+  
+  ###### 2) "LEARNING" MODALS ----------------------------------------------------------------------
+
 }
