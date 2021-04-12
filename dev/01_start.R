@@ -41,7 +41,7 @@ usethis::use_lifecycle_badge( "Experimental" )
 
 ## Use git ---- 
 # usethis::use_git() # I already connected to github
-usethis::use_github_action("pkgdown") # automatically deploys website documentation
+#usethis::use_github_action("pkgdown") # automatically deploys website documentation
 
 
 ## Init Testing Infrastructure ----
