@@ -5,6 +5,7 @@ options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mo
 golem::detach_all_attached()
 rm(list=ls(all.names = TRUE))
 
+# pkgdown::build_site()
 # Document and reload your package
 golem::document_and_reload() 
 
