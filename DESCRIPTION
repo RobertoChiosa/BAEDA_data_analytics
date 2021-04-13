@@ -1,0 +1,50 @@
+Package: eDASH
+Title: A Building Energy Data Analytics Dashboard
+Version: 0.0.0.9000
+Authors@R: person('Roberto', 'Chiosa', email = 'roberto.chiosa@polito.it', role = c('cre', 'aut'))
+Description: This packages provides the skeleton to build a production ready dashboard. This project is built on top of golem infrastructure 
+License: What license is it under?
+Imports: 
+    config (>= 0.3),
+    golem (>= 0.3.0),
+    shiny (>= 1.5.0),
+    attempt,
+    DT,
+    glue,
+    htmltools,
+    thinkr,
+    pkgload,
+    shinydashboard,
+    shinyWidgets,
+    magrittr,
+    dplyr,
+    ggplot2,
+    rpart,
+    rpart.plot,
+    grid,
+    partykit,
+    MLmetrics,
+    stats,
+    shinyFeedback,
+    shinyBS,
+    plotly,
+    utils,
+    knitr,
+    rmarkdown,
+    data.table,
+    LICORS,
+    NbClust,
+    shinyalert,
+    rlang,
+    shinyjs,
+    amap,
+    scales,
+    pkgdown
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+URL: https://github.com/RobertoChiosa/eDASH.git
+BugReports: https://github.com/RobertoChiosa/eDASH.git/issues
+Depends: 
+    R (>= 2.10)
+VignetteBuilder: knitr
