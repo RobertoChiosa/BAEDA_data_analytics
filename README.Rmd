@@ -6,7 +6,7 @@ output: github_document
 
 <!-- PROJECT LOGO -->
 <center>
-![](https://github.com/baeda-polito/dashboard-student/docs/reference/figures/BAEDA-logo-dashboard.png)
+![](docs/reference/figures/BAEDA-logo-dashboard.png)
   <p>
     <a href="https://github.com/baeda-polito/dashboard-student"><strong>Explore the docs » </strong></a>
     <br>

@@ -5,8 +5,7 @@
 
 <center>
 
-![your image
-caption](https://github.com/baeda-polito/dashboard-student/docs/reference/figures/BAEDA-logo-dashboard.png)
+![](docs/reference/figures/BAEDA-logo-dashboard.png)
 
 <p>
 
