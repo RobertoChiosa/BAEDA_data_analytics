@@ -5,13 +5,13 @@
 
 <center>
 
-![](docs/reference/figures/BAEDA-logo-dashboard.png)
+![](man/figures/BAEDA-logo-dashboard.png)
 
 <p>
 
 <a href="https://github.com/baeda-polito/dashboard-student"><strong>Explore
 the docs » </strong></a> <br>
-<a href="https://github.com/baeda-polito/dashboard-student/">View
+<a href="https://github.com/baeda-polito/dashboard-student">View
 Demo</a> ·
 <a href="https://github.com/baeda-polito/dashboard-student/issues">Report
 Bug</a> ·
@@ -20,22 +20,15 @@ Feature</a>
 
 </p>
 
-</center>
-
 <!-- badges: start -->
 
-<center>
-
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![](https://img.shields.io/badge/A%20BAEDA%20Lab%20Dashboard-student%20version-blue.svg)](http://www.baeda.polito.it/)
+[![](https://img.shields.io/badge/lifecycle-experimental-red.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+<!-- badges: end -->
 
 </center>
 
-<!-- badges: end -->
-
-<!-- ABOUT THE PROJECT -->
-
-## About The Project: the package eDASH
+-----
 
 This project consists in the design and development of interactive
 dashboards for the visualization of energy data. In particular, we

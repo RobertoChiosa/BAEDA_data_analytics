@@ -6,6 +6,7 @@ golem::detach_all_attached()
 rm(list=ls(all.names = TRUE))
 
 pkgdown::build_site()
+# pkgdown::build_home()
 # Document and reload your package
 golem::document_and_reload() 
 

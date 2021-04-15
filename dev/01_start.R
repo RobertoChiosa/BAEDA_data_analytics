@@ -20,12 +20,12 @@
 ## 
 golem::fill_desc(
   pkg_name = "eDASH", # The Name of the package containing the App 
-  pkg_title = "A Building Energy Data Analytics Dashboard", # The Title of the package containing the App 
+  pkg_title = "eDASH", # The Title of the package containing the App 
   pkg_description = "This packages provides the skeleton to build a production ready dashboard. This project is built on top of golem infrastructure. ", # The Description of the package containing the App 
   author_first_name = "Roberto", # Your First Name
   author_last_name = "Chiosa", # Your Last Name
   author_email = "roberto.chiosa@polito.it", # Your Email
-  repo_url = "https://github.com/RobertoChiosa/eDASH.git" # The URL of the GitHub Repo (optional) 
+  repo_url = "https://github.com/baeda-polito/dashboard-student" # The URL of the GitHub Repo (optional) 
 )
 
 ## Set {golem} options ----
@@ -37,7 +37,7 @@ golem::set_golem_options()
 usethis::use_readme_rmd( open = FALSE ) # creates a readme
 # usethis::use_code_of_conduct() # creates a code of conduct
 usethis::use_lifecycle_badge( "Experimental" )
-# usethis::use_news_md( open = FALSE )
+usethis::use_news_md( open = FALSE )
 
 ## Use git ---- 
 # usethis::use_git() # I already connected to github

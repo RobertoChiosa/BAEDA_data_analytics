@@ -4,29 +4,6 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-<!-- PROJECT LOGO -->
-<center>
-![](docs/reference/figures/BAEDA-logo-dashboard.png)
-  <p>
-    <a href="https://github.com/baeda-polito/dashboard-student"><strong>Explore the docs » </strong></a>
-    <br>
-    <a href="https://github.com/baeda-polito/dashboard-student/">View Demo</a>
-    ·
-    <a href="https://github.com/baeda-polito/dashboard-student/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/baeda-polito/dashboard-student/issues">Request Feature</a>
-  </p>
-
-</center>
-
-<!-- badges: start -->
-<center>
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-</center>
-<!-- badges: end -->
-
-
-
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -36,9 +13,27 @@ knitr::opts_chunk$set(
 )
 ```
 
+<!-- PROJECT LOGO -->
+<center>
 
-<!-- ABOUT THE PROJECT -->
-## About The Project: the package eDASH
+![](man/figures/BAEDA-logo-dashboard.png)
+  <p>
+    <a href="https://github.com/baeda-polito/dashboard-student"><strong>Explore the docs » </strong></a>
+    <br>
+    <a href="https://github.com/baeda-polito/dashboard-student">View Demo</a>
+    ·
+    <a href="https://github.com/baeda-polito/dashboard-student/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/baeda-polito/dashboard-student/issues">Request Feature</a>
+  </p>
+
+<!-- badges: start -->
+`r badger::badge_custom("A BAEDA Lab Dashboard", "student version", "blue", "http://www.baeda.polito.it/")` `r badger::badge_lifecycle("experimental", "red")`
+<!-- badges: end -->
+</center>
+
+
+---
 This project consists in the design and development of interactive dashboards for the visualization of energy data. In particular, we propose to interact with the data in a deeper way by modifying the hyperparameters of the code directly from the UI, giving the user great flexibility in the exploration. In addition, we created an "Advanced" section through which the users can perform advanced data analysis workflows, ranging from daily load profile clustering to Adaptive Symbolic Approximation (ASAX).
 
 <!-- TABLE OF CONTENTS -->

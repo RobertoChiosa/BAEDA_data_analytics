@@ -103,6 +103,9 @@ usethis::use_data_raw( name = "data", open = FALSE )
 # # Add action for PR
 # usethis::use_github_action_pr_commands()
 
+usethis::use_pkgdown()
+
+
 # Travis CI
 # usethis::use_travis() 
 # usethis::use_travis_badge() 
