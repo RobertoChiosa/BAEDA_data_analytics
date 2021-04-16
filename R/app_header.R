@@ -6,7 +6,7 @@
 #' @import shinydashboard
 #' @noRd
 header <- shinydashboard::dashboardHeader(disable = FALSE,                # if you want to hide the header set to TRUE    
-                                          title = tags$a(href = "www.baeda.polito.it",
+                                          title = tags$a(href = "http://www.baeda.polito.it/",
                                                          tags$img(src = 'www/BAEDA-logo-dashboard.png', heigth = '200', width = '200')),
                                           # title = "BAEDA Lab Analytics", # title displayed over the sidebar
                                           # MESSAGE MENU ----------------------------------------------------------------------
