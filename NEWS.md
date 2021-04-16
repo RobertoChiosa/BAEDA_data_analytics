@@ -1,3 +1,3 @@
-# eDASH 0.0.0.9000
+# eDASH 0.0.1
 
-* Added a `NEWS.md` file to track changes to the package.
+* The eDASH contains the base modules. Still in beta-phase.

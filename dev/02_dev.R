@@ -76,8 +76,10 @@ usethis::use_data_raw( name = "data", open = FALSE )
 # Documentation
 
 ## Vignette ----
-# usethis::use_vignette("eDASH")
-# devtools::build_vignettes()
+usethis::use_vignette("preprocessing")
+usethis::use_vignette("clustering")
+usethis::use_vignette("classification")
+devtools::build_vignettes()
 
 ## Code Coverage----
 ## Set the code coverage service ("codecov" or "coveralls")

@@ -64,3 +64,5 @@ po/*~
 _pkgdown.yml
 .DS_Store
 pkgdown
+doc
+Meta

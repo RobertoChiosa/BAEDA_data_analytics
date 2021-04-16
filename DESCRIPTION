@@ -1,8 +1,8 @@
 Package: eDASH
-Title: A Building Energy Data Analytics Dashboard
-Version: 0.0.1
+Title: eDASH
+Version: 0.0.0.9000
 Authors@R: person('Roberto', 'Chiosa', email = 'roberto.chiosa@polito.it', role = c('cre', 'aut'))
-Description: This packages provides the skeleton to build a production ready dashboard. This project is built on top of golem infrastructure 
+Description: This packages provides the skeleton to build a production ready dashboard. This project is built on top of golem infrastructure. 
 License: What license is it under?
 Imports: 
     config (>= 0.3),
