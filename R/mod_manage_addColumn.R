@@ -100,6 +100,7 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
       req( !is.null(infile())  )
       # gets rvs_dataset as reactive value to solve update inputs
       choices <- colnames(rvs_dataset())
+      # choices <- variable_list_with_class(rvs_dataset()) 
       updateSelectInput(session, "condition_LHS", choices = choices)
     })
     

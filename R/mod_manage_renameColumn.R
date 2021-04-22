@@ -108,16 +108,10 @@ mod_manage_renameColumn_server <- function(id, infile = NULL, rvs_dataset) {
     # Update selectInput according to dataset
     observe({
       req( !is.null(infile())  )
-      # creates list with class
-      # var_name <- colnames(rvs_dataset())
-      # var_fct <- unlist(sapply(rvs_dataset(),list_function) )
-      # var_list <- as.list(var_name)
-      # var_part1 <- var_name
-      # var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
-      #names(var_list) <- paste(var_part1, var_part2)
-
+     
       # gets rvs_dataset as reactive value to solve update inputs
       choices <- colnames(rvs_dataset())
+      # choices <- variable_list_with_class(rvs_dataset()) 
       updateSelectInput(session, "actual_name", choices = choices)
     })
     

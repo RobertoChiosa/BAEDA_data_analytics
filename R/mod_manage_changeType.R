@@ -19,37 +19,36 @@ mod_manage_manage_changeType_ui <- function(id) {
     shiny::tags$style(".fa-refresh {color:white}"),
     # ui in a collapsible box
     box(
-      column(
-        width = 6,
-        style = "padding-left:0px; padding-right:5px;",
-        shiny::selectInput(
-          ns("actual_name"),
-          label = "Select column:",
-          choices = NULL,
-          selected = NULL,
-          width = "100%"
-        )
+      shiny::selectInput(
+        ns("actual_name"),
+        label = "Select column:",
+        choices = NULL,
+        selected = NULL,
+        width = "100%"
       ),
-      column(
-        width = 6,
-        style = " padding-left:5px;padding-right:0px;",
-        shiny::selectizeInput(
-          ns("type"),
-          label = "Type:",
-          choices = c("as.factor", 
-                      "as.numeric", 
-                      "as.integer",
-                      "as.character",
-                      "as.Date",
-                      "as.POSIXct"
-                      ),
-          # all admitted unit # implement with groups
-          selected = NULL,
-          multiple = FALSE,
-          options = list(maxOptions = 5),
-          width = "100%"
-        )
-      ), 
+      shiny::selectizeInput(
+        ns("type"),
+        label = "Select type for conversion:",
+        choices = c("As Factor" = "as.factor", 
+                    "As Ordered Factor" = "as.ordered", 
+                    "as.numeric", 
+                    "as.integer",
+                    "as.character",
+                    "as.Date",
+                    "as.POSIXct"
+        ),
+        # all admitted unit # implement with groups
+        selected = NULL,
+        multiple = FALSE,
+        width = "100%"
+      ),
+      
+      shiny::htmlOutput(  ns("type_preview_actual_title") ),
+      shiny::verbatimTextOutput(  ns("type_preview_actual") ),
+      
+      shiny::htmlOutput(  ns("type_preview_future_title") ),
+      shiny::verbatimTextOutput(  ns("type_preview_future") ),
+      
       column(
         width = 12,
         style = "padding-left:0px; padding-right:0px;",
@@ -114,17 +113,30 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
     # Update selectInput according to dataset
     observe({
       req( !is.null(infile())  )
-      # # creates list with class
-      # var_name <- colnames(rvs_dataset())
-      # var_fct <- unlist(sapply(rvs_dataset(),list_function) ) 
-      # var_list <- as.list(var_name)
-      # var_part1 <- var_name
-      # var_part2 <- gsub(" ","",paste("{", var_fct, "}"))
-      # names(var_list) <- paste(var_part1, var_part2)
       
       # gets rvs_dataset as reactive value to solve update inputs
+      # choices <- variable_list_with_class(rvs_dataset()) 
       choices <- colnames(rvs_dataset())
       updateSelectInput(session, "actual_name", choices = choices)
+      
+      # preview of type conversion
+      output$type_preview_actual_title <- renderText({
+        paste("Summary of <code>", input$actual_name,  "</code> as is (Actual)")
+      })
+      output$type_preview_actual <- renderPrint({
+        
+        variable <- as.data.frame(rvs_dataset()[, input$actual_name])
+        summary( variable )
+      })
+      
+      output$type_preview_future_title <- renderText({
+        paste("Summary of <code>", input$actual_name, " </code> when converted (Future)")
+      })
+      output$type_preview_future <- renderPrint({
+        variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ) 
+        summary( variable)
+      })
+      
     })
     
     # Define the ReactiveValue to return : "toReturn"
@@ -153,42 +165,45 @@ list_function <- function(x){
     a[1]
   }
 }
-# 
-# # test module
-# library(shiny)
-# library(shinydashboard)
-# ui <- dashboardPage(
-#   dashboardHeader(disable = TRUE),
-#   dashboardSidebar(disable = TRUE),
-#   dashboardBody(
-#     column(width = 4,
-#            mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")),
-#     column(width = 8,
-#            DT::DTOutput("table"))
-#   )
-# )
-# server <- function(input, output, session) {
-# 
-#   data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
-# 
-#   output$table <- DT::renderDT({
-#     data_rv$df_tot
-#   })
-# 
-#   data_rename <-  mod_manage_manage_changeType_server("manage_manage_changeType_ui_1", 
-#                                                       rvs_dataset = reactive({data_rv$df_tot}) )
-#   # When applied function (data_mod2$trigger change) :
-#   #   - Update rv$variable with module output "variable"
-#   #   - Update rv$fun_history with module output "fun"
-#   observeEvent(data_rename$trigger, {
-#     req(data_rename$trigger > 0)
-#     data_rv$df_tot    <- data_rename$dataset
-#   })
-# 
-# 
-# }
-# 
-# shinyApp(ui, server)
+
+# test module
+library(shiny)
+library(shinydashboard)
+ui <- dashboardPage(
+  dashboardHeader(disable = TRUE),
+  dashboardSidebar(disable = TRUE),
+  dashboardBody(
+    column(width = 4,
+           mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")),
+    column(width = 8,
+           DT::DTOutput("table"))
+  )
+)
+server <- function(input, output, session) {
+  
+  data_rv <- reactiveValues( df_tot = readRDS("/Users/robi/Desktop/dashboard-student-old/data/df_cooling_1.rds"))                 # reactive value to store the loaded dataframes
+  
+  
+  
+  output$table <- DT::renderDT({
+    data_rv$df_tot
+  })
+  
+  data_rename <-  mod_manage_manage_changeType_server("manage_manage_changeType_ui_1",
+                                                      rvs_dataset = reactive({data_rv$df_tot}),
+                                                      infile = reactive({TRUE}))
+  # When applied function (data_mod2$trigger change) :
+  #   - Update rv$variable with module output "variable"
+  #   - Update rv$fun_history with module output "fun"
+  observeEvent(data_rename$trigger, {
+    req(data_rename$trigger > 0)
+    data_rv$df_tot    <- data_rename$dataset
+  })
+  
+  
+}
+
+shinyApp(ui, server)
 
 ## To be copied in the UI
 # mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")

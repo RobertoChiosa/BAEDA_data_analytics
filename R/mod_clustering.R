@@ -173,7 +173,11 @@ mod_clustering_server <- function(id, rvs) {
     
     # updates ui do for all
     observe({
-      updateSelectInput(session, inputId = 'cluster_variable', choices = colnames(rvs))
+      # gets rvs_dataset as reactive value to solve update inputs
+      choices <- colnames(rvs)
+      # choices <- variable_list_with_class(rvs )
+      
+      updateSelectInput(session, inputId = 'cluster_variable', choices = choices)
     })
     
     observeEvent(input$cluster_button, {
