@@ -7,10 +7,11 @@
 #' @noRd
 #'
 #' @import shiny
+#' @import magrittr
 #' @import shinydashboard
 #' @importFrom shinyalert shinyalert
 #' @importFrom rlang is_empty
-#' @importFrom dplyr mutate_at vars
+#' @importFrom dplyr mutate_at vars rename
 mod_manage_manage_changeType_ui <- function(id) {
   ns <- NS(id)
   
@@ -29,13 +30,23 @@ mod_manage_manage_changeType_ui <- function(id) {
       shiny::selectizeInput(
         ns("type"),
         label = "Select type for conversion:",
-        choices = c("As Factor" = "as.factor", 
-                    "As Ordered Factor" = "as.ordered", 
-                    "as.numeric", 
-                    "as.integer",
-                    "as.character",
-                    "as.Date",
-                    "as.POSIXct"
+        choices = c("as_integer" = "as_integer",
+                    "as_numeric" = "as_numeric",
+                    "as_factor" = "as_factor",
+                    "as_character" = "as_character",
+                    "month" = "month",
+                    "wday" = "wday",
+                    "as_mdy" = "as_mdy",
+                    "as_dmy" = "as_dmy",
+                    "as_ymd" = "as_ymd",
+                    "as_ymd_hms" = "as_ymd_hms",
+                    "as_ymd_hm" = "as_ymd_hm",
+                    "as_mdy_hms" = "as_mdy_hms",
+                    "as_mdy_hm" = "as_mdy_hm",
+                    "as_dmy_hms" = "as_dmy_hms",
+                    "as_dmy_hm" = "as_dmy_hm",
+                    "as_hms" = "as_hms",
+                    "as_hm" = "as_hm"
         ),
         # all admitted unit # implement with groups
         selected = NULL,
@@ -145,7 +156,16 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
     
     # (Re)load button
     observeEvent(input$new_name_submit, {
-      toReturn$dataset <-  dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)
+      
+      
+      toReturn$dataset <-  rvs_dataset() %>%
+        dplyr::mutate_at( .vars = dplyr::vars(input$actual_name), .funs = input$type) 
+      
+      if (input$new_name != "") {
+        toReturn$dataset <-  rvs_dataset() %>%
+          dplyr::rename( !!input$new_name := !!input$actual_name )
+      } 
+  
       toReturn$trigger  <- toReturn$trigger + 1
     })
     
@@ -153,61 +173,55 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
     
   })
 }
-
-
-# this is the function that looks for classes and gets only first class
-# used for selec tinputs
-list_function <- function(x){
-  a <- class(x)
-  if (length(class(x)) == 1) {
-    a
-  } else {
-    a[1]
-  }
-}
-
-# test module
-library(shiny)
-library(shinydashboard)
-ui <- dashboardPage(
-  dashboardHeader(disable = TRUE),
-  dashboardSidebar(disable = TRUE),
-  dashboardBody(
-    column(width = 4,
-           mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")),
-    column(width = 8,
-           DT::DTOutput("table"))
-  )
-)
-server <- function(input, output, session) {
-  
-  data_rv <- reactiveValues( df_tot = readRDS("/Users/robi/Desktop/dashboard-student-old/data/df_cooling_1.rds"))                 # reactive value to store the loaded dataframes
-  
-  
-  
-  output$table <- DT::renderDT({
-    data_rv$df_tot
-  })
-  
-  data_rename <-  mod_manage_manage_changeType_server("manage_manage_changeType_ui_1",
-                                                      rvs_dataset = reactive({data_rv$df_tot}),
-                                                      infile = reactive({TRUE}))
-  # When applied function (data_mod2$trigger change) :
-  #   - Update rv$variable with module output "variable"
-  #   - Update rv$fun_history with module output "fun"
-  observeEvent(data_rename$trigger, {
-    req(data_rename$trigger > 0)
-    data_rv$df_tot    <- data_rename$dataset
-  })
-  
-  
-}
-
-shinyApp(ui, server)
+# 
+# # test module
+# library(shiny)
+# library(shinydashboard)
+# library(magrittr)
+# library(lubridate)
+# 
+# source("./mod_manage_changeType_utils.R")
+# ui <- dashboardPage(
+#   dashboardHeader(disable = TRUE),
+#   dashboardSidebar(disable = TRUE),
+#   dashboardBody(
+#     column(width = 4,
+#            mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")),
+#     column(width = 8,
+#            DT::DTOutput("table"))
+#   )
+# )
+# server <- function(input, output, session) {
+#   
+#   data_rv <- reactiveValues( df_tot = readRDS("/Users/robi/Desktop/dashboard-student-old/data/df_cooling_1.rds"))                 # reactive value to store the loaded dataframes
+#   
+#   
+#   
+#   output$table <- DT::renderDT({
+#     data_rv$df_tot
+#   })
+#   
+#   data_rename <-  mod_manage_manage_changeType_server("manage_manage_changeType_ui_1",
+#                                                       rvs_dataset = reactive({data_rv$df_tot}),
+#                                                       infile = reactive({TRUE}))
+#   # When applied function (data_mod2$trigger change) :
+#   #   - Update rv$variable with module output "variable"
+#   #   - Update rv$fun_history with module output "fun"
+#   observeEvent(data_rename$trigger, {
+#     req(data_rename$trigger > 0)
+#     data_rv$df_tot    <- data_rename$dataset
+#   })
+#   
+#   
+# }
+# 
+# shinyApp(ui, server)
 
 ## To be copied in the UI
 # mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1")
 
 ## To be copied in the server
 # mod_manage_manage_changeType_server("manage_manage_changeType_ui_1", rvs_dataset = reactiveValues())
+
+
 
