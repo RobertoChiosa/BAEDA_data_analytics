@@ -12,5 +12,3 @@ golem::document_and_reload()
 
 # Run the application
 eDASH::run_app()
-
-

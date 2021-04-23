@@ -183,7 +183,9 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
 #     data_rv$df_tot
 #   })
 # 
-#   data_add <-  mod_manage_addColumn_server("manage_addColumn_ui_1", rvs_dataset = data_rv$df_tot)
+#   data_add <-  mod_manage_addColumn_server("manage_addColumn_ui_1", 
+#   infile = reactive({TRUE}),
+#   rvs_dataset = data_rv$df_tot)
 #   # When applied function (data_mod2$trigger change) :
 #   #   - Update rv$variable with module output "variable"
 #   #   - Update rv$fun_history with module output "fun"

@@ -22,14 +22,14 @@ mod_manage_manage_changeType_ui <- function(id) {
     box(
       shiny::selectInput(
         ns("actual_name"),
-        label = "Select column:",
+        label = "Select variable (column):",
         choices = NULL,
         selected = NULL,
         width = "100%"
       ),
       shiny::selectizeInput(
         ns("type"),
-        label = "Select type for conversion:",
+        label = "Select conversion type:",
         choices = c("as_integer" = "as_integer",
                     "as_numeric" = "as_numeric",
                     "as_factor" = "as_factor",
@@ -84,7 +84,7 @@ mod_manage_manage_changeType_ui <- function(id) {
 #' manage_manage_changeType Server Functions
 #'
 #' @noRd
-mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) {
+mod_manage_manage_changeType_server <- function(id, infile = NULL,  rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -129,7 +129,10 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
       # choices <- variable_list_with_class(rvs_dataset()) 
       choices <- colnames(rvs_dataset())
       updateSelectInput(session, "actual_name", choices = choices)
-      
+    })
+    
+    observeEvent(input$actual_name, {
+      req( !is.null(infile())  )
       # preview of type conversion
       output$type_preview_actual_title <- renderText({
         paste("Summary of <code>", input$actual_name,  "</code> as is (Actual)")
@@ -150,6 +153,8 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
       
     })
     
+    
+    
     # Define the ReactiveValue to return : "toReturn"
     # with slots "rvs_dataset" & "trigger"
     toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
@@ -165,7 +170,7 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
         toReturn$dataset <-  rvs_dataset() %>%
           dplyr::rename( !!input$new_name := !!input$actual_name )
       } 
-  
+      
       toReturn$trigger  <- toReturn$trigger + 1
     })
     
@@ -173,7 +178,7 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
     
   })
 }
-# 
+
 # # test module
 # library(shiny)
 # library(shinydashboard)
@@ -192,15 +197,15 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
 #   )
 # )
 # server <- function(input, output, session) {
-#   
+# 
 #   data_rv <- reactiveValues( df_tot = readRDS("/Users/robi/Desktop/dashboard-student-old/data/df_cooling_1.rds"))                 # reactive value to store the loaded dataframes
-#   
-#   
-#   
+# 
+# 
+# 
 #   output$table <- DT::renderDT({
 #     data_rv$df_tot
 #   })
-#   
+# 
 #   data_rename <-  mod_manage_manage_changeType_server("manage_manage_changeType_ui_1",
 #                                                       rvs_dataset = reactive({data_rv$df_tot}),
 #                                                       infile = reactive({TRUE}))
@@ -211,8 +216,8 @@ mod_manage_manage_changeType_server <- function(id,infile = NULL,  rvs_dataset) 
 #     req(data_rename$trigger > 0)
 #     data_rv$df_tot    <- data_rename$dataset
 #   })
-#   
-#   
+# 
+# 
 # }
 # 
 # shinyApp(ui, server)

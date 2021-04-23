@@ -14,7 +14,7 @@
 #' @export
 as_mdy <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  mdy(x) %>% as.Date()
+  lubridate::mdy(x) %>% as.Date()
 }
 
 #' Convert input in day-month-year format to date
@@ -26,7 +26,7 @@ as_mdy <- function(x) {
 #' @export
 as_dmy <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  dmy(x) %>% as.Date()
+  lubridate::dmy(x) %>% as.Date()
 }
 
 #' Convert input in year-month-day format to date
@@ -38,7 +38,7 @@ as_dmy <- function(x) {
 #' @export
 as_ymd <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  ymd(x) %>% as.Date()
+  lubridate::ymd(x) %>% as.Date()
 }
 
 # http://www.noamross.net/blog/2014/2/10/using-times-and-dates-in-r---presentation-code.html
@@ -55,7 +55,7 @@ as_ymd <- function(x) {
 #' @export
 as_ymd_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  ymd_hms(x)
+  lubridate::ymd_hms(x)
 }
 
 #' Convert input in year-month-day-hour-minute format to date-time
@@ -66,7 +66,7 @@ as_ymd_hms <- function(x) {
 #' @export
 as_ymd_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  parse_date_time(x, "%Y%m%d %H%M")
+  lubridate::parse_date_time(x, "%Y%m%d %H%M")
 }
 
 #' Convert input in month-day-year-hour-minute-second format to date-time
@@ -77,7 +77,7 @@ as_ymd_hm <- function(x) {
 #' @export
 as_mdy_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  parse_date_time(x, "%m%d%Y %H%M%S")
+  lubridate::parse_date_time(x, "%m%d%Y %H%M%S")
 }
 
 #' Convert input in month-day-year-hour-minute format to date-time
@@ -88,7 +88,7 @@ as_mdy_hms <- function(x) {
 #' @export
 as_mdy_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  parse_date_time(x, "%m%d%Y %H%M")
+  lubridate::parse_date_time(x, "%m%d%Y %H%M")
 }
 
 #' Convert input in day-month-year-hour-minute-second format to date-time
@@ -99,7 +99,7 @@ as_mdy_hm <- function(x) {
 #' @export
 as_dmy_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  parse_date_time(x, "%d%m%Y %H%M%S")
+  lubridate::parse_date_time(x, "%d%m%Y %H%M%S")
 }
 
 #' Convert input in day-month-year-hour-minute format to date-time
@@ -110,7 +110,7 @@ as_dmy_hms <- function(x) {
 #' @export
 as_dmy_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  parse_date_time(x, "%d%m%Y %H%M")
+  lubridate::parse_date_time(x, "%d%m%Y %H%M")
 }
 
 #' Convert input in hour-minute-second format to time
@@ -125,7 +125,7 @@ as_dmy_hm <- function(x) {
 #' @export
 as_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  hms(x)
+  lubridate::hms(x)
 }
 
 #' Convert input in hour-minute format to time
@@ -139,7 +139,7 @@ as_hms <- function(x) {
 #' @export
 as_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
-  hm(x)
+  lubridate::hm(x)
 }
 
 #' Convert variable to integer avoiding potential issues with factors
