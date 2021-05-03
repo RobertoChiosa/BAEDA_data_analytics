@@ -37,7 +37,11 @@ app_server <- function( input, output, session ) {
   ###### 3) "MANAGE" TAB ----------------------------------------------------------------------
   
   # modules manage
-  mod_manage_server("manage_ui_1", reactive({data_rv[[input$dataframe]]})  )
+  mod_manage_server(id = "manage_ui_1", 
+                    infile = reactive({data_rv_results$infile}), 
+                    rvs_dataset = reactive({data_rv[[input$dataframe]]})
+  )
+  
   
   ###### 3.1) change column name/variable name
   data_rename <-   mod_manage_renameColumn_server(id = "manage_renameColumn_ui_1", 
@@ -98,5 +102,5 @@ app_server <- function( input, output, session ) {
   
   
   ###### 2) "LEARNING" MODALS ----------------------------------------------------------------------
-
+  
 }

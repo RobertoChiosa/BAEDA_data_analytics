@@ -30,39 +30,36 @@ app_ui <- function(request) {
         # modal opens
         mod_load_ext_file_ui_modal("load_ext_file_ui_1"),
         
-        # rest of the tabs
+        ##### 
+        # MANAGE
         tabItems(
           tabItem(tabName = "manage",
                   fluidRow(
-                    box(width = 4,
-                      title = shiny::HTML(
-                        "Data Wrangling options
-                                         <a
-                                         id=\"button_wrangling\"
-                                         data-toggle=\"tooltip\"
-                                         title=\" Data Handling options.\"
-                                         class=\"dropdown\">
-                                         <i class=\"fa fa-info-circle\"></i>
-                                         </a>"
-                      ),
-                      # mod_manage_ui_input("manage_ui_1"),
-                      # rename column / variable from a dataset
-                      mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
-                      # change type
-                      mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1"),
-                      # add column / variable from a dataset
-                      mod_manage_addColumn_ui("manage_addColumn_ui_1")
+                    column(width = 4, style = "padding-left:0px; padding-right:0px;",
+                           mod_manage_ui_input("manage_ui_1"),
+                           # rename column / variable from a dataset
+                           mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
+                           # change type
+                           mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1"),
+                           # add column / variable from a dataset
+                           mod_manage_addColumn_ui("manage_addColumn_ui_1")
                     ),
-                    box(width = 8,
-                        mod_manage_ui_output("manage_ui_1")
+                    column(width = 8, style = "padding-left:0px; padding-right:0px;",
+                           box(width = 12,
+                               mod_manage_ui_output("manage_ui_1")
+                           )
                     )
+                    
                   )
           ),
+          ##### 
+          # PREPROCESSING
           tabItem(tabName = "preprocessing",
                   fluidRow(
-                    box(
-                      title = shiny::HTML(
-                        "Preprocessing options
+                    column(width = 4, style = "padding-left:0px; padding-right:0px;",
+                           box(width = 12,
+                               title = shiny::HTML(
+                                 "Preprocessing options
                                          <a
                                          id=\"button\"
                                          data-toggle=\"tooltip\"
@@ -70,16 +67,27 @@ app_ui <- function(request) {
                                          class=\"dropdown\">
                                          <i class=\"fa fa-info-circle\"></i>
                                          </a>"
-                      ),
-                      width = 4,
+                               ),
+                               p("This section permits to perform data pre processing on the loaded dataset.
+                                 The available modules permit to identify outliers through different techniques and
+                                 replace NA through imputation")
+                               
+                           )
                     ),
-                    box(width = 8, )
+                    column(width = 8, style = "padding-left:0px; padding-right:0px;",
+                           box(width = 12,
+                               
+                           )
+                    )
                   )),
+          ##### 
+          # VISUALIZATION
           tabItem(tabName = "visualization",
                   fluidRow(
-                    box(
-                      title = shiny::HTML(
-                        "Chart options
+                    column(width = 4, style = "padding-left:0px; padding-right:0px;",
+                           box(width = 12,
+                               title = shiny::HTML(
+                                 "Chart options
                                          <a
                                          id=\"button\"
                                          data-toggle=\"tooltip\"
@@ -87,54 +95,45 @@ app_ui <- function(request) {
                                          class=\"dropdown\">
                                          <i class=\"fa fa-info-circle\"></i>
                                          </a>"
-                      ),
-                      width = 4,
-                      selectInput(
-                        "chart",
-                        label = "Chart Type:",
-                        choices = c(
-                          "",
-                          "Carpet",
-                          "Line Plot",
-                          "Scatter Plot",
-                          "Box Plot",
-                          "Histogram"
-                        ),
-                        selected = NULL
-                      ),
-                      conditionalPanel(
-                        "input.chart == 'Histogram'",
-                        mod_histogram_ui_input("histogram_ui_1")
-                      ),
-                      # Histogram
+                               ),
+                               p("This section permits to perform visualize datacontained in the loaded dataset.
+                                Different kind of plots are available."),
+                               selectInput(
+                                 "chart",
+                                 label = "Chart Type:",
+                                 choices = c(
+                                   "Histogram",
+                                   "Box Plot",
+                                   "Carpet",
+                                   "Line Plot",
+                                   "Scatter Plot"
+                                 ),
+                                 selected = NULL
+                               ),
+                           ),
+                           box(
+                             conditionalPanel( "input.chart == 'Histogram'",  mod_histogram_ui_input("histogram_ui_1")),
+                             solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
+                             title = "Plot Parameters", status = "primary"
+                           )
                     ),
-                    box(
-                      width = 8,
-                      conditionalPanel(
-                        "input.chart == 'Histogram'",
-                        mod_histogram_ui_output("histogram_ui_1")
-                      )
+                    column(width = 8, style = "padding-left:0px; padding-right:0px;",
+                           box(width = 12,
+                               conditionalPanel("input.chart == 'Histogram'",mod_histogram_ui_output("histogram_ui_1"))
+                           )
                     )
-                  )),
+                  ),
+          ),
+          ##### 
+          # CLASSIFICATION
           tabItem(tabName = "classification",
                   # INPUT BOX
                   fluidRow(
-                    shinydashboard::box(
-                      width = 4,
-                      title = shiny::HTML(
-                        "Classification options
-                                         <a
-                                         id=\"button\"
-                                         data-toggle=\"tooltip\"
-                                         title=\" Classification options.\"
-                                         class=\"dropdown\">
-                                         <i class=\"fa fa-info-circle\"></i>
-                                         </a>"
-                      ),
-                      mod_cart_ui_input("cart_ui_1")
+                    column(width = 4, style = "padding-left:0px; padding-right:0px;",
+                           mod_cart_ui_input("cart_ui_1")
                     ),
                     column(
-                      width = 8,
+                      width = 8, style = "padding-left:0px; padding-right:0px;",
                       # INPUT BOX
                       fluidRow(
                         shinydashboard::box(width = 12,  mod_cart_ui_output("cart_ui_1", type = "tree"))
@@ -146,6 +145,8 @@ app_ui <- function(request) {
                     )
                   )
           ),
+          ##### 
+          # CLUSTERING
           tabItem(tabName = "clustering",
                   fluidRow(
                     box(width = 4,
@@ -166,6 +167,8 @@ app_ui <- function(request) {
                     )
                   )
           ),
+          ##### 
+          # ANN
           tabItem(tabName = "ann",
                   fluidRow(
                     box( width = 4,
@@ -184,6 +187,8 @@ app_ui <- function(request) {
                     )
                   )
           ),
+          ##### 
+          # FORECASTING
           tabItem(tabName = "forecasting",
                   fluidRow(
                     box(width = 4,
@@ -202,6 +207,8 @@ app_ui <- function(request) {
                     )
                   )
           ),
+          ##### 
+          # MV
           tabItem(tabName = "mv",
                   fluidRow(
                     box( width = 4,

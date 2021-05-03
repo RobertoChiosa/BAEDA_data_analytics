@@ -28,72 +28,101 @@ mod_cart_ui_input <- function(id){
   style_RCol <- "padding-left:0px; padding-right:0px;"
   
   tagList(
-    column(
-      width = 6,
-      style = style_LCol,
-      selectInput(ns('algorithm'), 'Algorithm:', choices = c("rpart")),
-      # add evtree
-      shinyBS::bsTooltip(
-        ns("algorithm"),
-        title = "Algorithm to perform cart",
-        placement = "right",
-        options = list(container = "body"),
-        trigger = "hover"
-      )
+    box(width = 12, 
+        title = shiny::HTML(
+          "Classification options
+                                         <a
+                                         id=\"button\"
+                                         data-toggle=\"tooltip\"
+                                         title=\" Classification options.\"
+                                         class=\"dropdown\">
+                                         <i class=\"fa fa-info-circle\"></i>
+                                         </a>"
+        ),
+        p("This section permits to perform classification task on the loaded dataset.
+                                 Classification can be performed in a descriptive or predictive fashon through CART and RT"),
+        
+        column(
+          width = 6,
+          style = style_LCol,
+          selectInput(ns('algorithm'), 'Algorithm:', choices = c("rpart")),
+          # add evtree
+          shinyBS::bsTooltip(
+            ns("algorithm"),
+            title = "Algorithm to perform cart",
+            placement = "right",
+            options = list(container = "body"),
+            trigger = "hover"
+          )
+        ),
+        column(
+          width = 6,
+          style = style_RCol,
+          selectInput(
+            ns('objective'),
+            'Objective:',
+            choices = c("Descriptive", "Predictive")
+          )
+        ),
+        
+        # # if predictive constructed i build a test and train sample
+        conditionalPanel(condition = sprintf("input['%s'] == 'Predictive'", ns('objective')),
+                         column(width = 6,  style = style_LCol,
+                                numericInput(ns("train_size"), "Train Size [%]:", 70, min = 0, max = 100, step = 1), # train size percentage
+                         ),
+                         column(width = 6,  style = style_RCol,
+                                numericInput(ns("seed_predictive"), label = "Sample Seed:", 1234) # seed sul sample
+                         ),
+                         # 70 30 continua oppure random sample sbilanciato rispetto variabile categorica
+                         # modello su train e prediction confusion matrix
+                         # predict per testarlo confusion matrix
+                         
+                         ## descriptive tutto
+                         # campionamento random test train
+        ),
+        
+        # # if descriptive selected i only describe the whole dataset
+        conditionalPanel(condition = sprintf("input['%s'] == 'rpart'", ns('algorithm')),
+                         
+                         #column(width = 6,  style = style_LCol,
+                         selectInput(ns('target_var_rt'), 'Target variable:', choices = NULL ),
+                         #),
+                         # column(width = 6,  style = style_RCol,
+                         #        selectInput(ns('target_var_rt_class'), 'Coerce to class:', choices = c("numeric", "factor", "ordered") )
+                         # ),
+                         # 
+                         selectInput(ns('split_var_rt'), "Split variable(s)", multiple = TRUE, choices = NULL),
+                         ### old
+                         # h5("Select split variables (coerce to)"),
+                         # column(width = 4,  style = style_LCol,
+                         #        selectInput(ns('split_var_num_rt'), NULL,
+                         #                    choices = NULL)
+                         #        #choices = c("as.numeric()"="", colnames(dplyr::select_if( data, is.numeric))) , multiple = TRUE),
+                         # ),
+                         # column(width = 4,  style = style_RCol,
+                         #        selectInput(ns('split_var_ord_rt'), NULL,
+                         #                    choices = NULL)
+                         #        #choices = c("as.ordered()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
+                         # ),
+                         # column(width = 4,  style = style_RCol,
+                         #        selectInput(ns('split_var_fact_rt'), NULL,
+                         #                    choices = NULL)
+                         #        #choices = c("as.factor()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
+                         # ),
+                         
+        ),
+        # conditionalPanel(condition = sprintf("input['%s'] == 'evtree'", ns('algorithm')),
+        #                  selectInput(ns('target_var_ev'), 'Select target variable (categorical):', choices = colnames(dplyr::select_if( data, is.factor)) ),
+        #                  selectInput(ns('split_var_ev'), 'Select categorical split variables:', choices = colnames(dplyr::select_if( data, is.factor)) , multiple = TRUE),
+        #                  numericInput(ns("minsplit_ev"), label = "Min split:", min = 1, max = 100, value = 30), # numeric
+        #                  numericInput(ns("minbucket_ev"), label = "Min bucket:", min = 1, max = 100, value = 30), # numeric
+        #                  sliderInput(ns("maxdepth_ev"), label = "Max depth:", min = 1, max = 100, value = 30),
+        #                  textInput(ns("seed_ev"), label = "Seed:", placeholder = "(ex.) 1234")
+        # ),
+        uiOutput(ns("cart_button_js")),
     ),
-    column(
-      width = 6,
-      style = style_RCol,
-      selectInput(
-        ns('objective'),
-        'Objective:',
-        choices = c("Descriptive", "Predictive")
-      )
-    ),
-    
-    # # if predictive constructed i build a test and train sample
-    conditionalPanel(condition = sprintf("input['%s'] == 'Predictive'", ns('objective')),
-                     column(width = 6,  style = style_LCol,
-                            numericInput(ns("train_size"), "Train Size [%]:", 70, min = 0, max = 100, step = 1), # train size percentage
-                     ),
-                     column(width = 6,  style = style_RCol,
-                            numericInput(ns("seed_predictive"), label = "Sample Seed:", 1234) # seed sul sample
-                     ),
-                     # 70 30 continua oppure random sample sbilanciato rispetto variabile categorica
-                     # modello su train e prediction confusion matrix
-                     # predict per testarlo confusion matrix
-                     
-                     ## descriptive tutto
-                     # campionamento random test train
-    ),
-    # # if descriptive selected i only describe the whole dataset
-    conditionalPanel(condition = sprintf("input['%s'] == 'rpart'", ns('algorithm')),
-                     #column(width = 6,  style = style_LCol,
-                     selectInput(ns('target_var_rt'), 'Target variable:', choices = NULL ),
-                     #),
-                     # column(width = 6,  style = style_RCol,
-                     #        selectInput(ns('target_var_rt_class'), 'Coerce to class:', choices = c("numeric", "factor", "ordered") )
-                     # ),
-                     # 
-                     selectInput(ns('split_var_rt'), "Split variable(s)", multiple = TRUE, choices = NULL),
-                     ### old
-                     # h5("Select split variables (coerce to)"),
-                     # column(width = 4,  style = style_LCol,
-                     #        selectInput(ns('split_var_num_rt'), NULL,
-                     #                    choices = NULL)
-                     #        #choices = c("as.numeric()"="", colnames(dplyr::select_if( data, is.numeric))) , multiple = TRUE),
-                     # ),
-                     # column(width = 4,  style = style_RCol,
-                     #        selectInput(ns('split_var_ord_rt'), NULL,
-                     #                    choices = NULL)
-                     #        #choices = c("as.ordered()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
-                     # ),
-                     # column(width = 4,  style = style_RCol,
-                     #        selectInput(ns('split_var_fact_rt'), NULL,
-                     #                    choices = NULL)
-                     #        #choices = c("as.factor()"="", colnames(dplyr::select_if( data, function(col) is.factor(col) | is.integer(col) )) ) , multiple = TRUE),
-                     # ),
-                     box(
+    box(
+      conditionalPanel(condition = sprintf("input['%s'] == 'rpart'", ns('algorithm')),
                        selectInput(ns('index_rt'), 'Splitting index:', choices = c("gini", "information")),
                        sliderInput(ns("maxdepth_rt"), label = "Max depth:", min = 1, max = 20, value = 4),
                        sliderInput(ns("cp_rt"), label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
@@ -106,19 +135,10 @@ mod_cart_ui_input <- function(id){
                        column(width = 4,  style = style_RCol,
                               numericInput(ns("xval_rt"), label = "Cross validation:", min = 0,  value = 10), # input numerico default e suggestions info
                        ),
-                       solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
-                       title = "Hyper-parameters", status = "primary"
-                     )
-    ),
-    # conditionalPanel(condition = sprintf("input['%s'] == 'evtree'", ns('algorithm')),
-    #                  selectInput(ns('target_var_ev'), 'Select target variable (categorical):', choices = colnames(dplyr::select_if( data, is.factor)) ),
-    #                  selectInput(ns('split_var_ev'), 'Select categorical split variables:', choices = colnames(dplyr::select_if( data, is.factor)) , multiple = TRUE),
-    #                  numericInput(ns("minsplit_ev"), label = "Min split:", min = 1, max = 100, value = 30), # numeric
-    #                  numericInput(ns("minbucket_ev"), label = "Min bucket:", min = 1, max = 100, value = 30), # numeric
-    #                  sliderInput(ns("maxdepth_ev"), label = "Max depth:", min = 1, max = 100, value = 30),
-    #                  textInput(ns("seed_ev"), label = "Seed:", placeholder = "(ex.) 1234")
-    # ),
-    uiOutput(ns("cart_button_js"))
+      ),
+      solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
+      title = "Hyper-parameters", status = "primary"
+    )
   )
 }
 

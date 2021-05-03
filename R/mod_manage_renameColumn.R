@@ -74,6 +74,7 @@ mod_manage_renameColumn_server <- function(id, infile = NULL, rvs_dataset) {
     ns <- session$ns
     
     # apply button
+    # apply button
     output$button_js <- renderUI({
       if (is.null(infile())) {
         shinyjs::disabled(

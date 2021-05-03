@@ -7,45 +7,14 @@
 #' @noRd 
 #'
 #' @import shiny
+#' @import ggplot2
 mod_visualization_histogram_ui_input <- function(id){
   ns <- NS(id)
   tagList(
     
-    column(
-      width = 8,
-      style = "padding-left:0px; padding-right:0px;",
-      selectInput(ns("variable"), label = NULL, choices = NULL),
-    ),
-    column(
-      # adds filtering
-      width = 2,
-      style = "padding-left:5px; padding-right:0px;",
-      actionButton(
-        ns("add_filter"),
-        NULL,
-        icon = icon("filter"),
-        class = "btn-success",
-        width = "100%"
-      )
-    ),
-    column(
-      width = 2,
-      style = "padding-left:5px; padding-right:0px;",
-      actionButton(
-        ns("remove_filter"),
-        NULL,
-        icon = icon("trash"),
-        class = "btn-danger",
-        width = "100%"
-      ) # adds filtering
-    ),
     
-    fluidRow(
-      width = 12,
-      id = ns("filter_column")
-    ),
+    selectInput(ns("variable"), label = NULL, choices = NULL),
     
-    hr(),
     sliderInput(
       ns("bins"),
       label = "Number of bins:",
@@ -70,27 +39,26 @@ mod_visualization_histogram_ui_input <- function(id){
       style = "padding-left:5px; padding-right:0px;",
       selectInput(ns("facetvariable"), label = "Facet Variable:", choices = NULL),
     ), 
-    # conditionalPanel(
-    #   "input.facetvariable != 'None'",
-    #   numericInput(
-    #     "nrowvariable",
-    #     "Number of facet rows",
-    #     value = 3,
-    #     min = 1
-    #   )
-    # ),
+    conditionalPanel(condition = sprintf("input['%s'] != 'None'", ns('facetvariable')),
+                     numericInput(
+                       ns("nrowvariable"),
+                       "Number of facet rows",
+                       value = 3,
+                       min = 1
+                     )
+    ),
     hr(),
     column(
       "Style",
       width = 6,
-      checkboxInput("checkbox_flip", label = "Flip", value = FALSE),
-      checkboxInput("checkbox_density", label = "Density", value = FALSE)
+      checkboxInput(ns("checkbox_flip"), label = "Flip", value = FALSE),
+      checkboxInput(ns("checkbox_density"), label = "Density", value = FALSE)
     ),
     column(
       "Scale",
       width = 6,
-      checkboxInput("checkbox_logx", label = "Log-X", value = FALSE),
-      checkboxInput("checkbox_logy", label = "Log-Y", value = FALSE)
+      checkboxInput(ns("checkbox_logx"), label = "Log-X", value = FALSE),
+      checkboxInput(ns("checkbox_logy"), label = "Log-Y", value = FALSE)
     )
   )
 }
@@ -119,60 +87,95 @@ mod_visualization_histogram_server <- function(id, infile = NULL, rvs_dataset){
       
       choices_factor <-  c("None", colnames(rvs_dataset()) )
       # choices <- variable_list_with_class(rvs_dataset()) 
-      updateSelectInput(session, "fillvariable",   choices = choices_factor)
-      updateSelectInput(session, "facetvariable",  choices = choices_factor)
+      updateSelectInput(session, "fillvariable",   choices = c("None", choices_factor))
+      updateSelectInput(session, "facetvariable",  choices = c("None", choices_factor))
     })
     
-    trigger <- reactiveValues( i=0 )
-    
-    observeEvent(input$add_filter, {
-      req( trigger$i < dim(rvs_dataset())[2]  )
-      trigger$i <- trigger$i+1
-      insertUI(
-        selector = gsub(" ", "", paste('#', ns("filter_column") )),
-        where = "afterBegin",
-        ui = tagList(
-          column(
-            h6(paste("Filter variable", trigger$i)),
-            width = 12,
-           # style = "padding-left:0px; padding-right:0px;",
-            selectInput(ns(paste("filter_variable", trigger$i)), label =  NULL, choices = colnames(rvs_dataset()) ),
-            sliderInput(ns(paste("filter_slider", trigger$i)), label = NULL, min = 0, max = 24, value = c(0, 24) )
-          )
-        )
-      )
-    })
-    
-    observeEvent(input$remove_filter, {
-      removeUI(
-        selector =  gsub(" ", "", paste('#', ns("filter_column") ))
-      )
-    })
+    # trigger <- reactiveValues( i=0 )
+    # 
+    # observeEvent(input$add_filter, {
+    #   # maximum number of filters less than dataframe dimensions
+    #   req( trigger$i < dim(rvs_dataset())[2]  )
+    #   trigger$i <- trigger$i+1
+    #   insertUI(
+    #     selector = gsub(" ", "", paste('#', ns("filter_column") )),
+    #     where = "afterBegin",
+    #     ui = tagList(
+    #       column(
+    #         h6(paste("Filter variable", trigger$i)),
+    #         width = 12,
+    #        # style = "padding-left:0px; padding-right:0px;",
+    #         selectInput(ns(paste("filter_variable", trigger$i)), label =  NULL, choices = colnames(rvs_dataset()) ),
+    #         sliderInput(ns(paste("filter_slider", trigger$i)), label = NULL, min = 0, max = 24, value = c(0, 24) )
+    #       )
+    #     )
+    #   )
+    # })
+    # 
+    # observeEvent(input$remove_filter, {
+    #   removeUI(
+    #     selector =  gsub(" ", "", paste('#', ns("filter_column") ))
+    #   )
+    # })
     
     
     # output box - plot - HISTOGRAM
     output$plot <- renderPlot({
-      hist(iris$Sepal.Length)
+      req(rvs_dataset(), input$variable)
+      
+      plot <- ggplot2::ggplot(rvs_dataset()) + 
+        
+        # fill variable
+        if (input$fillvariable == "None") {
+          geom_histogram( aes_string(x = input$variable), bins = input$bins, na.rm = TRUE)
+        } else {
+          geom_histogram( aes_string(x = input$variable, fill = input$fillvariable), bins = input$bins, na.rm = TRUE)
+        }
+      
+      
+      # flip
+      if (input$checkbox_flip == TRUE) {
+        plot <- plot + coord_flip()
+      }
+      # add wrap
+      if (input$facetvariable == "None") {
+        NULL
+      } else {
+        plot <- plot + facet_wrap( ~  rvs_dataset()[, input$facetvariable], nrow = input$nrowvariable)
+      }
+      # log
+      if (input$checkbox_logx == TRUE) {
+        plot <- plot + ggplot2::scale_x_continuous(trans = 'log10')
+      }
+      if (input$checkbox_logy == TRUE) {
+        plot <- plot + ggplot2::scale_y_continuous(trans = 'log10')
+      }
+      
+      # tema
+      plot <- plot + labs( x = input$variable, fill = input$fillvariable ) + theme_bw() 
+      
+      plot
+      #hist(iris$Sepal.Length)
       #   req(input$plot_button)  # requires the plot button to be pressed
       #   isolate({               # avoid reactivity of parameters
       #     
-      #     data_plot <- data[[input$dataframe]] %>%
+      #     rvs_dataset() <- data[[input$dataframe]] %>%
       #       dplyr::filter( min_dec >= input$hours_slider_hist[1], 
       #                      min_dec <= input$hours_slider_hist[2],
       #                      Month >= input$month_slider_hist[1], 
       #                      Month <= input$month_slider_hist[2]
       #       )
       #     
-      #     plot <- ggplot(data =  data_plot,
-      #                    mapping =  aes(x =  data_plot[,input$variable],
-      #                                   fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]},
+      #     plot <- ggplot(data =  rvs_dataset(),
+      #                    mapping =  aes(x =  rvs_dataset()[,input$variable],
+      #                                   fill = if (input$fillvariable == "None") {NULL} else { rvs_dataset()[,input$fillvariable]},
       #                    ),
       #     ) + theme_bw() 
       #     
       #     # densità
       #     if (input$checkbox_density == TRUE) {
       #       plot <- plot + geom_density(aes(y = ..density..,
-      #                                       fill = if (input$fillvariable == "None") {NULL} else { data_plot[,input$fillvariable]}),
+      #                                       fill = if (input$fillvariable == "None") {NULL} else { rvs_dataset()[,input$fillvariable]}),
       #                                   alpha = 0.4,
       #                                   bw = input$bins/5,
       #                                   na.rm = TRUE)  # aggiungo distribuzione
@@ -182,7 +185,7 @@ mod_visualization_histogram_server <- function(id, infile = NULL, rvs_dataset){
       #     # tema
       #     plot <- plot + labs( x = input$variable, fill = input$fillvariable )
       #     # add wrap
-      #     if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  data_plot[,input$facetvariable], nrow = input$nrowvariable)}
+      #     if (input$facetvariable == "None") {NULL} else {plot <- plot + facet_wrap(~  rvs_dataset()[,input$facetvariable], nrow = input$nrowvariable)}
       #     # log
       #     # flip
       #     if (input$checkbox_logx == TRUE) {plot <- plot + scale_x_continuous(trans = 'log10') }
@@ -199,45 +202,46 @@ mod_visualization_histogram_server <- function(id, infile = NULL, rvs_dataset){
   })
 }
 
-
-# test module
-library(shiny)
-library(shinydashboard)
-library(shinyFeedback)
-library(magrittr)
-library(dplyr)
-ui <- dashboardPage(
-  dashboardHeader(disable = TRUE),
-  dashboardSidebar(disable = TRUE),
-  dashboardBody(
-    column(width = 4,
-           box(
-             mod_visualization_histogram_ui_input("visualization_histogram_ui_1"),
-             solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
-             title = "Plot Parameters", status = "primary"
-           )
-    ),
-    column(width = 8,
-           mod_visualization_histogram_ui_output("visualization_histogram_ui_1")),
-  )
-)
-server <- function(input, output, session) {
-  
-  data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
-  
-  data_hist <-  mod_visualization_histogram_server("visualization_histogram_ui_1", 
-                                                   infile = reactive({TRUE}),
-                                                   rvs_dataset = reactive({data_rv$df_tot}))
-  # When applied function (data_mod2$trigger change) :
-  #   - Update rv$variable with module output "variable"
-  #   - Update rv$fun_history with module output "fun"
-  # observeEvent(data_hist$trigger, {
-  #   req(data_hist$trigger > 0)
-  #   data_rv$df_tot    <- data_hist$dataset
-  # })
-}
-
-shinyApp(ui, server)
+# 
+# # test module
+# library(shiny)
+# library(ggplot2)
+# library(shinydashboard)
+# library(shinyFeedback)
+# library(magrittr)
+# library(dplyr)
+# ui <- dashboardPage(
+#   dashboardHeader(disable = TRUE),
+#   dashboardSidebar(disable = TRUE),
+#   dashboardBody(
+#     column(width = 4,
+#            box(
+#              mod_visualization_histogram_ui_input("visualization_histogram_ui_1"),
+#              solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
+#              title = "Plot Parameters", status = "primary"
+#            )
+#     ),
+#     column(width = 8,
+#            mod_visualization_histogram_ui_output("visualization_histogram_ui_1")),
+#   )
+# )
+# server <- function(input, output, session) {
+#   
+#   data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
+#   
+#   data_hist <-  mod_visualization_histogram_server("visualization_histogram_ui_1",
+#                                                    infile = reactive({TRUE}),
+#                                                    rvs_dataset = reactive({data_rv$df_tot}))
+#   # When applied function (data_mod2$trigger change) :
+#   #   - Update rv$variable with module output "variable"
+#   #   - Update rv$fun_history with module output "fun"
+#   # observeEvent(data_hist$trigger, {
+#   #   req(data_hist$trigger > 0)
+#   #   data_rv$df_tot    <- data_hist$dataset
+#   # })
+# }
+# 
+# shinyApp(ui, server)
 
 ## To be copied in the UI
 # mod_visualization_histogram_ui("visualization_histogram_ui_1")
