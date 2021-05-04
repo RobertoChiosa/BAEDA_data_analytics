@@ -4,7 +4,8 @@ options(golem.app.prod = FALSE) # TRUE = production mode, FALSE = development mo
 # Detach all loaded packages and clean your environment
 golem::detach_all_attached()
 rm(list=ls(all.names = TRUE))
-
+ 
+# r
 # pkgdown::build_site()
 # pkgdown::build_home()
 # Document and reload your package
