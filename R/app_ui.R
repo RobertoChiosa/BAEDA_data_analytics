@@ -267,7 +267,7 @@ golem_add_external_resources <- function() {
   tags$head(
     favicon(),
     bundle_resources(path = app_sys('app/www'),
-                     app_title = 'eDASH'),
+                     app_title = 'eDASH - Student'),
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
     shinyFeedback::useShinyFeedback(),

@@ -12,7 +12,7 @@
 #' @importFrom shinyalert shinyalert
 #' @importFrom rlang is_empty
 #' @importFrom shinyFeedback feedbackWarning hideFeedback
-#' @importFrom shinyjs  disabled
+#' @importFrom shinyjs disabled
 mod_manage_renameColumn_ui <- function(id) {
   ns <- NS(id)
   

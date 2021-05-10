@@ -20,8 +20,8 @@
 ## 
 golem::fill_desc(
   pkg_name = "eDASH", # The Name of the package containing the App 
-  pkg_title = "eDASH", # The Title of the package containing the App 
-  pkg_description = "This packages provides the skeleton to build a production ready dashboard. This project is built on top of golem infrastructure. ", # The Description of the package containing the App 
+  pkg_title = "Energy Data Analytics Dashboard - Student Version", # The Title of the package containing the App 
+  pkg_description = "This packages distributes a data analytics dashboard concieved for building energy data. This project is built on top of golem infrastructure and distributed as package. ", # The Description of the package containing the App 
   author_first_name = "Roberto", # Your First Name
   author_last_name = "Chiosa", # Your Last Name
   author_email = "roberto.chiosa@polito.it", # Your Email
