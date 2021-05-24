@@ -67,7 +67,19 @@ app_server <- function( input, output, session ) {
     data_rv[[input$dataframe]] <- data_type$dataset
   })
   
-  ###### 3.2) change column type
+  ###### 3.2) Transform column type
+  data_transform <-    mod_manage_transform_server(id = "manage_transform_ui_1",
+                                                   infile = reactive({data_rv_results$infile}), 
+                                                   rvs_dataset = reactive({data_rv[[input$dataframe]]})  
+  )
+  # When applied function (data_rename$trigger change) :
+  #   - Update data_rv[[input$dataframe]] with module output "dataset"
+  observeEvent(data_transform$trigger, {
+    req(data_transform$trigger > 0) # requires a trigger
+    data_rv[[input$dataframe]] <- data_transform$dataset
+  })
+  
+  ###### 3.2) Add column type
   data_add <-   mod_manage_addColumn_server(id = "manage_addColumn_ui_1", 
                                             infile = reactive({data_rv_results$infile}), 
                                             rvs_dataset = reactive({data_rv[[input$dataframe]]})  
@@ -83,6 +95,20 @@ app_server <- function( input, output, session ) {
   # plot modules
   mod_histogram_server(id = "histogram_ui_1")
   
+  
+  ###### 4) "PREPROCESSING" TAB ----------------------------------------------------------------------
+  # outliers detection
+  data_cleaning <-  mod_preprocessing_cleaning_server(id = "preprocessing_cleaning_ui_1",
+                                                      infile = reactive({data_rv_results$infile}), 
+                                                      rvs_dataset = reactive({data_rv[[input$dataframe]]})  
+  )
+  # When applied function (data_preprocessing$trigger change) :
+  #   - Update data_rv$df_tot with module output "dataset"
+  observeEvent(data_cleaning$trigger, {
+    req(data_cleaning$trigger > 0)
+    data_rv[[input$dataframe]] <- data_cleaning$dataset
+  })
+  
   ###### 2) "CLASSIFICATION" TAB ----------------------------------------------------------------------
   data_cart <-   mod_cart_server(id = "cart_ui_1", 
                                  infile = reactive({data_rv_results$infile}), 
@@ -95,10 +121,17 @@ app_server <- function( input, output, session ) {
   #   data_rv[[input$dataframe]] <- data_cart$dataset
   # })
   
-  
-  
   ###### 2) "CLUSTERING" TAB ----------------------------------------------------------------------
-  mod_clustering_server(id = "clustering_ui_1",data_rv[[input$dataframe]])
+  data_cluster <-   mod_clustering_server(id = "clustering_ui_1", 
+                                 infile = reactive({data_rv_results$infile}), 
+                                 rvs_dataset = reactive({data_rv[[input$dataframe]]})  
+  )
+  # When applied function (data_rename$trigger change) :
+  #   - Update data_rv[[input$dataframe]] with module output "dataset"
+  # observeEvent(data_cart$trigger, {
+  #   req(data_cart$trigger > 0) # requires a trigger
+  #   data_rv[[input$dataframe]] <- data_cart$dataset
+  # })
   
   
   ###### 2) "LEARNING" MODALS ----------------------------------------------------------------------

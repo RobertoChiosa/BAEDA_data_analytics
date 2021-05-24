@@ -4,7 +4,7 @@
 \alias{manage_addColumn}
 \alias{mod_manage_addColumn_ui}
 \alias{mod_manage_addColumn_server}
-\title{manage_addColumn}
+\title{Add Column Module}
 \usage{
 mod_manage_addColumn_ui(id)
 

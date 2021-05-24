@@ -42,7 +42,9 @@ app_ui <- function(request) {
                            # change type
                            mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1"),
                            # add column / variable from a dataset
-                           mod_manage_addColumn_ui("manage_addColumn_ui_1")
+                           mod_manage_addColumn_ui("manage_addColumn_ui_1"),
+                           # transform type
+                           mod_manage_transform_ui(id = "manage_transform_ui_1")
                     ),
                     column(width = 8, style = "padding-left:0px; padding-right:0px;",
                            box(width = 12,
@@ -71,16 +73,21 @@ app_ui <- function(request) {
                                p("This section permits to perform data pre processing on the loaded dataset.
                                  The available modules permit to identify outliers through different techniques and
                                  replace NA through imputation")
-                               
-                           )
+                           ),
+                           mod_preprocessing_cleaning_ui_input("preprocessing_cleaning_ui_1")
                     ),
                     column(width = 8, style = "padding-left:0px; padding-right:0px;",
-                           box(width = 12,
-                               
+                           tabBox(width = 12,
+                                  tabPanel( title = "Outliers identification", 
+                                            
+                                  ),
+                                  tabPanel( title = "NA replacement",
+                                            mod_preprocessing_cleaning_ui_output("preprocessing_cleaning_ui_1")
+                                  )     
                            )
                     )
                   )),
-          ##### 
+          #####
           # VISUALIZATION
           tabItem(tabName = "visualization",
                   fluidRow(
@@ -149,21 +156,16 @@ app_ui <- function(request) {
           # CLUSTERING
           tabItem(tabName = "clustering",
                   fluidRow(
-                    box(width = 4,
-                        title = shiny::HTML(
-                          "Clustering options
-                                         <a
-                                         id=\"button\"
-                                         data-toggle=\"tooltip\"
-                                         title=\" Clustering options.\"
-                                         class=\"dropdown\">
-                                         <i class=\"fa fa-info-circle\"></i>
-                                         </a>"
-                        ),
-                        mod_clustering_ui_input("clustering_ui_1")
+                    column(width = 4, style = "padding-left:0px; padding-right:0px;",
+                           mod_clustering_ui_input("clustering_ui_1")
                     ),
-                    box(width = 8,
-                        mod_clustering_ui_output("clustering_ui_1")
+
+                    column(
+                      width = 8, style = "padding-left:0px; padding-right:0px;",
+                      # INPUT BOX
+                      fluidRow(
+                        shinydashboard::box(width = 12, mod_clustering_ui_output("clustering_ui_1"))
+                      ),
                     )
                   )
           ),

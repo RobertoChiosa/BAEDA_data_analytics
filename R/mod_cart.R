@@ -1,11 +1,28 @@
-#' cart UI Function
-#'
-#' @description A shiny Module.
-#'
+#' @name mod_cart
+#' @aliases mod_cart_ui_input
+#' @aliases mod_cart_ui_output
+#' @aliases mod_cart_server
+#' 
+#' @title CART Module
+#' 
+#' @description 
+#' This module permits to perform CART
+#' 
 #' @param id,input,output,session Internal parameters for {shiny}.
-#'
-#' @noRd 
-#'
+#' 
+#' @examples \dontrun{
+#' 
+#' # To be copied in the UI
+#' mod_cart_ui_input(id = "cart_ui_1")
+#' mod_cart_ui_output(id = "cart_ui_1", type = c("tree", "cp", "cm"))
+#' 
+#' # To be copied in the server
+#' mod_cart_server(id = "cart_ui_1",
+#'                infile = reactive({ infile }),
+#'                rvs_dataset = reactive({ rvs$data })
+#' )
+#' }
+#' 
 #' @import shiny
 #' @import ggplot2
 #' @import magrittr
@@ -20,6 +37,9 @@
 #' @importFrom grid gpar
 #' @importFrom shinyjs  disabled
 
+#' @rdname mod_cart
+#' 
+#' @export
 mod_cart_ui_input <- function(id){
   ns <- NS(id)
   
@@ -42,8 +62,7 @@ mod_cart_ui_input <- function(id){
         p("This section permits to perform classification task on the loaded dataset.
                                  Classification can be performed in a descriptive or predictive fashon through CART and RT"),
         
-        column(
-          width = 6,
+        column(width = 6,
           style = style_LCol,
           selectInput(ns('algorithm'), 'Algorithm:', choices = c("rpart")),
           # add evtree
@@ -54,16 +73,14 @@ mod_cart_ui_input <- function(id){
             options = list(container = "body"),
             trigger = "hover"
           )
-        ),
-        column(
-          width = 6,
-          style = style_RCol,
-          selectInput(
-            ns('objective'),
-            'Objective:',
-            choices = c("Descriptive", "Predictive")
-          )
-        ),
+        ), 
+        column(width = 6,
+               style = style_RCol,
+               selectInput(
+                 ns('objective'),
+                 'Objective:',
+                 choices = c("Descriptive", "Predictive")
+               )), 
         
         # # if predictive constructed i build a test and train sample
         conditionalPanel(condition = sprintf("input['%s'] == 'Predictive'", ns('objective')),
@@ -122,10 +139,12 @@ mod_cart_ui_input <- function(id){
         uiOutput(ns("cart_button_js")),
     ),
     box(
+      solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
+      title = "Hyper-parameters", status = "primary",
       conditionalPanel(condition = sprintf("input['%s'] == 'rpart'", ns('algorithm')),
-                       selectInput(ns('index_rt'), 'Splitting index:', choices = c("gini", "information")),
+                       selectInput(ns('index_rt'),    label ='Splitting index:', choices = c("gini", "information")),
                        sliderInput(ns("maxdepth_rt"), label = "Max depth:", min = 1, max = 20, value = 4),
-                       sliderInput(ns("cp_rt"), label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
+                       sliderInput(ns("cp_rt"),       label = "Complexity parameter:", min = 0, max = 1e-1, value = 0, step = 1e-5),
                        column(width = 4,  style = style_LCol,
                               numericInput( ns("minsplit_rt"), label = "Min split:", min = 1, max = 10, value = 0),
                        ),
@@ -135,13 +154,17 @@ mod_cart_ui_input <- function(id){
                        column(width = 4,  style = style_RCol,
                               numericInput(ns("xval_rt"), label = "Cross validation:", min = 0,  value = 10), # input numerico default e suggestions info
                        ),
-      ),
-      solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
-      title = "Hyper-parameters", status = "primary"
+      )
     )
   )
 }
 
+#' @rdname mod_cart
+#' 
+#' @param type a parameter describing the type of output to be displayed. The available options are:
+#' \code{tree}, \code{cp}, \code{cm}
+#' 
+#' @export
 mod_cart_ui_output<- function(id, type){
   ns <- NS(id)
   
@@ -177,10 +200,12 @@ mod_cart_ui_output<- function(id, type){
   
 }
 
-
-#' cart Server Functions
-#'
-#' @noRd 
+#' @rdname mod_cart
+#' 
+#' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
+#' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
+#' 
+#' @export
 mod_cart_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
@@ -405,6 +430,11 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
 }
 
 
+#' Shiny app snippet to offline test the functionality of the modules.
+#' Comment and uncomment when necesssary.
+#' devtools::document() to render roxygen comments an preview with ?mod_manage_addColumn
+#' @noRd
+
 # # test module
 # library(shiny)
 # library(shinydashboard)
@@ -466,13 +496,3 @@ mod_cart_server <- function(id, infile = NULL, rvs_dataset){
 # }
 # 
 # shinyApp(ui, server)
-
-
-## To be copied in the UI
-# mod_cart_ui_input("cart_ui_1")
-# mod_cart_ui_output("cart_ui_1", type = "tree")
-# mod_cart_ui_output("cart_ui_1", type = "cp")
-# mod_cart_ui_output("cart_ui_1", type = "CM")
-
-## To be copied in the server
-# mod_cart_server("cart_ui_1", rvs_dataset())

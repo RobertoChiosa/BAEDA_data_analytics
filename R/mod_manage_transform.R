@@ -1,27 +1,23 @@
-#' @name manage_addColumn
-#' @aliases mod_manage_addColumn_ui
-#' @aliases mod_manage_addColumn_server
+#' @name manage_transform
+#' @aliases mod_manage_transform_ui
+#' @aliases mod_manage_transform_server
 #' 
-#' @title Add Column Module
+#' @title Column  Transformation Module
 #' 
 #' @description 
-#' This module permits to add new columns to the loaded dataframe. It is a submodule of the manage module.
-#' 
-#' In particular, the user can programmatically add columns by writing down a custom \code{if_else} 
-#' expression or by adding predefined calendar variables (\code{minute}, \code{hour}, \code{day}, \code{month}, 
-#' \code{day_type}, \code{month_day}, \code{year}, \code{date}, \code{datetime})
+#' This module permits to transform a column of the input dataframe 
 #' 
 #' @param id,input,output,session Internal parameters for {shiny}.
 #' 
 #' @examples \dontrun{
 #' 
 #' # To be copied in the UI
-#' mod_manage_addColumn_ui(id = "manage_addColumn_ui_1")
+#' mod_manage_transform_ui(id = "manage_transform_ui_1")
 #' 
 #' # To be copied in the server
-#' mod_manage_addColumn_server(id = "manage_addColumn_ui_1",
-#'                             infile = rective({ infile }),
-#'                             rvs_dataset = rective({ rvs$data })
+#' mod_manage_transform_server(id = "manage_transform_ui_1",
+#'                             infile = reactive({ infile }),
+#'                             rvs_dataset = reactive({ rvs$data })
 #' )
 #' }
 #' 
@@ -29,12 +25,13 @@
 #' @import shinydashboard
 #' @import dplyr magrittr
 #' @importFrom shinyFeedback feedbackWarning hideFeedback
+#' 
 
 
-#' @rdname manage_addColumn
+#' @rdname manage_transform
 #' 
 #' @export
-mod_manage_addColumn_ui <- function(id) {
+mod_manage_transform_ui <- function(id) {
   ns <- NS(id)
   
   tagList(
@@ -42,23 +39,36 @@ mod_manage_addColumn_ui <- function(id) {
     shiny::tags$style(".fa-refresh {color:white}"),
     # ui in a collapsible box
     box(
-      h5("Please compose the expression"),
-      column(width = 5, style = "padding-left:0px; padding-right:10px;",
-             selectInput(label = NULL, ns("condition_LHS"), choices = NULL )
+      shiny::selectInput(
+        ns("actual_name"),
+        label = "Select variable (column):",
+        choices = NULL,
+        selected = NULL,
+        width = "100%"
       ),
-      column(width = 2, style = "padding-left:0px; padding-right:10px;",
-             selectInput(label = NULL, ns("condition_operator"), choices = c(">",">=","<", "<=","==") )
+      shiny::selectizeInput(
+        ns("type"),
+        label = "Select conversion type:",
+        choices = c("bin",
+                    "normalize",
+                    "recode",
+                    "remove/reorder levels", 
+                    "rename",
+                    "summarize",
+                    "pivot"
+                    ),
+        # all admitted unit # implement with groups
+        selected = NULL,
+        multiple = FALSE,
+        width = "100%"
       ),
-      column(width = 5, style = "padding-left:0px; padding-right:0px;",
-             textInput(label = NULL, ns("condition_RHS"), placeholder = "(e.g., 1200)", value = NULL)
-      ),
-      column(width = 6, style = "padding-left:0px; padding-right:10px;",
-             textInput(label = NULL, ns("condition_true"), placeholder = "IF TRUE", value = NULL)
-      ),
-      column(width = 6, style = "padding-left:0px; padding-right:10px;",
-             textInput(label = NULL, ns("condition_false"), placeholder = "ELSE (FALSE)", value = NULL)
-      ),
-      verbatimTextOutput(ns("expression")),
+      
+      shiny::htmlOutput(  ns("type_preview_actual_title") ),
+      shiny::verbatimTextOutput(  ns("type_preview_actual") ),
+      
+      shiny::htmlOutput(  ns("type_preview_future_title") ),
+      shiny::verbatimTextOutput(  ns("type_preview_future") ),
+      
       column(
         width = 12,
         style = "padding-left:0px; padding-right:0px;",
@@ -68,25 +78,25 @@ mod_manage_addColumn_ui <- function(id) {
             ns("new_name"),
             label = NULL,
             value = "",
-            placeholder = "New name...",
+            placeholder = "(Optional) New name...",
             width = "100%"
           ),
           uiOutput(ns("button_js"))
         )
       ),
       solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
-      title = "Add Column", status = "primary"
+      title = "Transform", status = "primary"
     )
   )
 }
 
-#' @rdname manage_addColumn
+#' @rdname manage_transform
 #' 
 #' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
 #' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
 #' 
 #' @export
-mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
+mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -113,6 +123,7 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
       }
     })
     
+    
     # reactive value to evaluate the string name
     # it is true if some special values are found
     # observe this reactive value and show warning live
@@ -125,23 +136,36 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
     # Update selectInput according to dataset
     observe({
       req( !is.null(infile())  )
+      
       # gets rvs_dataset as reactive value to solve update inputs
-      choices <- colnames(rvs_dataset())
       # choices <- variable_list_with_class(rvs_dataset()) 
-      updateSelectInput(session, "condition_LHS", choices = choices)
+      choices <- colnames(rvs_dataset())
+      updateSelectInput(session, "actual_name", choices = choices)
     })
     
-    # creates the expression
-    observe(
-      output$expression <- renderText(
-        paste(
-          "if_else(",
-          input$condition_LHS, input$condition_operator, input$condition_RHS, ",",
-          input$condition_true,",", input$condition_false, ")"
-        )
+    observeEvent(input$actual_name, {
+      req( !is.null(infile())  )
+      # preview of type conversion
+      output$type_preview_actual_title <- renderText({
+        paste("Summary of <code>", input$actual_name,  "</code> as is (Actual)")
+      })
+      output$type_preview_actual <- renderPrint({
         
-      )
-    )
+        variable <- as.data.frame(rvs_dataset()[, input$actual_name])
+        summary( variable )
+      })
+      
+      output$type_preview_future_title <- renderText({
+        paste("Summary of <code>", input$actual_name, " </code> when converted (Future)")
+      })
+      output$type_preview_future <- renderPrint({
+        variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ) 
+        summary( variable)
+      })
+      
+    })
+    
+    
     
     # Define the ReactiveValue to return : "toReturn"
     # with slots "rvs_dataset" & "trigger"
@@ -150,34 +174,16 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
     # (Re)load button
     observeEvent(input$new_name_submit, {
       
-      validated <- TRUE                          # validated is TRUE if the value is acceptable FALSE if not acceptable
       
-      # hide previous feedbacks
-      shinyFeedback::hideFeedback("condition_false")
-      shinyFeedback::hideFeedback("condition_true")
-      shinyFeedback::hideFeedback("condition_RHS")
-      shinyFeedback::hideFeedback("add_columnName")
+      toReturn$dataset <-  rvs_dataset() %>%
+        dplyr::mutate_at( .vars = dplyr::vars(input$actual_name), .funs = input$type) 
       
-      if (input$condition_false == "") { shinyFeedback::feedbackWarning("condition_false", TRUE, "Please fill")
-        validated = FALSE} 
-      if (input$condition_true == "") { shinyFeedback::feedbackWarning("condition_true", TRUE, "Please fill")
-        validated = FALSE} 
-      if (input$condition_RHS== "") { shinyFeedback::feedbackWarning("condition_RHS", TRUE, "Please fill")
-        validated = FALSE} 
-      if (input$new_name == "") { shinyFeedback::feedbackWarning("new_name", TRUE, "Please fill")
-        validated = FALSE} 
+      if (input$new_name != "") {
+        toReturn$dataset <-  rvs_dataset() %>%
+          dplyr::rename( !!input$new_name := !!input$actual_name )
+      } 
       
-      req(validated) #if validation passed do
-      
-      expression_toeval <- paste(
-        "if_else(",
-        input$condition_LHS, input$condition_operator, input$condition_RHS, ",",
-        input$condition_true,",", input$condition_false, ")"
-      )
-      
-      toReturn$dataset    <- dplyr::mutate( rvs_dataset(), 
-                                            !!input$new_name := as.factor( eval(parse(text = expression_toeval))) )
-      toReturn$trigger    <- toReturn$trigger + 1
+      toReturn$trigger  <- toReturn$trigger + 1
     })
     
     return(toReturn)
@@ -185,9 +191,11 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
   })
 }
 
+
+
 #' Shiny app snippet to offline test the functionality of the modules.
 #' Comment and uncomment when necesssary.
-#' devtools::document() to render roxygen comments an preview with ?mod_manage_addColumn
+#' devtools::document() to render roxygen comments an preview with ?mod_manage_transform
 #' @noRd
 
 # library(shiny)
@@ -200,7 +208,7 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
 #   dashboardSidebar(disable = TRUE),
 #   dashboardBody(
 #     column(width = 4,
-#            mod_manage_addColumn_ui("manage_addColumn_ui_1")),
+#            mod_manage_transform_ui("manage_transform_ui_1")),
 #     column(width = 8,
 #            DT::DTOutput("table"))
 #   )
@@ -213,7 +221,7 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
 #     data_rv$df_tot
 #   })
 #   
-#   data_add <-  mod_manage_addColumn_server("manage_addColumn_ui_1",
+#   data_add <-  mod_manage_transform_server("manage_transform_ui_1",
 #                                            infile = reactive({TRUE}),
 #                                            rvs_dataset = reactive({data_rv$df_tot}))
 #   # When applied function (data_mod2$trigger change) :

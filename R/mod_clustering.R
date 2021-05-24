@@ -1,12 +1,30 @@
-#' clustering UI Function
-#'
-#' @description A shiny Module.
-#'
+#' @name mod_clustering
+#' @aliases mod_clustering_ui_input
+#' @aliases mod_clustering_ui_output
+#' @aliases mod_clustering_server
+#' 
+#' @title Daily Profile Clustering Module
+#' 
+#' @description 
+#' This module permits to perform daily load profile clustering
+#' 
 #' @param id,input,output,session Internal parameters for {shiny}.
-#'
-#' @noRd
+#' 
+#' @examples \dontrun{
+#' 
+#' # To be copied in the UI
+#' mod_clustering_ui_input(id = "clustering_ui_1")
+#' mod_clustering_ui_output(id = "clustering_ui_1")
+#' 
+#' # To be copied in the server
+#' mod_clustering_server(id = "clustering_ui_1",
+#'                       infile = reactive({ infile }),
+#'                       rvs_dataset = reactive({ rvs$data })
+#' )
+#' }
 #'
 #' @import shiny
+#' @importFrom magrittr `%>%`
 #' @importFrom shinyFeedback hideFeedback feedbackWarning feedbackDanger
 #' @importFrom tidyr pivot_wider
 #' @importFrom dplyr select mutate distinct
@@ -19,134 +37,169 @@
 #' @importFrom plyr ddply summarise
 #' @importFrom scales date_breaks
 #' @import  ggplot2
+#' @importFrom shinyjs  disabled
+
+#' @rdname mod_clustering
+#' 
+#' @export
 mod_clustering_ui_input <- function(id) {
   ns <- NS(id)
   tagList(
-    column(
-      width = 6,
-      style = "padding-left:0px; padding-right:0px;",
-      selectInput(
-        ns('cluster_variable'),
-        'Variable:',
-        choices = NULL # updated according to the input
-      ),
-      selectInput(
-        ns('cluster_distance'),
-        'Distance:',
-        choices = list(
-          General = c(
-            "euclidean",
-            "maximum",
-            "manhattan",
-            "canberra",
-            "binary",
-            "minkowski"
+    box(width = 12, 
+        
+        title = shiny::HTML(
+          "Clustering options
+                                         <a
+                                         id=\"button\"
+                                         data-toggle=\"tooltip\"
+                                         title=\" Clustering options.\"
+                                         class=\"dropdown\">
+                                         <i class=\"fa fa-info-circle\"></i>
+                                         </a>"
+        ),
+        p("This section permits to perform daily profile clustering on the loaded dataset."),
+        
+        column(
+          width = 6,
+          style = "padding-left:0px; padding-right:0px;",
+          selectInput(
+            ns('cluster_variable'),
+            'Variable:',
+            choices = NULL # updated according to the input
           ),
-          Partitive = c(
-            "pearson" ,
-            "abspearson" ,
-            "abscorrelation",
-            "correlation",
-            "spearman",
-            "kendall"
+          selectInput(
+            ns('cluster_distance'),
+            'Distance:',
+            choices = list(
+              General = c(
+                "euclidean",
+                "maximum",
+                "manhattan",
+                "canberra",
+                "binary",
+                "minkowski"
+              ),
+              Partitive = c(
+                "pearson" ,
+                "abspearson" ,
+                "abscorrelation",
+                "correlation",
+                "spearman",
+                "kendall"
+              )
+            )
+          ),
+          numericInput(
+            ns('cluster_number'),
+            'Number of clusters',
+            value = 2,
+            min = 1
+          )
+        ),
+        column(
+          width = 6,
+          style = "padding-left:10px; padding-right:0px;",
+          selectInput(
+            ns('cluster_normalization'),
+            'Normalization:',
+            choices = c("none", "maxmin", "max", "min", "zscore")
+          ), 
+          selectInput(
+            ns('cluster_method'),
+            'Clustering method:',
+            choices = list(
+              Hierarchical = c(
+                "ward.D2",
+                "ward.D",
+                "single",
+                "complete",
+                "average",
+                "mcquitty",
+                "median",
+                "centroid"
+              ),
+              Partitive = c("kmeans", "kmeans++", "FDL")
+            ),
+            selected = 'ward.D2'
+          ),
+          # NBCLUST
+          tags$div(title = "By selecting yes the NBclust package will evaluate the optimal number of clusters",
+                   radioGroupButtons(
+                     inputId = ns("radio_nbclust"),
+                     label = "Search optimal number",
+                     choices = c("Yes", "No"),
+                     selected = "No",
+                     justified = TRUE
+                     
+                   ))
+          
+        ),
+        uiOutput(ns("clustering_inbox_nbclust")),
+        # disabled wainting to load file
+        shinyjs::disabled(
+          actionButton(
+            ns("cluster_button"),
+            "Perform cluster",
+            class = "btn-success",
+            icon = icon("braille"),
+            width = "100%"
           )
         )
+    ),
+    box(
+      solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
+      title = "Post-processing", status = "primary",
+      column(
+        width = 8,
+        style = "padding-left:0px; padding-right:0px;",
+        selectizeInput(
+          ns('cluster_merge'),
+          label = NULL,
+          choices = c("Select cluster to merge..." = ''),
+          multiple = TRUE
+        )
       ),
-      numericInput(
-        ns('cluster_number'),
-        'Number of clusters',
-        value = 2,
-        min = 1
-      )
-    ),
-    column(
-      width = 6,
-      style = "padding-left:10px; padding-right:0px;",
-      selectInput(
-        ns('cluster_normalization'),
-        'Normalization:',
-        choices = c("none", "maxmin", "max", "min", "zscore")
+      column(width = 4,
+             style = "padding-left:10px; padding-right:0px;",
+             # disabled wainting to load file
+             shinyjs::disabled(
+               actionButton(ns('cluster_merge_button'), 'Merge!',  width = '100%'))
       ),
-      selectInput(
-        ns('cluster_method'),
-        'Clustering method:',
-        choices = list(
-          Hierarchical = c(
-            "ward.D2",
-            "ward.D",
-            "single",
-            "complete",
-            "average",
-            "mcquitty",
-            "median",
-            "centroid"
-          ),
-          Partitive = c("kmeans", "kmeans++", "FDL")
-        ),
-        selected = 'ward.D2'
+      column(width = 8,
+             style = "padding-left:0px; padding-right:0px;",
+             selectizeInput(
+               ns('cluster_discard'),
+               label = NULL,
+               choices = c('Select cluster to discard...' = ''),
+               multiple = TRUE
+             )
       ),
-      # NBCLUST
-      tags$div(title = "By selecting yes the NBclust package will evaluate the optimal number of clusters",
-               radioGroupButtons(
-                 inputId = ns("radio_nbclust"),
-                 label = "Search optimal number",
-                 choices = c("Yes", "No"),
-                 selected = "No",
-                 justified = TRUE
-                 
-               ))
-      
-    ),
-    uiOutput(ns("clustering_inbox_nbclust")),
-    actionButton(
-      ns("cluster_button"),
-      "Perform cluster",
-      class = "btn-success",
-      icon = icon("chart-bar"),
-      width = "100%"
-    ),
-    hr(),
-    column(
-      width = 8,
-      style = "padding-left:0px; padding-right:0px;",
-      selectizeInput(
-        ns('cluster_merge'),
-        label = NULL,
-        choices = c("Select cluster to merge..." = ''),
-        multiple = TRUE
+      column(width = 4,
+             style = "padding-left:10px; padding-right:0px;",
+             shinyjs::disabled(
+               actionButton(ns('cluster_discard_button'), 'Discard!',  width = '100%')
+             )
+      ),
+      searchInput(
+        inputId = ns("clustering_dataframe_name"),
+        label = "Save clustering results dataframe",
+        placeholder = "New name..",
+        value = NULL,
+        # initial value
+        btnSearch = icon("plus"),
+        btnReset = icon("backspace"),
+        # icons
+        width = "100%"
       )
-    ),
-    column(width = 4,
-           style = "padding-left:10px; padding-right:0px;",
-           actionButton(ns('cluster_merge_button'), 'Merge!',  width = '100%')),
-    column(width = 8,
-           style = "padding-left:0px; padding-right:0px;",
-           selectizeInput(
-        ns('cluster_discard'),
-        label = NULL,
-        choices = c('Select cluster to discard...' = ''),
-        multiple = TRUE
-      )
-    ),
-    column(width = 4,
-           style = "padding-left:10px; padding-right:0px;",
-           actionButton(ns('cluster_discard_button'), 'Discard!',  width = '100%')),
-    searchInput(
-      inputId = ns("clustering_dataframe_name"),
-      label = "Save clustering results dataframe",
-      placeholder = "New name..",
-      value = NULL,
-      # initial value
-      btnSearch = icon("plus"),
-      btnReset = icon("backspace"),
-      # icons
-      width = "100%"
     )
     
   )
   
 }
 
+#' @rdname mod_clustering
+#' 
+#' @export
 mod_clustering_ui_output <- function(id) {
   ns <- NS(id)
   tagList(
@@ -162,10 +215,14 @@ mod_clustering_ui_output <- function(id) {
   )
 }
 
-#' clustering Server Functions
-#'
-#' @noRd
-mod_clustering_server <- function(id, rvs) {
+
+#' @rdname mod_clustering
+#' 
+#' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
+#' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
+#' 
+#' @export
+mod_clustering_server <- function(id, infile = NULL, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -173,10 +230,9 @@ mod_clustering_server <- function(id, rvs) {
     
     # updates ui do for all
     observe({
-      # gets rvs_dataset as reactive value to solve update inputs
-      choices <- colnames(rvs)
-      # choices <- variable_list_with_class(rvs )
-      
+      req( !is.null(infile())  )
+      shinyjs::enable("cluster_button")
+      choices <- colnames(rvs_dataset())
       updateSelectInput(session, inputId = 'cluster_variable', choices = choices)
     })
     
@@ -211,7 +267,7 @@ mod_clustering_server <- function(id, rvs) {
                )
         ),
         column(width = 6,  style = "padding-left:5px; padding-right:0px;",
-               sliderInput(inputId = "cluster_number_nbclust", label = "Number of clusters:", min = 1, max = 10, value = c(1, 10) ),
+               sliderInput(inputId = "cluster_number_nbclust", label = "Number of clusters (range):", min = 1, max = 10, value = c(1, 10) ),
         )
       )
     })
@@ -221,7 +277,7 @@ mod_clustering_server <- function(id, rvs) {
     observeEvent(input$cluster_button,{
       # validation
       #req(input$file)                                                   # require a uploaded file
-      validate_df <- "Date_Time" %in% colnames(rvs) # require this column to be created
+      validate_df <- "Date_Time" %in% colnames(rvs_dataset()) # require this column to be created
       
       # # give feedback about the absence of a correct dataframe
       # shinyFeedback::hideFeedback("cluster_variable")
@@ -230,15 +286,19 @@ mod_clustering_server <- function(id, rvs) {
       # }
       req(validate_df)                                                  # stops execution if no datetime found
       
+      
+      shinyjs::enable("cluster_merge_button")
+      shinyjs::enable("cluster_discard_button")
+      
       # notification of process
       id <- showNotification("Performing clustering...", duration = NULL, closeButton = FALSE, type = "message")
       on.exit(removeNotification(id), add = TRUE)
       
       # process and create clustering dataframe
-      df1 <- rvs  %>%
-        dplyr::mutate(Date = lubridate::date(rvs$Date_Time),
-                      Time = format(lubridate::round_date(rvs$Date_Time, "5 mins") , "%H:%M:%S"),
-                      X = rvs[,input$cluster_variable]) %>%
+      df1 <- rvs_dataset()  %>%
+        dplyr::mutate(Date = lubridate::date(rvs_dataset()$Date_Time),
+                      Time = format(lubridate::round_date(rvs_dataset()$Date_Time, "5 mins") , "%H:%M:%S"),
+                      X = rvs_dataset()[,input$cluster_variable]) %>%
         dplyr::select(Date, Time, X)
       
       # normalize data given input command
@@ -279,7 +339,7 @@ mod_clustering_server <- function(id, rvs) {
       } else if (input$cluster_method == "kmeans++") {
         clust_res <- LICORS::kmeanspp(df3, input$cluster_number)                                # perform clustering
         df2$Cluster <- clust_res$cluster                                                # add labels to dataframe
-      } else{ # hierarchical
+      } else { # hierarchical
         diss_matrix <- dist(df3, input$cluster_distance)                                # calculate distance matrix
         hcl <- hclust(diss_matrix, method = input$cluster_method)                       # perform clustering
         df2$Cluster <- cutree(hcl, input$cluster_number)                                # add labels to dataframe
@@ -325,7 +385,7 @@ mod_clustering_server <- function(id, rvs) {
       # give feedback about the optimal number
       shinyFeedback::hideFeedback("cluster_number_nbclust")
       shinyFeedback::feedbackWarning("cluster_number_nbclust", TRUE, paste("The suggested number of clusters is", optimal_N_clusters) )
-      
+  
     })
     
     # 4.5) Merge clusters ----------------------------------------------------------------------
@@ -348,7 +408,7 @@ mod_clustering_server <- function(id, rvs) {
     output$out_clustering_preview <- renderPlot({
       
       # requires a performed clustering and a result dataframe in memory
-      validate_df <- "Date_Time" %in% colnames(rvs) # require this column to be created
+      validate_df <- "Date_Time" %in% colnames(rvs_dataset()) # require this column to be created
       req(input$cluster_button, data_results[["Clustering_df"]], validate_df)
       
       # load actual cluster dataframe and add color info
@@ -420,11 +480,65 @@ mod_clustering_server <- function(id, rvs) {
   })
 }
 
-## To be copied in the UI
-# mod_clustering_ui("clustering_ui_1")
+#' Shiny app snippet to offline test the functionality of the modules.
+#' Comment and uncomment when necesssary.
+#' devtools::document() to render roxygen comments an preview with ?mod_clustering
+#' @noRd
+#' 
 
-## To be copied in the UI
-# mod_clustering_ui_output("clustering_ui_1")
+# library("shiny")
+# library("shinyFeedback")
+# library("shinydashboard")
+# library("shinyWidgets")
+# library("tidyr")
+# library("dplyr")
+# library("stats")
+# library("amap")
+# library("RColorBrewer")
+# library("NbClust")
+# library("lubridate")
+# library("plyr")
+# library("scales")
+# library("ggplot2")
+# library("shinyjs")
+# 
+# ui <- dashboardPage(
+#   dashboardHeader(disable = TRUE),
+#   dashboardSidebar(disable = TRUE),
+#   dashboardBody(
+#     shinyjs::useShinyjs(),
+#     shinyFeedback::useShinyFeedback(),
+#     column(width = 4,
+# 
+#            mod_clustering_ui_input(id = "clustering_ui_1")
+# 
+#     ),
+#     column(width = 8,
+#            box(width = 12,
+#                mod_clustering_ui_output(id = "clustering_ui_1")
+#            )
+#     )
+#   )
+# )
+# server <- function(input, output, session) {
+# 
+#   data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
+#   data_rv_results <- reactiveValues(infile = TRUE)  # NULL to simulate no dataset added, TRUE to simulate dataset added
+# 
+#   data_cluster <- mod_clustering_server(id = "clustering_ui_1",
+#                                         infile = reactive({data_rv_results$infile}),
+#                                         rvs_dataset = reactive({data_rv$df_tot})
+#   )
+#   # When applied function (data_mod2$trigger change) :
+#   #   - Update rv$variable with module output "variable"
+#   #   - Update rv$fun_history with module output "fun"
+#   # observeEvent(data_rename$trigger, {
+#   #   req(data_rename$trigger > 0)
+#   #   data_rv$df_tot    <- data_rename$dataset
+#   # })
+# 
+# 
+# }
+# 
+# shinyApp(ui, server)
 
-## To be copied in the server
-# mod_clustering_server("clustering_ui_1", rvs)
