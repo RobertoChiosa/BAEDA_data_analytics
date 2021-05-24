@@ -32,8 +32,9 @@ mod_preprocessing_cleaning_ui_output(id = "preprocessing_cleaning_ui_1")
 
 # To be copied in the server
 mod_preprocessing_cleaning_server(id = "preprocessing_cleaning_ui_1",
-                                  infile = reactive({ infile }),
-                                  data_set = reactive({ rvs$data })
+                                 infile = reactive({data_rv_results$infile}), 
+                                 rvs_dataset = reactive({data_rv[[input$dataframe]]})  
 )
 }
+
 }

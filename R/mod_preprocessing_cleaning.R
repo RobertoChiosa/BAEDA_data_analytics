@@ -18,11 +18,11 @@
 #' 
 #' # To be copied in the server
 #' mod_preprocessing_cleaning_server(id = "preprocessing_cleaning_ui_1",
-#'                                   infile = reactive({ infile }),
-#'                                   data_set = reactive({ rvs$data })
-#' )
+#'                                  infile = reactive({data_rv_results$infile}), 
+#'                                  rvs_dataset = reactive({data_rv[[input$dataframe]]})  
+#')
 #' }
-
+#' 
 #' @import shiny dplyr ggplot2 imputeTS htmltools
 #' @importFrom shinyWidgets dropdownButton tooltipOptions
 #' @importFrom shinycssloaders withSpinner
@@ -32,6 +32,7 @@
 #' @importFrom stats reformulate
 #' @importFrom simputation impute_cart
 #' @importFrom lubridate is.POSIXct
+#' @importFrom shinyjs disable enable
 #' 
 #' @rdname mod_preprocessing_cleaning
 #' 
@@ -52,7 +53,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
         style = "padding-left:0px; padding-right:0px;",
         shinyjs::disabled(
           shiny::actionButton(
-            ns("plot_variable"),
+            ns("plot_preview"),
             label = "Plot",
             style = "margin-top: 25px;",
             icon = icon("refresh"),
@@ -441,7 +442,7 @@ mod_preprocessing_cleaning_server <- function(id, infile = NULL, rvs_dataset){
       req( !is.null(infile())  )
       # activates buttons
       shinyjs::enable("replacement_button")
-      shinyjs::enable("plot_variable")
+      shinyjs::enable("plot_preview")
 
       # defines inputs
       variable_choices <- colnames(rvs_dataset())[sapply(rvs_dataset(), is.numeric)]
@@ -762,8 +763,8 @@ mod_preprocessing_cleaning_server <- function(id, infile = NULL, rvs_dataset){
     
     output$plot1 <- renderPlot({
       validate(need(!is.null(infile()) , "Please load a dataset"))
-      validate(need(input$plot_variable, "Please press plot button to display the lineplot"))
-      req(input$plot_variable, input$main_dataset_rows_all)
+      validate(need(input$plot_preview, "Please press plot button to display the lineplot"))
+      req(input$plot_preview, input$main_dataset_rows_all)
       plotdata()
     })
     
@@ -825,7 +826,7 @@ mod_preprocessing_cleaning_server <- function(id, infile = NULL, rvs_dataset){
     })
     
     
-    ###### MODAL ----------------------------------------------------------------------
+    ###### MODAL and PROCESS ----------------------------------------------------------------------
     
     # function for dialog box when clicking on replace NAs button
     modal_confirm <- function(){

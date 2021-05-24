@@ -1,78 +1,136 @@
-#' preprocessing_outliers UI Function
-#'
-#' @description A shiny Module. I divided the module into
-#' - input UI where the inputs parameters are
-#' - output UI where the output plots/tables are
-#'
+#' @name mod_preprocessing_outliers
+#' @aliases mod_preprocessing_outliers_ui_input
+#' @aliases mod_preprocessing_outliers_ui_output
+#' @aliases mod_preprocessing_outliers_server
+#' 
+#' @title Preprocessing Module for outliers identification
+#' 
+#' @description 
+#' This module permits to identify outliers through different techniques.
+#' 
 #' @param id,input,output,session Internal parameters for {shiny}.
+#' 
+#' @examples \dontrun{
+#' 
+#' # To be copied in the UI
+#' mod_preprocessing_outliers_ui_input(id = "preprocessing_outliers_ui_1")
+#' mod_preprocessing_outliers_ui_output(id = "preprocessing_outliers_ui_1")
+#' 
+# To be copied in the server
+#'mod_preprocessing_outliers_server(id = "preprocessing_outliers_ui_1",
+#'                                  infile = reactive({infile}), 
+#'                                  rvs_dataset = reactive({data_rv})  
+#')
+#' }
 #'
-#' @noRd 
-#'
-#' @import shiny
-#' @import dplyr
-#' @import magrittr
-#' @import ggplot2
+#' @import shiny dplyr ggplot2
+#' @importFrom magrittr `%>%`
 #' @importFrom shinyFeedback showFeedbackWarning hideFeedback
 #' @importFrom stats na.omit quantile IQR
+#' @importFrom lubridate is.POSIXct
 #' @importFrom shinyWidgets dropdownButton
 #' @importFrom shinyBS bsTooltip
+#' @importFrom shinycssloaders withSpinner
 #' @importFrom stats median
 #' @importFrom utils write.csv
-#' @importFrom shinyjs disable runjs
+#' @importFrom shinyjs disable enable runjs
+#' 
+#' @rdname mod_preprocessing_outliers
+#' 
+#' @export
 mod_preprocessing_outliers_ui_input <- function(id) {
   ns <- NS(id)
-
+  
   shiny::tagList(
     box(
-      shiny::selectInput(ns("outldet_method"), 'Select outlier detection method', 
-                         choices = c("Boxplot",
-                                     "Method2",
-                                     "Method3",
-                                     "Majority Voting 2/3")
-      ), 
-      shiny::selectInput(ns("variable"), 'Select variable', choices = NULL),
-      shiny::conditionalPanel( condition = sprintf("input['%s']=='Boxplot'", ns('outldet_method')),
-                               shiny::selectInput(ns("facetwrap"), 'Select the variable to facet by', choices = NULL),
-                               shiny::selectInput(
-                                 ns("outl_type"),
-                                 'Select the outlier type to show in "Outliers Table"',
-                                 choices = c("upper", "lower", "all"),
-                                 selected = "all"
-                               ),
-                               shiny::checkboxInput(ns("n_obs"), 'Show boxplot stats', value = FALSE), 
-                               shiny::sliderInput(
-                                 ns("k_iqr_range"),
-                                 'Select the interquartile range multiplier for outliers detection:',
-                                 value = 1.5,
-                                 min = 1,
-                                 max = 10,
-                                 step = 0.1
-                               )),
+      solidHeader = T, collapsible = T, collapsed = FALSE, width = 12,
+      title = "Outliers identification", status = "primary",
+      shiny::selectInput(
+        ns("outldet_method"),
+        'Select outlier detection method',
+        choices = c("Boxplot"
+                    # "Method2",
+                    # "Method3",
+                    # "Majority Voting 2/3"
+                    )
+      ),
+      shiny::selectInput(ns("variable"), 'Select variable (numeric)', choices = NULL),
+      # parameters for boxplot
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s']=='Boxplot'", ns('outldet_method')),
+        
+        column(
+          width = 10,
+          style = "padding-left:0px; padding-right:5px;",
+          shiny::selectInput(ns("facetwrap"), 'Select the facet variable (factor)', choices = NULL)
+        ),
+        column(width = 2,
+               style = "padding-left:0px; padding-right:0px;",
+               shinyjs::disabled(
+                 shiny::actionButton(
+                   ns("plot_preview"),
+                   label = "Plot",
+                   style = "margin-top: 25px;",
+                   icon = icon("refresh"),
+                   class = "btn-success",
+                   width = "100%"
+                 )
+               )
+        ), 
+        shiny::selectInput(
+          ns("outl_type"),
+          'Select the outlier type to show in "Outliers Table"',
+          choices = c(
+            "Upper bound outliers" = "upper",
+            "Lower bound outliers" = "lower",
+            "All outliers (upper+lower)" = "all"
+          ),
+          selected = "all"
+        ), 
+        shiny::sliderInput(
+          ns("k_iqr_range"),
+          'Select the interquartile range multiplier (k*IQR) for outliers definition:',
+          value = 1.5,
+          min = 1,
+          max = 10,
+          step = 0.1
+        )
+      ),
+      # parameters for Method2
       #simple outlier detection parameters, to replace with the parameters needed for the selected outliers detection function, such as iqr range for boxplots
-      shiny::conditionalPanel(condition = sprintf("input['%s']=='Method2'", ns('outldet_method')),
-                              shiny::selectInput(ns("graphx2"),'Select x variable for the scatter plot', choices = NULL),
-                              shiny::sliderInput(
-                                ns("limit_cond_2"),
-                                'Select the threshold for outlier detection:',
-                                value = 550,
-                                min = 0,
-                                max = 1000,
-                                step = 0.5
-                              )
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s']=='Method2'", ns('outldet_method')),
+        shiny::selectInput(ns("graphx2"), 'Select x variable for the scatter plot', choices = NULL),
+        shiny::sliderInput(
+          ns("limit_cond_2"),
+          'Select the threshold for outlier detection:',
+          value = 550,
+          min = 0,
+          max = 1000,
+          step = 0.5
+        )
       ),
-      shiny::conditionalPanel(condition = sprintf("input['%s']=='Method3'", ns('outldet_method')),
-                              shiny::selectInput(ns("graphx3"),'Select x variable for the scatter plot', choices = NULL),
-                              shiny::sliderInput(
-                                ns("limit_cond_3"),
-                                'Select the threshold for outlier detection:',
-                                value = 600,
-                                min = 0,
-                                max = 1000,
-                                step = 0.5
-                              )
-      ),
-      shiny::conditionalPanel(condition = sprintf("input['%s']=='Majority Voting 2/3'", ns('outldet_method')),
-        shiny::selectInput(ns("facetwrap4"), 'Select the variable to facet by (boxplot)', choices = NULL),
+      # parameters for Method3
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s']=='Method3'", ns('outldet_method')),
+        shiny::selectInput(ns("graphx3"), 'Select x variable for the scatter plot', choices = NULL),
+        shiny::sliderInput(
+          ns("limit_cond_3"),
+          'Select the threshold for outlier detection:',
+          value = 600,
+          min = 0,
+          max = 1000,
+          step = 0.5
+        )
+      ), 
+      # parameters for majority voting
+      shiny::conditionalPanel(
+        condition = sprintf("input['%s']=='Majority Voting 2/3'", ns('outldet_method')),
+        shiny::selectInput(
+          ns("facetwrap4"),
+          'Select the variable to facet by (boxplot)',
+          choices = NULL
+        ),
         shiny::selectInput(
           ns("outl_type4"),
           'Select the outlier type to show in "Outliers Table" (boxplot)',
@@ -104,47 +162,55 @@ mod_preprocessing_outliers_ui_input <- function(id) {
           step = 0.5
         )
       ),
-      shiny::actionButton(
-        ns("replace_outliers_button"),
-        label = "Replace outliers with NAs",
-        icon = icon("eraser"),
-        class = "btn-warning",
-        width = "100%"
+      shinyjs::disabled(
+        shiny::actionButton(
+          ns("replace_outliers_button"),
+          label = "Replace outliers with NAs",
+          icon = icon("eraser"),
+          class = "btn-warning",
+          width = "100%"
+        )
       ),
       br(),
       br(),
-      div(style="display:center-align;float:center ;width:100%;text-align: center;", shiny::downloadButton(ns("dataset_download"),"Download dataset")),
-      solidHeader = T, collapsible = T, collapsed = FALSE, width = 12,
-      title = "Outliers identification", status = "primary"
+      div(style = "display:center-align;float:center ;width:100%;text-align: center;", shiny::downloadButton(ns("dataset_download"), "Download dataset"))
     )
   )
 }
 
+#' @rdname mod_preprocessing_outliers
+#' 
+#' @export
 mod_preprocessing_outliers_ui_output <- function(id) {
   ns <- NS(id)
   tagList(
     shiny::conditionalPanel( condition = sprintf("input['%s']!='Majority Voting 2/3'", ns('outldet_method')),
-    shinyWidgets::dropdownButton( size = "sm",
-                                  tags$h4("Graphical parameters"),
-                                  numericInput(ns('plot_fontsize'), label = 'Font size:', value = 11, step = 1),
-                                  numericInput(ns('plot_dl_width'), label = 'Width of plot to be downloaded (px):', value = 1500, step = 10),
-                                  numericInput(ns('plot_dl_height'), label = 'Height of plot to be downloaded (px):', value = 500, step = 10),
-                                  div(style="display:left-align;float:left ;width:100%;text-align: left;", shiny::downloadButton(ns("plot_download"),"Download plot")),
-                                  circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
-                                  tooltip = shinyWidgets::tooltipOptions(title = "Click to modify or download plot")
-    ),
-    shinycssloaders::withSpinner(shiny::plotOutput(ns("plot1")))
+                             shinyWidgets::dropdownButton( size = "sm",
+                                                           tags$h4("Graphical parameters"),
+                                                           shiny::checkboxInput(ns("n_obs"), 'Show boxplot stats', value = FALSE),
+                                                           numericInput(ns('plot_fontsize'), label = 'Font size:', value = 11, step = 1),
+                                                           numericInput(ns('plot_dl_width'), label = 'Width of plot to be downloaded (px):', value = 1500, step = 10),
+                                                           numericInput(ns('plot_dl_height'), label = 'Height of plot to be downloaded (px):', value = 500, step = 10),
+                                                           div(style="display:left-align;float:left ;width:100%;text-align: left;", shiny::downloadButton(ns("plot_download"),"Download plot")),
+                                                           circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                                                           tooltip = shinyWidgets::tooltipOptions(title = "Click to modify or download plot")
+                             ),
+                             shinycssloaders::withSpinner(shiny::plotOutput(ns("plot1")))
     ),
     tabsetPanel(
-      tabPanel("Main dataset", br(), shinycssloaders::withSpinner(DT::dataTableOutput(ns("main_dataset")))),
-      tabPanel("Outliers table"  , br(), shinycssloaders::withSpinner(shiny::verbatimTextOutput(ns("outl_percent"))),  br(), shinycssloaders::withSpinner(DT::dataTableOutput(ns("outliers_table"))))
+      tabPanel("Main dataset",   br(), shinycssloaders::withSpinner( DT::dataTableOutput(ns("main_dataset")))  ),
+      tabPanel("Outliers table", br(), shinycssloaders::withSpinner( shiny::verbatimTextOutput(ns("outl_percent"))),  br(), shinycssloaders::withSpinner(DT::dataTableOutput(ns("outliers_table"))))
     )
   )
 }
 
-#' preprocessing_outliers Server Functions  
-#' @noRd 
-mod_preprocessing_outliers_server <- function(id, data_set){
+#' @rdname mod_preprocessing_outliers
+#' 
+#' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
+#' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
+#' 
+#' @export
+mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
@@ -152,16 +218,23 @@ mod_preprocessing_outliers_server <- function(id, data_set){
     output$dataset_download <- shiny::downloadHandler(
       filename = "download_dataset.csv",
       content = function(file) {
-        utils::write.csv(data_set(), file)
+        utils::write.csv(rvs_dataset(), file)
       }
     )
     
+    ###### UPDATE INPUTS ----------------------------------------------------------------------
+    
     # Update selectInput according to dataset in input
     observe({
+      req( !is.null(infile())  )
+      
+      shinyjs::enable("replace_outliers_button")
+      shinyjs::enable("plot_preview")
+      
       # updates dataset variables selection depending on the current dataset
-      variable_choices <- colnames(data_set())[sapply(data_set(), is.numeric)]
-      facet_choices    <- c("NULL", colnames(data_set())[sapply(data_set(), is.factor)])
-      graphx_choices   <- colnames(data_set())[sapply(data_set(), lubridate::is.POSIXct)]
+      variable_choices <- colnames(rvs_dataset())[sapply(rvs_dataset(), is.numeric)]
+      facet_choices    <- c("NULL", colnames(rvs_dataset())[sapply(rvs_dataset(), is.factor)])
+      graphx_choices   <- colnames(rvs_dataset())[sapply(rvs_dataset(), lubridate::is.POSIXct)]
       
       updateSelectInput(session, "variable",   choices = variable_choices)
       updateSelectInput(session, "facetwrap",  choices = facet_choices)
@@ -170,6 +243,8 @@ mod_preprocessing_outliers_server <- function(id, data_set){
       updateSelectInput(session, "graphx3",    choices = graphx_choices)
     })
     
+    ###### WARNINGS ----------------------------------------------------------------------
+
     # give feedback about inputs
     observeEvent(input$k_iqr_range, {
       # hide previous feedback if any
@@ -185,7 +260,6 @@ mod_preprocessing_outliers_server <- function(id, data_set){
       }
     })
     
-    
     observeEvent(input$k_iqr_range4, {
       # hide previous feedback if any
       shinyFeedback::hideFeedback("k_iqr_range4")
@@ -199,91 +273,85 @@ mod_preprocessing_outliers_server <- function(id, data_set){
                                            "Very high IQR multipliers may result in extremely low numbers of outliers detected!")
       }
     })
-    
-    ## consider to move out from modules and to define global functions
-    # function to detect outliers 
-    # input:
-    # x = a vector [numeric]
-    # k_iqr_range = a numeric range [numeric]
-    # return a logic vector
-    is_outlier1 <-  function(x, k_iqr_range, type) {
-      if (type == "all"){
-        return(x < stats::quantile(x, 0.25, na.rm=TRUE) - k_iqr_range * stats::IQR(x, na.rm=TRUE) |
-                 x > stats::quantile(x, 0.75, na.rm=TRUE) + k_iqr_range * stats::IQR(x, na.rm=TRUE))
-      }
-      if(type == "upper"){
-        return(x > stats::quantile(x, 0.75, na.rm=TRUE) + k_iqr_range * stats::IQR(x, na.rm=TRUE))
-      }
-      if(type == "lower"){
-        return(x < stats::quantile(x, 0.25, na.rm=TRUE) - k_iqr_range * stats::IQR(x, na.rm=TRUE))
-      }
-    }
-    
-    #simple functions to define outliers, in order to test full functionality of the structure
-    is_outlier2 <- function(x, limit){
-      return(x > limit)
-    }
-    
-    is_outlier3 <- function(x, limit){
-      return(x > limit)
-    }
-    
-    
-    # functions to define where to put the stats for each boxplot
-    n_fun1<-function(x){
-      return(data.frame(y=Inf, label= paste('count =', length(x))
-      ))
-    }
-    
-    n_fun2<-function(x){
-      return(data.frame(y=-Inf, label= paste('median =', stats::median(x))
-      ))
-    }
-    
-    # function for dialog box when clicking on replace with NAs button
-    modal_confirm <- function(){
-      ns <- session$ns
-      shiny::modalDialog(
-        size = 'm',
-        easyClose = TRUE,
-        fade = TRUE,
-        title = "Replace outliers with NAs",
-        shiny::HTML("<strong style='color:red;' >WARNING: </strong> after replacing outliers with NAs, the current dataset will be overwritten. Continue?"),
-        footer = tagList(
-          actionButton(ns("no"), "Dismiss"),
-          actionButton(ns("yes"),"Confirm", class = "btn btn-danger")
-        )
-      )
-    }
-    
-    observeEvent(input$replace_outliers_button,{
-      # ask users if they want to replace outliers
-      shiny::showModal(modal_confirm())
-    })
-    
-    observeEvent(input$no,{
-      shiny::removeModal()
-    })
-    
-    
-    
-    # Define the ReactiveValue to return : "toReturn"
-    # with slots "rvs_dataset" & "trigger"
-    toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
-    
-    
+  
+    ###### INTERNAL DATASET DEFINITIONS----------------------------------------------------------------------
     
     # this is defined internally
     data_set_filtrato_iniziale <- reactive(
-      data_set() %>%
+      rvs_dataset() %>%
         dplyr::mutate(rownumber=row_number()) %>%
         dplyr::group_by_(input$facetwrap) 
     )
     
+    data_set_filtrato_intermedio <- reactive(
+      
+      # switch (input$outldet_method,
+      #         "Boxplot" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+      #           dplyr::mutate(outlier = is_outlier1(.data[[input$variable]], input$k_iqr_range, input$outl_type)),
+      #         "Method2" =  data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+      #           dplyr::mutate(outlier = is_outlier2(.data[[input$variable]], input$limit_cond_2)),
+      #         "Method3" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+      #           dplyr::mutate(outlier = is_outlier3(.data[[input$variable]], input$limit_cond_3)),
+      #         "Majority Voting 2/3" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+      #           dplyr::mutate(outlier1 = is_outlier1(.data[[input$variable]], input$k_iqr_range4, input$outl_type4)) %>%
+      #           dplyr::mutate(outlier2 = is_outlier2(.data[[input$variable]], input$limit_cond_4_2)) %>%
+      #           dplyr::mutate(outlier3 = is_outlier3(.data[[input$variable]], input$limit_cond_4_3))
+      # )
+      
+      
+      if(input$outldet_method=="Boxplot"){
+        data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+          dplyr::mutate(outlier = is_outlier1(.data[[input$variable]], input$k_iqr_range, input$outl_type))
+      }
+      else{
+        if(input$outldet_method=="Method2"){
+          data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+            dplyr::mutate(outlier = is_outlier2(.data[[input$variable]], input$limit_cond_2))
+        }
+        else{
+          if(input$outldet_method=="Method3"){
+            data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+              dplyr::mutate(outlier = is_outlier3(.data[[input$variable]], input$limit_cond_3))
+          }
+          else{
+            if(input$outldet_method=="Majority Voting 2/3"){
+              data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+                dplyr::mutate(outlier1 = is_outlier1(.data[[input$variable]], input$k_iqr_range4, input$outl_type4)) %>%
+                dplyr::mutate(outlier2 = is_outlier2(.data[[input$variable]], input$limit_cond_4_2)) %>%
+                dplyr::mutate(outlier3 = is_outlier3(.data[[input$variable]], input$limit_cond_4_3))
+            }
+          }}}
+    )
     
+    
+    data_set_filtrato_intermedio_norownumbers <- reactive(
+      data_set_filtrato_intermedio() %>%
+        select(-rownumber)
+    )
+    
+    
+    percent <- reactive(
+      if(input$outldet_method!="Majority Voting 2/3"){
+        nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE & !is.na(data_set_filtrato_intermedio()$outlier),])/nrow(data_set_filtrato_intermedio())*100
+      }
+      else{
+        (nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2),])+
+           nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])+
+           nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])-
+           2* nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),]))/nrow(data_set_filtrato_intermedio())*100
+      }
+    )
+    
+    ###### OUTPUTS ----------------------------------------------------------------------
+    
+    
+    output$outl_percent <- renderPrint({
+      sprintf("The percentage of outliers in the selected portion of the dataset is %f%%", percent())
+    }
+    )
     output$main_dataset <- DT::renderDT({
       req(input$facetwrap)
-      DT::datatable(data_set(),
+      DT::datatable(rvs_dataset(),
                     selection = "none",
                     rownames = FALSE,
                     style = "bootstrap",
@@ -314,65 +382,10 @@ mod_preprocessing_outliers_server <- function(id, data_set){
       )
     })
     
-    
-  
-    data_set_filtrato_intermedio <- reactive(
-      if(input$outldet_method=="Boxplot"){
-        data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-          dplyr::mutate(outlier = is_outlier1(.data[[input$variable]], input$k_iqr_range, input$outl_type))
-      }
-      else{
-        if(input$outldet_method=="Method2"){
-          data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-            dplyr::mutate(outlier = is_outlier2(.data[[input$variable]], input$limit_cond_2))
-        }
-        else{
-          if(input$outldet_method=="Method3"){
-            data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-              dplyr::mutate(outlier = is_outlier3(.data[[input$variable]], input$limit_cond_3))
-          }
-          else{
-            if(input$outldet_method=="Majority Voting 2/3"){
-              data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-                dplyr::mutate(outlier1 = is_outlier1(.data[[input$variable]], input$k_iqr_range4, input$outl_type4)) %>%
-                dplyr::mutate(outlier2 = is_outlier2(.data[[input$variable]], input$limit_cond_4_2)) %>%
-                dplyr::mutate(outlier3 = is_outlier3(.data[[input$variable]], input$limit_cond_4_3))
-            }
-          }}}
-    )
-    
-    
-    data_set_filtrato_intermedio_norownumbers <- reactive(
-      data_set_filtrato_intermedio() %>%
-      select(-rownumber)
-    )
-    
-    
-    percent <- reactive(
-      if(input$outldet_method!="Majority Voting 2/3"){
-      nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE & !is.na(data_set_filtrato_intermedio()$outlier),])/nrow(data_set_filtrato_intermedio())*100
-      }
-      else{
-        (nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2),])+
-        nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])+
-        nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])-
-          2* nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),]))/nrow(data_set_filtrato_intermedio())*100
-      }
-     )
-    
-    
-    
-      
-    output$outl_percent <- renderPrint({
-      sprintf("The percentage of outliers in the selected portion of the dataset is %f%%", percent())
-    }
-    )
-    
-    
     output$outliers_table <- DT::renderDT({
       DT::datatable(
         if(input$outldet_method!="Majority Voting 2/3"){
-        dplyr::filter(data_set_filtrato_intermedio_norownumbers(), outlier == TRUE)}
+          dplyr::filter(data_set_filtrato_intermedio_norownumbers(), outlier == TRUE)}
         else{
           dplyr::filter(data_set_filtrato_intermedio_norownumbers(), (outlier1 == TRUE & outlier2 == TRUE) | (outlier2 == TRUE & outlier3 == TRUE) | (outlier1 == TRUE & outlier3 == TRUE))
         },
@@ -411,41 +424,41 @@ mod_preprocessing_outliers_server <- function(id, data_set){
     plotdata <- reactive(
       if(input$outldet_method == "Boxplot"){
         if(input$facetwrap != "NULL"){
-        ggplot2::ggplot(
-          data = data_set_filtrato_intermedio(), 
-          ggplot2::aes_string(
-            x = input$facetwrap,
-            y = input$variable,
-            group = input$facetwrap,
-            fill = input$facetwrap
-          )
-        ) +
-          stat_boxplot(geom ='errorbar', 
-                       coef = input$k_iqr_range,
-                       width = 0.6,
-                       na.rm = TRUE ) + # adds error bars
-          ggplot2::geom_boxplot(
-            coef = input$k_iqr_range,
-            width = 0.6,
-            na.rm = TRUE # fixes Warning: Removed N rows containing non-finite values (stat_boxplot).
+          ggplot2::ggplot(
+            data = data_set_filtrato_intermedio(), 
+            ggplot2::aes_string(
+              x = input$facetwrap,
+              y = input$variable,
+              group = input$facetwrap,
+              fill = input$facetwrap
+            )
           ) +
-          {
-            if ( input$n_obs==TRUE){
-              ggplot2::stat_summary(fun.data = n_fun1, geom = "text", na.rm = TRUE, hjust=0.5, vjust=1)
-          }
-          }+
-          {
-            if ( input$n_obs==TRUE){
-              ggplot2::stat_summary(fun.data = n_fun2, geom = "text", na.rm = TRUE, hjust=0.5, vjust=-0.5)
-            }
-          }+
-          ggplot2::theme_bw() +
-          theme(legend.position = "none",
-                panel.grid = element_blank(),
-                axis.ticks.x = element_blank(),
-                axis.title=element_text(size=input$plot_fontsize),
-                axis.text.x = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")),
-                axis.text.y = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")))
+            stat_boxplot(geom ='errorbar', 
+                         coef = input$k_iqr_range,
+                         width = 0.6,
+                         na.rm = TRUE ) + # adds error bars
+            ggplot2::geom_boxplot(
+              coef = input$k_iqr_range,
+              width = 0.6,
+              na.rm = TRUE # fixes Warning: Removed N rows containing non-finite values (stat_boxplot).
+            ) +
+            {
+              if ( input$n_obs==TRUE){
+                ggplot2::stat_summary(fun.data = n_fun1, geom = "text", na.rm = TRUE, hjust=0.5, vjust=1)
+              }
+            }+
+            {
+              if ( input$n_obs==TRUE){
+                ggplot2::stat_summary(fun.data = n_fun2, geom = "text", na.rm = TRUE, hjust=0.5, vjust=-0.5)
+              }
+            }+
+            ggplot2::theme_bw() +
+            theme(legend.position = "none",
+                  panel.grid = element_blank(),
+                  axis.ticks.x = element_blank(),
+                  axis.title=element_text(size=input$plot_fontsize),
+                  axis.text.x = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")),
+                  axis.text.y = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")))
         }
         else{
           ggplot2::ggplot(
@@ -524,23 +537,58 @@ mod_preprocessing_outliers_server <- function(id, data_set){
       }
     )
     
+    ###### MODAL and PROCESS ----------------------------------------------------------------------
+    # function for dialog box when clicking on replace with NAs button
+    modal_confirm <- function(){
+      ns <- session$ns
+      shiny::modalDialog(
+        size = 'm',
+        easyClose = TRUE,
+        fade = TRUE,
+        title = "Replace outliers with NAs",
+        shiny::HTML("<strong style='color:red;' >WARNING: </strong> after replacing outliers with NAs, the current dataset will be overwritten. Continue?"),
+        footer = tagList(
+          actionButton(ns("no"), "Dismiss"),
+          actionButton(ns("yes"),"Confirm", class = "btn btn-danger")
+        )
+      )
+    }
+    
+    observeEvent(input$replace_outliers_button,{
+      # ask users if they want to replace outliers
+      shiny::showModal(modal_confirm())
+    })
+    
+    observeEvent(input$no,{
+      shiny::removeModal()
+    })
+    
+    # Define the ReactiveValue to return : "toReturn"
+    # with slots "rvs_dataset" & "trigger"
+    toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
+    
+    
     observeEvent(input$yes,{
+      
+      # notification of process
+      id <- showNotification("Performing cleaning...", duration = NULL, closeButton = FALSE, type = "message")
+      on.exit(removeNotification(id), add = TRUE)
       
       shiny::removeModal()
       
       # find in the intermediate dataframe the rows corresponding to outliers
       rows_outliers <- 
         if(input$outldet_method!="Majority Voting 2/3"){
-        data_set_filtrato_intermedio() %>%
-        dplyr::filter(outlier == TRUE)
+          data_set_filtrato_intermedio() %>%
+            dplyr::filter(outlier == TRUE)
         }
       else{
         data_set_filtrato_intermedio() %>%
-        dplyr::filter((outlier1 == TRUE & outlier2 == TRUE) | (outlier2 == TRUE & outlier3 == TRUE) | (outlier1 == TRUE & outlier3 == TRUE))
+          dplyr::filter((outlier1 == TRUE & outlier2 == TRUE) | (outlier2 == TRUE & outlier3 == TRUE) | (outlier1 == TRUE & outlier3 == TRUE))
       }
       
       # return the main dataset with NAs in the column where outliers are tagged as TRUE
-      toReturn$dataset <- data_set() %>%
+      toReturn$dataset <- rvs_dataset() %>%
         dplyr::mutate(rownumber = row_number()) %>%
         dplyr::mutate(!!input$variable := ifelse(rownumber %in%  rows_outliers$rownumber, NA, .data[[input$variable]])) %>%
         dplyr::select(-rownumber)
@@ -553,56 +601,62 @@ mod_preprocessing_outliers_server <- function(id, data_set){
   })
 }
 
-# #the following code is used for debug
+#' Shiny app snippet to offline test the functionality of the modules.
+#' Comment and uncomment when necessary.
+#' devtools::document() to render roxygen comments an preview with ?mod_manage_addColumn
+#' @noRd
+# 
 # library(shiny)
-# library(dplyr)
-# library(magrittr)
-# library(ggplot2)
-# library(viridis)
-# library(shinyFeedback)
-# library(stats)
-# library(prob)
 # library(shinydashboard)
+# library(shiny)
+# library(ggplot2)
+# library(magrittr)
+# library(shinyBS)
+# library(shinyWidgets)
+# library(dplyr)
+# library(rpart)
+# library(stats)
+# library(shinyFeedback)
+# library(partykit)
+# library(MLmetrics)
+# library(grid)
+# library(shinyjs)
+# 
 # ui <- dashboardPage(
 #   dashboardHeader(disable = TRUE),
 #   dashboardSidebar(disable = TRUE),
 #   dashboardBody(
-#     fluidRow(
-#       box(width = 4,
-#           title = "Preprocessing degli outliers puntuali",
-#           mod_preprocessing_outliers_ui_input("preprocessing_outliers_ui_1")
-#       ),
-#       box(width = 8,
-#           mod_preprocessing_outliers_ui_output("preprocessing_outliers_ui_1")
-#       )
+#     shinyjs::useShinyjs(),
+#     shinyFeedback::useShinyFeedback(),
+#     column(width = 4,
+#            box(width = 12,
+#                mod_preprocessing_cleaning_ui_input("preprocessing_cleaning_ui_1")
+#            )
+#     ),
+#     column(width = 8,
+#            box(width = 12,
+#                mod_preprocessing_cleaning_ui_output("preprocessing_cleaning_ui_1")
+#            )
 #     )
 #   )
 # )
-# 
 # server <- function(input, output, session) {
-#   data_rv <- reactiveValues( df_tot = df_15min )                 # reactive value to store the loaded dataframes
 # 
-#   data_rv <- reactiveValues( df_tot = df_15min )                 # reactive value to store the loaded dataframes
+#   data_rv <- reactiveValues( df_tot = eDASH::data)                 # reactive value to store the loaded dataframes
+#   data_rv_results <- reactiveValues(infile = TRUE)  # NULL to simulate no dataset added, TRUE to simulate dataset added
 # 
-#   ### preprocessing outliers detection
-#   data_preprocessing <-  mod_preprocessing_outliers_server("preprocessing_outliers_ui_1",
-#                                                            data_set = reactive({data_rv$df_tot}) )
-#   # DONT DELETE I need for further integration
+#   data_cart <-  mod_preprocessing_cleaning_server("preprocessing_cleaning_ui_1",
+#                                                   infile = reactive({data_rv_results$infile}),
+#                                                   rvs_dataset = reactive({data_rv$df_tot}) )
 #   # When applied function (data_mod2$trigger change) :
 #   #   - Update rv$variable with module output "variable"
 #   #   - Update rv$fun_history with module output "fun"
-#   observeEvent(data_preprocessing$trigger, {
-#     req(data_preprocessing$trigger > 0)
-#     data_rv$df_tot    <- data_preprocessing$dataset
-#   })
+#   # observeEvent(data_rename$trigger, {
+#   #   req(data_rename$trigger > 0)
+#   #   data_rv$df_tot    <- data_rename$dataset
+#   # })
+# 
 # 
 # }
 # 
 # shinyApp(ui, server)
-
-## To be copied in the UI
-# mod_preprocessing_outliers_ui_input("preprocessing_outliers_ui_1")
-# mod_preprocessing_outliers_ui_output("preprocessing_outliers_ui_1")
-
-## To be copied in the server
-# mod_preprocessing_outliers_server("preprocessing_outliers_ui_1", data_set = reactive({data_rv$df_tot}))

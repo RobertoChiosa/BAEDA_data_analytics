@@ -74,12 +74,13 @@ app_ui <- function(request) {
                                  The available modules permit to identify outliers through different techniques and
                                  replace NA through imputation")
                            ),
+                           mod_preprocessing_outliers_ui_input(id = "preprocessing_outliers_ui_1"),
                            mod_preprocessing_cleaning_ui_input("preprocessing_cleaning_ui_1")
                     ),
                     column(width = 8, style = "padding-left:0px; padding-right:0px;",
                            tabBox(width = 12,
                                   tabPanel( title = "Outliers identification", 
-                                            
+                                            mod_preprocessing_outliers_ui_output(id = "preprocessing_outliers_ui_1")
                                   ),
                                   tabPanel( title = "NA replacement",
                                             mod_preprocessing_cleaning_ui_output("preprocessing_cleaning_ui_1")
@@ -159,7 +160,7 @@ app_ui <- function(request) {
                     column(width = 4, style = "padding-left:0px; padding-right:0px;",
                            mod_clustering_ui_input("clustering_ui_1")
                     ),
-
+                    
                     column(
                       width = 8, style = "padding-left:0px; padding-right:0px;",
                       # INPUT BOX

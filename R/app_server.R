@@ -98,6 +98,18 @@ app_server <- function( input, output, session ) {
   
   ###### 4) "PREPROCESSING" TAB ----------------------------------------------------------------------
   # outliers detection
+  data_detection <-  mod_preprocessing_outliers_server(id = "preprocessing_outliers_ui_1",
+                                                      infile = reactive({data_rv_results$infile}), 
+                                                      rvs_dataset = reactive({data_rv[[input$dataframe]]})  
+  )
+  # When applied function (data_preprocessing$trigger change) :
+  #   - Update data_rv$df_tot with module output "dataset"
+  observeEvent(data_detection$trigger, {
+    req(data_detection$trigger > 0)
+    data_rv[[input$dataframe]] <- data_detection$dataset
+  })
+  
+  # outliers cleaning
   data_cleaning <-  mod_preprocessing_cleaning_server(id = "preprocessing_cleaning_ui_1",
                                                       infile = reactive({data_rv_results$infile}), 
                                                       rvs_dataset = reactive({data_rv[[input$dataframe]]})  
