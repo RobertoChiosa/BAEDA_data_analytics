@@ -4,6 +4,7 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @importFrom shinyBS addPopover
+#' @importFrom utils write.csv
 #' @noRd
 app_server <- function( input, output, session ) {
   ###### 1) DATA STRUCTURE ----------------------------------------------------------------------
@@ -13,7 +14,23 @@ app_server <- function( input, output, session ) {
   data_rv_results <- reactiveValues(infile = NULL)      # reactive value where we will store all the loaded dataframes force loaded
   #data_rv$df_tot <- data                               # upload as default a well known dataset
   
-  ######  2) DATA LOADING ----------------------------------------------------------------------
+  
+
+  
+  
+  ######  2) DATA LOADING DOWNLOADING ----------------------------------------------------------------------
+  
+  # dataset download function
+  
+  observeEvent(input$download, {
+    output$dataset_download <- shiny::downloadHandler(
+      filename = gsub(" |:|-", "", paste("data", Sys.time()) ),
+      content = function(file) {
+        utils::write.csv(data_rv[[input$dataframe]], file)
+      }
+    )
+  })
+
   # # server to load external file
   mod_load_ext_file_server(id = "load_ext_file_ui_1", 
                            toggle_button_input = reactive({ input$upload }), 

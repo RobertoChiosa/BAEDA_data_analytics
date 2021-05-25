@@ -48,7 +48,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
       shiny::selectInput(
         ns("outldet_method"),
         'Select outlier detection method',
-        choices = c("Boxplot"
+        choices = c("Inter-quartile method" = "Boxplot"
                     # "Method2",
                     # "Method3",
                     # "Majority Voting 2/3"
@@ -155,13 +155,10 @@ mod_preprocessing_outliers_ui_input <- function(id) {
           ns("replace_outliers_button"),
           label = "Replace outliers with NAs",
           icon = icon("eraser"),
-          class = "btn-warning",
+          class = "btn-success",
           width = "100%"
         )
-      ),
-      br(),
-      br(),
-      div(style = "display:center-align;float:center ;width:100%;text-align: center;", shiny::downloadButton(ns("dataset_download"), "Download dataset"))
+      )
     )
   )
 }
@@ -202,13 +199,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
-    # dataset download function
-    output$dataset_download <- shiny::downloadHandler(
-      filename = "download_dataset.csv",
-      content = function(file) {
-        utils::write.csv(rvs_dataset(), file)
-      }
-    )
+    
     
     ###### UPDATE INPUTS ----------------------------------------------------------------------
     
@@ -276,6 +267,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     })
     
     data_set_filtrato_intermedio <- reactive({
+      req(input$main_dataset_rows_all)
       switch (input$outldet_method,
               "Boxplot" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
                 dplyr::mutate(outlier = is_outlier1(.data[[input$variable]], input$k_iqr_range, input$outl_type)),
@@ -310,8 +302,6 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     })
     
     ###### OUTPUTS ----------------------------------------------------------------------
-    
-    
     output$main_dataset <- DT::renderDT({
       validate(need(input$variable, "Please provide a valid dataset."))
       req(input$variable)
@@ -395,9 +385,13 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     # plot boxplot or scatter plot
     
     output$plot1 <- renderPlot({
+      
       # requires a facet variable to plot
       validate(need(input$variable, "Please provide a valid dataset."))
       req(input$variable)
+      # requires the total table to be loaded
+      req(input$main_dataset_rows_all)
+      
       
       if (input$outldet_method == "Boxplot") {
         if(input$facetwrap != "NULL"){
@@ -497,10 +491,10 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
           ggplot2::geom_point(data = data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE,], color = 'red', na.rm = TRUE)
       }
       
-
-      #plot download function
+      
+      # plot download function
       output$plot_download <- shiny::downloadHandler(
-        filename = "plot.png",
+        filename =  filename = gsub(" |:|-", "", paste("preprocessing_plot", Sys.time()) ),
         content = function(file) {
           ggplot2::ggsave(
             file,
@@ -513,11 +507,10 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         }
       )
       
+      # plot to return in the ui
       plot
       
     })
-    
-  
     
     ###### MODAL and PROCESS ----------------------------------------------------------------------
     # function for dialog box when clicking on replace with NAs button
@@ -530,8 +523,8 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         title = "Replace outliers with NAs",
         shiny::HTML("<strong style='color:red;' >WARNING: </strong> after replacing outliers with NAs, the current dataset will be overwritten. Continue?"),
         footer = tagList(
-          actionButton(ns("no"), "Dismiss"),
-          actionButton(ns("yes"),"Confirm", class = "btn btn-danger")
+          modalButton("Dismiss"),
+          actionButton(ns("yes"),"Confirm", class = "btn btn-danger", icon = icon("warning"))
         )
       )
     }
@@ -539,10 +532,6 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     observeEvent(input$replace_outliers_button,{
       # ask users if they want to replace outliers
       shiny::showModal(modal_confirm())
-    })
-    
-    observeEvent(input$no,{
-      shiny::removeModal()
     })
     
     # Define the ReactiveValue to return : "toReturn"

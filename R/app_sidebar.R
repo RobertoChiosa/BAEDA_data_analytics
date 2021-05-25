@@ -6,7 +6,8 @@ sidebar <- shinydashboard::dashboardSidebar(
     shiny::tagList(
       shiny::selectInput(  "dataframe",  "Dataframe:", choices = c("None")),
       shiny::actionButton( "upload",     "Upload a new dataframe", icon = icon("plus"), width = "87%", class = "btn-success")
-      #shiny::actionButton( "add_calendar_columns", "  Add calendar variables", icon = icon("calendar-alt"), width = "87%"),
+      # shiny::downloadButton( "download",   "download", icon = icon("download"), 
+      #                        style = "class: btn btn-default action-button; width:100%; padding-left:20px; padding-right:10px; ")
     ),
     shinydashboard::menuItem( "Wrangling",         tabName = "manage",         icon = icon("database") ),   # wrangling but in code called manage
     shinydashboard::menuItem( "Pre-processing",    tabName = "preprocessing",  icon = icon("cogs") ),  
