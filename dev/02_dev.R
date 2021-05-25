@@ -30,9 +30,6 @@ usethis::use_package( "magrittr" )          # pipe operator
 usethis::use_package( "simputation" )       # NA imputation with cart
 usethis::use_package( "imputeTS" )          # NA imputation
 
-
-
-
 usethis::use_package( "dplyr" )
 usethis::use_package( "plyr" )
 usethis::use_package( "lubridate" )         # work with dates and time

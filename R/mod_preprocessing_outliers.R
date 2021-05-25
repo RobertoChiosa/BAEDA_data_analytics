@@ -52,31 +52,16 @@ mod_preprocessing_outliers_ui_input <- function(id) {
                     # "Method2",
                     # "Method3",
                     # "Majority Voting 2/3"
-                    )
+        )
       ),
       shiny::selectInput(ns("variable"), 'Select variable (numeric)', choices = NULL),
+      
       # parameters for boxplot
       shiny::conditionalPanel(
         condition = sprintf("input['%s']=='Boxplot'", ns('outldet_method')),
         
-        column(
-          width = 10,
-          style = "padding-left:0px; padding-right:5px;",
-          shiny::selectInput(ns("facetwrap"), 'Select the facet variable (factor)', choices = NULL)
-        ),
-        column(width = 2,
-               style = "padding-left:0px; padding-right:0px;",
-               shinyjs::disabled(
-                 shiny::actionButton(
-                   ns("plot_preview"),
-                   label = "Plot",
-                   style = "margin-top: 25px;",
-                   icon = icon("refresh"),
-                   class = "btn-success",
-                   width = "100%"
-                 )
-               )
-        ), 
+        shiny::selectInput(ns("facetwrap"), 'Select the facet variable (factor)', choices = NULL),
+        
         shiny::selectInput(
           ns("outl_type"),
           'Select the outlier type to show in "Outliers Table"',
@@ -96,6 +81,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
           step = 0.1
         )
       ),
+      
       # parameters for Method2
       #simple outlier detection parameters, to replace with the parameters needed for the selected outliers detection function, such as iqr range for boxplots
       shiny::conditionalPanel(
@@ -110,6 +96,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
           step = 0.5
         )
       ),
+      
       # parameters for Method3
       shiny::conditionalPanel(
         condition = sprintf("input['%s']=='Method3'", ns('outldet_method')),
@@ -123,6 +110,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
           step = 0.5
         )
       ), 
+      
       # parameters for majority voting
       shiny::conditionalPanel(
         condition = sprintf("input['%s']=='Majority Voting 2/3'", ns('outldet_method')),
@@ -187,10 +175,10 @@ mod_preprocessing_outliers_ui_output <- function(id) {
     shiny::conditionalPanel( condition = sprintf("input['%s']!='Majority Voting 2/3'", ns('outldet_method')),
                              shinyWidgets::dropdownButton( size = "sm",
                                                            tags$h4("Graphical parameters"),
-                                                           shiny::checkboxInput(ns("n_obs"), 'Show boxplot stats', value = FALSE),
-                                                           numericInput(ns('plot_fontsize'), label = 'Font size:', value = 11, step = 1),
-                                                           numericInput(ns('plot_dl_width'), label = 'Width of plot to be downloaded (px):', value = 1500, step = 10),
-                                                           numericInput(ns('plot_dl_height'), label = 'Height of plot to be downloaded (px):', value = 500, step = 10),
+                                                           shiny::checkboxInput(ns("n_obs"),   label = 'Show boxplot stats', value = FALSE),
+                                                           numericInput(ns('plot_fontsize'),   label = 'Font size:', value = 12, step = 1),
+                                                           numericInput(ns('plot_dl_width'),   label = 'Width of plot to be downloaded (px):', value = 700, step = 10),
+                                                           numericInput(ns('plot_dl_height'),  label = 'Height of plot to be downloaded (px):', value = 500, step = 10),
                                                            div(style="display:left-align;float:left ;width:100%;text-align: left;", shiny::downloadButton(ns("plot_download"),"Download plot")),
                                                            circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
                                                            tooltip = shinyWidgets::tooltipOptions(title = "Click to modify or download plot")
@@ -199,7 +187,7 @@ mod_preprocessing_outliers_ui_output <- function(id) {
     ),
     tabsetPanel(
       tabPanel("Main dataset",   br(), shinycssloaders::withSpinner( DT::dataTableOutput(ns("main_dataset")))  ),
-      tabPanel("Outliers table", br(), shinycssloaders::withSpinner( shiny::verbatimTextOutput(ns("outl_percent"))),  br(), shinycssloaders::withSpinner(DT::dataTableOutput(ns("outliers_table"))))
+      tabPanel("Outliers table", br(), shinycssloaders::withSpinner(     shiny::htmlOutput( ns("outl_percent")) ),  br(), shinycssloaders::withSpinner(DT::dataTableOutput(ns("outliers_table"))))
     )
   )
 }
@@ -228,8 +216,6 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     observe({
       req( !is.null(infile())  )
       
-      shinyjs::enable("replace_outliers_button")
-      shinyjs::enable("plot_preview")
       
       # updates dataset variables selection depending on the current dataset
       variable_choices <- colnames(rvs_dataset())[sapply(rvs_dataset(), is.numeric)]
@@ -241,14 +227,16 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       updateSelectInput(session, "facetwrap4", choices = facet_choices)
       updateSelectInput(session, "graphx2",    choices = graphx_choices)
       updateSelectInput(session, "graphx3",    choices = graphx_choices)
+      
+      
+      # only if breview has been clicked we enable cleaning
+      req(input$variable)
+      shinyjs::enable("replace_outliers_button")
     })
     
     ###### WARNINGS ----------------------------------------------------------------------
-
-    # give feedback about inputs
+    
     observeEvent(input$k_iqr_range, {
-      # hide previous feedback if any
-      shinyFeedback::hideFeedback("k_iqr_range")
       # give feedback depending on the k_iqr_range
       if (input$k_iqr_range < 1.5) {
         shinyFeedback::showFeedbackWarning("k_iqr_range",
@@ -257,12 +245,13 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       else if (input$k_iqr_range > 3) {
         shinyFeedback::showFeedbackWarning("k_iqr_range",
                                            "Very high IQR multpliers may result in extremely low numbers of outliers detected!")
+      } else {
+        # hide previous feedback if any
+        shinyFeedback::hideFeedback("k_iqr_range")
       }
     })
     
     observeEvent(input$k_iqr_range4, {
-      # hide previous feedback if any
-      shinyFeedback::hideFeedback("k_iqr_range4")
       # give feedback depending on the k_iqr_range
       if (input$k_iqr_range4 < 1.5) {
         shinyFeedback::showFeedbackWarning("k_iqr_range4",
@@ -271,86 +260,61 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       else if (input$k_iqr_range4 > 3) {
         shinyFeedback::showFeedbackWarning("k_iqr_range4",
                                            "Very high IQR multipliers may result in extremely low numbers of outliers detected!")
+      } else {
+        # hide previous feedback if any
+        shinyFeedback::hideFeedback("k_iqr_range4")
       }
     })
-  
+    
     ###### INTERNAL DATASET DEFINITIONS----------------------------------------------------------------------
     
-    # this is defined internally
-    data_set_filtrato_iniziale <- reactive(
+    # input dataset grouped by facet wrap and with row nmber
+    data_set_filtrato_iniziale <- reactive({
       rvs_dataset() %>%
         dplyr::mutate(rownumber=row_number()) %>%
         dplyr::group_by_(input$facetwrap) 
-    )
+    })
     
-    data_set_filtrato_intermedio <- reactive(
-      
-      # switch (input$outldet_method,
-      #         "Boxplot" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-      #           dplyr::mutate(outlier = is_outlier1(.data[[input$variable]], input$k_iqr_range, input$outl_type)),
-      #         "Method2" =  data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-      #           dplyr::mutate(outlier = is_outlier2(.data[[input$variable]], input$limit_cond_2)),
-      #         "Method3" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-      #           dplyr::mutate(outlier = is_outlier3(.data[[input$variable]], input$limit_cond_3)),
-      #         "Majority Voting 2/3" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-      #           dplyr::mutate(outlier1 = is_outlier1(.data[[input$variable]], input$k_iqr_range4, input$outl_type4)) %>%
-      #           dplyr::mutate(outlier2 = is_outlier2(.data[[input$variable]], input$limit_cond_4_2)) %>%
-      #           dplyr::mutate(outlier3 = is_outlier3(.data[[input$variable]], input$limit_cond_4_3))
-      # )
-      
-      
-      if(input$outldet_method=="Boxplot"){
-        data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-          dplyr::mutate(outlier = is_outlier1(.data[[input$variable]], input$k_iqr_range, input$outl_type))
-      }
-      else{
-        if(input$outldet_method=="Method2"){
-          data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-            dplyr::mutate(outlier = is_outlier2(.data[[input$variable]], input$limit_cond_2))
-        }
-        else{
-          if(input$outldet_method=="Method3"){
-            data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
-              dplyr::mutate(outlier = is_outlier3(.data[[input$variable]], input$limit_cond_3))
-          }
-          else{
-            if(input$outldet_method=="Majority Voting 2/3"){
-              data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+    data_set_filtrato_intermedio <- reactive({
+      switch (input$outldet_method,
+              "Boxplot" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+                dplyr::mutate(outlier = is_outlier1(.data[[input$variable]], input$k_iqr_range, input$outl_type)),
+              "Method2" =  data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+                dplyr::mutate(outlier = is_outlier2(.data[[input$variable]], input$limit_cond_2)),
+              "Method3" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
+                dplyr::mutate(outlier = is_outlier3(.data[[input$variable]], input$limit_cond_3)),
+              "Majority Voting 2/3" = data_set_filtrato_iniziale()[input$main_dataset_rows_all,] %>%
                 dplyr::mutate(outlier1 = is_outlier1(.data[[input$variable]], input$k_iqr_range4, input$outl_type4)) %>%
                 dplyr::mutate(outlier2 = is_outlier2(.data[[input$variable]], input$limit_cond_4_2)) %>%
                 dplyr::mutate(outlier3 = is_outlier3(.data[[input$variable]], input$limit_cond_4_3))
-            }
-          }}}
-    )
+      )
+    })
     
-    
-    data_set_filtrato_intermedio_norownumbers <- reactive(
+    data_set_filtrato_intermedio_norownumbers <- reactive({
       data_set_filtrato_intermedio() %>%
         select(-rownumber)
-    )
+    })
     
-    
-    percent <- reactive(
+    percent <- reactive({
       if(input$outldet_method!="Majority Voting 2/3"){
-        nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE & !is.na(data_set_filtrato_intermedio()$outlier),])/nrow(data_set_filtrato_intermedio())*100
+        res <- nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE & !is.na(data_set_filtrato_intermedio()$outlier),])/nrow(data_set_filtrato_intermedio())*100
       }
       else{
-        (nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2),])+
-           nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])+
-           nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])-
-           2* nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),]))/nrow(data_set_filtrato_intermedio())*100
+        res <- (nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2),])+
+                  nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])+
+                  nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),])-
+                  2* nrow(data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier1 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier1) & data_set_filtrato_intermedio()$outlier2 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier2) & data_set_filtrato_intermedio()$outlier3 == TRUE & !is.na(data_set_filtrato_intermedio()$outlier3),]))/nrow(data_set_filtrato_intermedio())*100
       }
-    )
+      
+      round(res,2)
+    })
     
     ###### OUTPUTS ----------------------------------------------------------------------
     
     
-    output$outl_percent <- renderPrint({
-      sprintf("The percentage of outliers in the selected portion of the dataset is %f%%", percent())
-    }
-    )
     output$main_dataset <- DT::renderDT({
-      req(input$facetwrap)
+      validate(need(input$variable, "Please provide a valid dataset."))
+      req(input$variable)
       DT::datatable(rvs_dataset(),
                     selection = "none",
                     rownames = FALSE,
@@ -382,7 +346,16 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       )
     })
     
+    output$outl_percent <- renderText({
+      validate(need(input$variable, "Please provide a valid dataset."))
+      req(input$variable)
+      
+      paste("The percentage of outliers in the selected portion of the dataset is <code>",  percent(),  "%</code>")
+    })
+    
     output$outliers_table <- DT::renderDT({
+      
+      req(input$variable)
       DT::datatable(
         if(input$outldet_method!="Majority Voting 2/3"){
           dplyr::filter(data_set_filtrato_intermedio_norownumbers(), outlier == TRUE)}
@@ -420,11 +393,15 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     })
     
     # plot boxplot or scatter plot
-    # reactive in order to permit download
-    plotdata <- reactive(
-      if(input$outldet_method == "Boxplot"){
+    
+    output$plot1 <- renderPlot({
+      # requires a facet variable to plot
+      validate(need(input$variable, "Please provide a valid dataset."))
+      req(input$variable)
+      
+      if (input$outldet_method == "Boxplot") {
         if(input$facetwrap != "NULL"){
-          ggplot2::ggplot(
+          plot <- ggplot2::ggplot(
             data = data_set_filtrato_intermedio(), 
             ggplot2::aes_string(
               x = input$facetwrap,
@@ -433,16 +410,18 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
               fill = input$facetwrap
             )
           ) +
+            # adds error bars
             stat_boxplot(geom ='errorbar', 
                          coef = input$k_iqr_range,
                          width = 0.6,
-                         na.rm = TRUE ) + # adds error bars
+                         na.rm = TRUE ) + 
+            # adds box plot
             ggplot2::geom_boxplot(
               coef = input$k_iqr_range,
               width = 0.6,
               na.rm = TRUE # fixes Warning: Removed N rows containing non-finite values (stat_boxplot).
             ) +
-            {
+            { # adds summary
               if ( input$n_obs==TRUE){
                 ggplot2::stat_summary(fun.data = n_fun1, geom = "text", na.rm = TRUE, hjust=0.5, vjust=1)
               }
@@ -456,17 +435,17 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
             theme(legend.position = "none",
                   panel.grid = element_blank(),
                   axis.ticks.x = element_blank(),
-                  axis.title=element_text(size=input$plot_fontsize),
-                  axis.text.x = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")),
-                  axis.text.y = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")))
+                  axis.title  = element_text(size = input$plot_fontsize),
+                  axis.text.x = element_text(size = input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")),
+                  axis.text.y = element_text(size = input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")))
         }
         else{
-          ggplot2::ggplot(
+          plot <- ggplot2::ggplot(
             data = data_set_filtrato_intermedio(),
             ggplot2::aes_string(
               y = input$variable
             )
-          )+
+          ) +
             stat_boxplot(geom ='errorbar', 
                          coef = input$k_iqr_range,
                          width = 0.6,
@@ -496,46 +475,49 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
                   axis.text.x = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")),
                   axis.text.y = element_text(size=input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")))
         }
+        
+      } else  if (input$outldet_method == "Method2") {
+        plot <- ggplot2::ggplot(data_set_filtrato_intermedio(), 
+                                ggplot2::aes_string(
+                                  x = input$graphx2,
+                                  y = input$variable
+                                )
+        ) +
+          ggplot2::geom_point(na.rm = TRUE)+
+          ggplot2::geom_point(data = data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE,], color = 'red', na.rm = TRUE)
+        
+      } else  if (input$outldet_method == "Method3") {
+        plot <- ggplot2::ggplot(data_set_filtrato_intermedio(), 
+                                ggplot2::aes_string(
+                                  x = input$graphx3,
+                                  y = input$variable
+                                )
+        ) +
+          ggplot2::geom_point(na.rm = TRUE)+
+          ggplot2::geom_point(data = data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE,], color = 'red', na.rm = TRUE)
       }
-      else{
-        if(input$outldet_method == "Method2"){
-          ggplot2::ggplot(data_set_filtrato_intermedio(), 
-                          ggplot2::aes_string(
-                            x = input$graphx2,
-                            y = input$variable
-                          )
-          ) +
-            ggplot2::geom_point(na.rm = TRUE)+
-            ggplot2::geom_point(data = data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE,], color = 'red', na.rm = TRUE)
+      
+
+      #plot download function
+      output$plot_download <- shiny::downloadHandler(
+        filename = "plot.png",
+        content = function(file) {
+          ggplot2::ggsave(
+            file,
+            device = png,
+            plot = plot,
+            width = input$plot_dl_width,
+            height = input$plot_dl_height,
+            limitsize = FALSE
+          )
         }
-        else{
-          if(input$outldet_method == "Method3"){
-            ggplot2::ggplot(data_set_filtrato_intermedio(), 
-                            ggplot2::aes_string(
-                              x = input$graphx3,
-                              y = input$variable
-                            )
-            ) +
-              ggplot2::geom_point(na.rm = TRUE)+
-              ggplot2::geom_point(data = data_set_filtrato_intermedio()[data_set_filtrato_intermedio()$outlier == TRUE,], color = 'red', na.rm = TRUE)
-          }
-        }
-      }
-    )
-    
-    output$plot1 <- renderPlot({
-      req(input$facetwrap)
-      plotdata()
+      )
+      
+      plot
+      
     })
     
-    
-    #plot download function
-    output$plot_download <- shiny::downloadHandler(
-      filename = "plot.png",
-      content = function(file){
-        ggplot2::ggsave(file, device = png, plot = plotdata(), width=input$plot_dl_width, height=input$plot_dl_height, limitsize=FALSE)
-      }
-    )
+  
     
     ###### MODAL and PROCESS ----------------------------------------------------------------------
     # function for dialog box when clicking on replace with NAs button

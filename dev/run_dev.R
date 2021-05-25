@@ -7,7 +7,7 @@ rm(list=ls(all.names = TRUE))
  
 # usethis::use_pkgdown()
 # pkgdown::clean_site()
-pkgdown::build_site()
+# pkgdown::build_site()
 # pkgdown::build_home()
 # Document and reload your package
 golem::document_and_reload() 
