@@ -43,8 +43,17 @@ mod_preprocessing_outliers_ui_input <- function(id) {
   
   shiny::tagList(
     box(
-      solidHeader = T, collapsible = T, collapsed = FALSE, width = 12,
-      title = "Outliers identification", status = "primary",
+      solidHeader = T,
+      collapsible = T,
+      collapsed = FALSE,
+      width = 12,
+      title = "Outliers identification",
+      status = "primary",
+      
+      ###### METHOD SELECTION----------------------------------------------------------------------
+      # permits to select different kind of outlier detection methods
+      # actually implemented:
+      # - Inter-quartile method
       shiny::selectInput(
         ns("outldet_method"),
         'Select outlier detection method',
@@ -54,14 +63,21 @@ mod_preprocessing_outliers_ui_input <- function(id) {
                     # "Majority Voting 2/3"
         )
       ),
+      # the variable selection depends on the loaded dataset,  updated in server side
       shiny::selectInput(ns("variable"), 'Select variable (numeric)', choices = NULL),
       
-      # parameters for boxplot
-      shiny::conditionalPanel(
+      ###### IQR METHOD----------------------------------------------------------------------
+      # options for this method are displayed
+      shiny::conditionalPanel( 
         condition = sprintf("input['%s']=='Boxplot'", ns('outldet_method')),
         
+        # this is the variable used on the x axes of the boxplot to divide the visualization and 
+        # detection on a categorical variable, updated on server side 
         shiny::selectInput(ns("facetwrap"), 'Select the facet variable (factor)', choices = NULL),
         
+        # we give the possibility to select all/upper/lower bound outliers, as well as the k multiplier
+        # that is used to define outliers. 
+        # *we can add the possibility to chose a data transformation to retreive outliers on different scale
         shiny::selectInput(
           ns("outl_type"),
           'Select the outlier type to show in "Outliers Table"',
@@ -82,6 +98,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
         )
       ),
       
+      ######  METHOD 2 (NOT DEFINED)----------------------------------------------------------------------
       # parameters for Method2
       #simple outlier detection parameters, to replace with the parameters needed for the selected outliers detection function, such as iqr range for boxplots
       shiny::conditionalPanel(
@@ -97,6 +114,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
         )
       ),
       
+      ######  METHOD 3 (NOT DEFINED)----------------------------------------------------------------------
       # parameters for Method3
       shiny::conditionalPanel(
         condition = sprintf("input['%s']=='Method3'", ns('outldet_method')),
@@ -111,6 +129,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
         )
       ), 
       
+      ######  MAJORITY VOTING (NOT DEFINED) ----------------------------------------------------------------------
       # parameters for majority voting
       shiny::conditionalPanel(
         condition = sprintf("input['%s']=='Majority Voting 2/3'", ns('outldet_method')),
@@ -169,22 +188,42 @@ mod_preprocessing_outliers_ui_input <- function(id) {
 mod_preprocessing_outliers_ui_output <- function(id) {
   ns <- NS(id)
   tagList(
-    shiny::conditionalPanel( condition = sprintf("input['%s']!='Majority Voting 2/3'", ns('outldet_method')),
-                             shinyWidgets::dropdownButton( size = "sm",
-                                                           tags$h4("Graphical parameters"),
-                                                           shiny::checkboxInput(ns("n_obs"),   label = 'Show boxplot stats', value = FALSE),
-                                                           numericInput(ns('plot_fontsize'),   label = 'Font size:', value = 12, step = 1),
-                                                           numericInput(ns('plot_dl_width'),   label = 'Width of plot to be downloaded (px):', value = 700, step = 10),
-                                                           numericInput(ns('plot_dl_height'),  label = 'Height of plot to be downloaded (px):', value = 500, step = 10),
-                                                           div(style="display:left-align;float:left ;width:100%;text-align: left;", shiny::downloadButton(ns("plot_download"),"Download plot")),
-                                                           circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
-                                                           tooltip = shinyWidgets::tooltipOptions(title = "Click to modify or download plot")
-                             ),
-                             shinycssloaders::withSpinner(shiny::plotOutput(ns("plot1")))
+    shiny::conditionalPanel(
+      condition = sprintf("input['%s']!='Majority Voting 2/3'", ns('outldet_method')),
+      # this button gives the possibility to modify plot parameters like
+      # - fontsize
+      # - width height of downloaded plot
+      shinyWidgets::dropdownButton(
+        size = "sm",
+        circle = TRUE,
+        status = "primary",
+        icon = icon("gear"),
+        width = "400px",
+        tooltip = shinyWidgets::tooltipOptions(title = "Click to modify or download plot"),
+        tags$h4("Graphical parameters"),
+        shiny::checkboxInput(ns("n_obs"),   label = 'Show boxplot stats', value = FALSE),
+        numericInput( ns('plot_fontsize'),  label = 'Font size:', value = 12, step = 1 ),
+        numericInput( ns('plot_dl_width'),  label = 'Width of plot to be downloaded (px):',  value = 700, step = 10 ),
+        numericInput( ns('plot_dl_height'), label = 'Height of plot to be downloaded (px):', value = 500, step = 10 ),
+        div(style = "display:left-align;float:left ;width:100%;text-align: left;", 
+            shiny::downloadButton(ns("plot_download"), "Download plot")
+        )
+      ),
+      shinycssloaders::withSpinner(shiny::plotOutput(ns("plot1")))
     ),
     tabsetPanel(
-      tabPanel("Main dataset",   br(), shinycssloaders::withSpinner( DT::dataTableOutput(ns("main_dataset")))  ),
-      tabPanel("Outliers table", br(), shinycssloaders::withSpinner(     shiny::htmlOutput( ns("outl_percent")) ),  br(), shinycssloaders::withSpinner(DT::dataTableOutput(ns("outliers_table"))))
+      tabPanel(
+        "Main dataset", # table representation of the original dataset
+        br(),
+        shinycssloaders::withSpinner(DT::dataTableOutput(ns("main_dataset")))
+      ),
+      tabPanel(
+        "Outliers table", # table representing the identified outliers through the selected method
+        br(),
+        shinycssloaders::withSpinner(shiny::htmlOutput(ns("outl_percent"))),
+        br(),
+        shinycssloaders::withSpinner(DT::dataTableOutput(ns("outliers_table")))
+      )
     )
   )
 }
@@ -198,15 +237,11 @@ mod_preprocessing_outliers_ui_output <- function(id) {
 mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    
-    
-    
+
     ###### UPDATE INPUTS ----------------------------------------------------------------------
-    
-    # Update selectInput according to dataset in input
+    # Update selectInput according to dataset in input. It requires at least one dataframe has been loaded 
     observe({
       req( !is.null(infile())  )
-      
       
       # updates dataset variables selection depending on the current dataset
       variable_choices <- colnames(rvs_dataset())[sapply(rvs_dataset(), is.numeric)]
@@ -219,14 +254,13 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       updateSelectInput(session, "graphx2",    choices = graphx_choices)
       updateSelectInput(session, "graphx3",    choices = graphx_choices)
       
-      
-      # only if breview has been clicked we enable cleaning
+      # waits variables to be loaded
       req(input$variable)
       shinyjs::enable("replace_outliers_button")
     })
     
     ###### WARNINGS ----------------------------------------------------------------------
-    
+    # various validations and warnings on user inputs
     observeEvent(input$k_iqr_range, {
       # give feedback depending on the k_iqr_range
       if (input$k_iqr_range < 1.5) {
@@ -300,51 +334,59 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       
       round(res,2)
     })
+
     
     ###### OUTPUTS ----------------------------------------------------------------------
+    # this list provides the datatable options used, just modify this list to modify all visualizations
+    DT_table_options_list <- list(selection = "none",
+                                  rownames = FALSE,
+                                  style = "bootstrap",
+                                  filter = "top", #fbox
+                                  escape = FALSE,
+                                  ## must use fillContainer = FALSE to address
+                                  ## see https://github.com/rstudio/DT/issues/367
+                                  ## https://github.com/rstudio/DT/issues/379
+                                  fillContainer = FALSE,
+                                  ## works with client-side processing
+                                  extensions = "KeyTable",
+                                  options = list(
+                                    keys = TRUE,
+                                    autoWidth = FALSE, # permits to adapt the columns to the width of the box
+                                    scrollX = 500, # permits to scroll along x
+                                    search = list(regex = TRUE),
+                                    columnDefs = list(
+                                      list(
+                                        orderSequence = c("desc", "asc"),
+                                        targets = "_all"
+                                      ),
+                                      list(className = "dt-center", targets = "_all")
+                                    ),
+                                    processing = FALSE,
+                                    pageLength = 10,
+                                    lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
+                                  )
+    )
+    
+    
     output$main_dataset <- DT::renderDT({
+      # validation: if no variable selected, no table to be displayed
       validate(need(input$variable, "Please provide a valid dataset."))
       req(input$variable)
-      DT::datatable(rvs_dataset(),
-                    selection = "none",
-                    rownames = FALSE,
-                    style = "bootstrap",
-                    filter = "top", #fbox
-                    escape = FALSE,
-                    ## must use fillContainer = FALSE to address
-                    ## see https://github.com/rstudio/DT/issues/367
-                    ## https://github.com/rstudio/DT/issues/379
-                    fillContainer = FALSE,
-                    ## works with client-side processing
-                    extensions = "KeyTable",
-                    options = list(
-                      keys = TRUE,
-                      autoWidth = FALSE, # permits to adapt the columns to the width of the box
-                      scrollX = 500, # permits to scroll along x
-                      search = list(regex = TRUE),
-                      columnDefs = list(
-                        list(
-                          orderSequence = c("desc", "asc"),
-                          targets = "_all"
-                        ),
-                        list(className = "dt-center", targets = "_all")
-                      ),
-                      processing = FALSE,
-                      pageLength = 10,
-                      lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
-                    )
-      )
+      # table of the original dataset
+      DT::datatable(rvs_dataset(), DT_table_options_list )
     })
     
+   
     output$outl_percent <- renderText({
+      # validation: if no variable selected, no string to be displayed
       validate(need(input$variable, "Please provide a valid dataset."))
       req(input$variable)
-      
       paste("The percentage of outliers in the selected portion of the dataset is <code>",  percent(),  "%</code>")
     })
     
     output$outliers_table <- DT::renderDT({
       
+      # validation: if no variable selected, no plot to be plotted
       req(input$variable)
       DT::datatable(
         if(input$outldet_method!="Majority Voting 2/3"){
@@ -352,41 +394,14 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         else{
           dplyr::filter(data_set_filtrato_intermedio_norownumbers(), (outlier1 == TRUE & outlier2 == TRUE) | (outlier2 == TRUE & outlier3 == TRUE) | (outlier1 == TRUE & outlier3 == TRUE))
         },
-        selection = "none",
-        rownames = FALSE,
-        style = "bootstrap",
-        # filter = "top", #fbox
-        escape = FALSE,
-        ## must use fillContainer = FALSE to address
-        ## see https://github.com/rstudio/DT/issues/367
-        ## https://github.com/rstudio/DT/issues/379
-        fillContainer = FALSE,
-        ## works with client-side processing
-        extensions = "KeyTable",
-        options = list(
-          keys = TRUE,
-          autoWidth = FALSE, # permits to adapt the columns to the width of the box
-          scrollX = 500, # permits to scroll along x
-          search = list(regex = TRUE),
-          columnDefs = list(
-            list(
-              orderSequence = c("desc", "asc"),
-              targets = "_all"
-            ),
-            list(className = "dt-center", targets = "_all")
-          ),
-          processing = FALSE,
-          pageLength = 10,
-          lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
-        )
+        DT_table_options_list 
       )
     })
     
-    # plot boxplot or scatter plot
+    # plot boxplot or scatter plot in the ain frame
     
     output$plot1 <- renderPlot({
-      
-      # requires a facet variable to plot
+      # validation: if no variable selected, no plot to be plotted
       validate(need(input$variable, "Please provide a valid dataset."))
       req(input$variable)
       # requires the total table to be loaded
@@ -433,7 +448,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
                   axis.text.x = element_text(size = input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")),
                   axis.text.y = element_text(size = input$plot_fontsize, margin = unit(c(0.3,0.3,0.3,0.3), "cm")))
         }
-        else{
+        else{ # does not exists a facet wrap variable
           plot <- ggplot2::ggplot(
             data = data_set_filtrato_intermedio(),
             ggplot2::aes_string(
@@ -492,9 +507,9 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       }
       
       
-      # plot download function
+      # download plot function in the gear button
       output$plot_download <- shiny::downloadHandler(
-        filename =  filename = gsub(" |:|-", "", paste("preprocessing_plot", Sys.time()) ),
+        filename = gsub(" |:|-", "", paste("preprocessing_plot", Sys.time()) ),
         content = function(file) {
           ggplot2::ggsave(
             file,
@@ -523,28 +538,28 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         title = "Replace outliers with NAs",
         shiny::HTML("<strong style='color:red;' >WARNING: </strong> after replacing outliers with NAs, the current dataset will be overwritten. Continue?"),
         footer = tagList(
-          modalButton("Dismiss"),
+          modalButton("Dismiss"), # default button for modal
           actionButton(ns("yes"),"Confirm", class = "btn btn-danger", icon = icon("warning"))
         )
       )
     }
     
+    # when the user press the replace button open modal asxing to confirm
     observeEvent(input$replace_outliers_button,{
-      # ask users if they want to replace outliers
       shiny::showModal(modal_confirm())
     })
     
     # Define the ReactiveValue to return : "toReturn"
-    # with slots "rvs_dataset" & "trigger"
+    # with slots "dataset" & "trigger"
     toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
-    
     
     observeEvent(input$yes,{
       
       # notification of process
-      id <- showNotification("Performing cleaning...", duration = NULL, closeButton = FALSE, type = "message")
+      id <- showNotification("Replacing outliers...", duration = NULL, closeButton = FALSE, type = "message")
       on.exit(removeNotification(id), add = TRUE)
       
+      # remove modal when confirm pressed
       shiny::removeModal()
       
       # find in the intermediate dataframe the rows corresponding to outliers
@@ -563,6 +578,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         dplyr::mutate(rownumber = row_number()) %>%
         dplyr::mutate(!!input$variable := ifelse(rownumber %in%  rows_outliers$rownumber, NA, .data[[input$variable]])) %>%
         dplyr::select(-rownumber)
+      
       # update trigger for the external environment
       toReturn$trigger <- toReturn$trigger +1
       
