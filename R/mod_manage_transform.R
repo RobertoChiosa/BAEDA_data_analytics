@@ -56,7 +56,6 @@ mod_manage_transform_ui <- function(id) {
           "Bin",
           "Normalize",
           "Remove/reorder levels", 
-          "Rename",
           "Summarize",
           "Transform"
         ),
@@ -114,7 +113,10 @@ mod_manage_transform_ui <- function(id) {
                                shiny::selectInput(
                                  inputId = ns("normalization_type"),
                                  label = "Chose normalization type",
-                                 choices = c("Z-Score" = "zscore")
+                                 choices = c("Z-Score"         = "zscore",
+                                             "Min-Max Scaling" = "minmax_scaling",
+                                             "Max Scaling"     = "max_scaling"
+                                             )
                                )
       ),
       ###### REMOVE/REORDER LEVELS ----------------------------------------------------------------------
@@ -127,10 +129,6 @@ mod_manage_transform_ui <- function(id) {
                                  multiple = TRUE,
                                  width = "100%"
                                ),
-      ),
-      ###### RENAME ----------------------------------------------------------------------
-      shiny::conditionalPanel( condition = sprintf("input['%s'] == 'Rename' ", ns('transformation') ),
-                               
       ),
       ###### SUMMARIZE ----------------------------------------------------------------------
       shiny::conditionalPanel( condition = sprintf("input['%s'] == 'Summarize' ", ns('transformation') ),
@@ -212,9 +210,17 @@ mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
     # update the preview accordincìg to the type of transformation
     
     observeEvent(input$actual_name, {
-      req( !is.null(infile())  )
+      req( !is.null(infile()), input$actual_name != ""  )
       
       updateTextInput(session, "new_name", value = input$actual_name)
+      
+      if (is.factor(rvs_dataset()[, input$actual_name])) {
+        updateSelectInput(session, "levels", 
+                          choices = levels(rvs_dataset()[, input$actual_name]),
+                          selected = levels(rvs_dataset()[, input$actual_name])
+        )
+      }
+  
       
       # preview of type conversion ANTE
       # output$type_preview_actual_title <- renderText({
@@ -235,10 +241,9 @@ mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
         
         switch (input$transformation,
                 "Change Type"           = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ), 
-                "Bin"                   = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ), 
+                "Bin"                   = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), list(~ bins(., n = input$number_bins) ) )[, input$actual_name]  ), 
                 "Normalize"             = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$normalization_type)[, input$actual_name]  ), 
-                "Remove/reorder levels" = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ), 
-                "Rename"                = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ), 
+                "Remove/reorder levels" = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), list(~ refactor(., levs = input$levels) ))[, input$actual_name]  ), 
                 "Summarize"             = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ), 
                 "Transform"             = variable <- as.data.frame( dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type)[, input$actual_name]  ), 
         )
@@ -261,10 +266,9 @@ mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
       
       switch (input$transformation,
               "Change Type"           = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type),
-              "Bin"                   = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type),
+              "Bin"                   = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), list(~ bins(., n = input$number_bins) )),
               "Normalize"             = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$normalization_type),
-              "Remove/reorder levels" = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type),
-              "Rename"                = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type), 
+              "Remove/reorder levels" = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), list(~ refactor(., levs = input$levels) ) ),
               "Summarize"             = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type), 
               "Transform"             = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type), 
       )

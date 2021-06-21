@@ -72,18 +72,6 @@ app_server <- function( input, output, session ) {
     data_rv[[input$dataframe]] <- data_rename$dataset
   })
   
-  ###### 3.2) change column type
-  data_type <-   mod_manage_manage_changeType_server(id = "manage_manage_changeType_ui_1", 
-                                                     infile = reactive({data_rv_results$infile}), 
-                                                     rvs_dataset = reactive({data_rv[[input$dataframe]]})  
-  )
-  # When applied function (data_rename$trigger change) :
-  #   - Update data_rv[[input$dataframe]] with module output "dataset"
-  observeEvent(data_type$trigger, {
-    req(data_type$trigger > 0) # requires a trigger
-    data_rv[[input$dataframe]] <- data_type$dataset
-  })
-  
   ###### 3.2) Transform column type
   data_transform <-    mod_manage_transform_server(id = "manage_transform_ui_1",
                                                    infile = reactive({data_rv_results$infile}), 

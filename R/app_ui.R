@@ -39,8 +39,7 @@ app_ui <- function(request) {
                            mod_manage_ui_input("manage_ui_1"),
                            # rename column / variable from a dataset
                            mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
-                           # change type
-                           mod_manage_manage_changeType_ui("manage_manage_changeType_ui_1"),
+                           
                            # add column / variable from a dataset
                            mod_manage_addColumn_ui("manage_addColumn_ui_1"),
                            # transform type
