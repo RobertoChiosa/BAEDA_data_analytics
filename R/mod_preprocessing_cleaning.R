@@ -41,27 +41,49 @@ mod_preprocessing_cleaning_ui_input <- function(id){
   ns <- NS(id)
   tagList(
     box(
-      solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
-      title = "NA replacement", status = "primary",
+      solidHeader = T,
+      collapsible = T,
+      collapsed = TRUE,
+      width = 12,
+      title = "NA replacement",
+      status = "primary",
+      
       
       shiny::selectInput(ns("variable"), 'Select variable', choices = NULL),
-      column( width = 10,
+      column(
+        width = 10,
         style = "padding-left:0px; padding-right:5px;",
-          shiny::selectInput(ns("graphx"), 'Select x variable for the plot (POSIXct required)', choices = NULL)
-      ),
-      column( width = 2,
-        style = "padding-left:0px; padding-right:0px;",
-        shinyjs::disabled(
-          shiny::actionButton(
-            ns("plot_preview"),
-            label = "Plot",
-            style = "margin-top: 25px;",
-            icon = icon("refresh"),
-            class = "btn-success",
-            width = "100%"
-          )
+        shiny::selectInput(
+          ns("graphx"),
+          'Select x variable for the plot (POSIXct required)',
+          choices = NULL
         )
       ),
+      
+      column( width = 2,
+              style = "padding-left:0px; padding-right:0px;",
+              shinyjs::disabled(
+                shiny::actionButton(
+                  ns("plot_preview"),
+                  label = "Plot",
+                  style = "margin-top: 25px;",
+                  icon = icon("refresh"),
+                  class = "btn-success",
+                  width = "100%"
+                )
+              )
+      ),
+      ###### METHOD SELECTION----------------------------------------------------------------------
+      # this selector permits to chose among different methods of na imputation
+      # - "Interpolation",
+      # - "Weighted moving average",
+      # - "Global constant",
+      # - "Forward/Backward observation carrying",
+      # - "Seasonal decomposition",
+      # - "Seasonal splitting",
+      # - "Lookup table",
+      # - "Regression tree"
+      # 
       shiny::selectInput(
         ns("imputmethod"),
         'Select the NA imputation method',
@@ -82,77 +104,81 @@ mod_preprocessing_cleaning_ui_input <- function(id){
       shiny::conditionalPanel(
         condition = sprintf("input['%s'] != 'Lookup table' & input['%s'] !='Regression tree'",ns('imputmethod'), ns('imputmethod') ),
         
-        # interpolation inputs
-        shiny::conditionalPanel( condition = sprintf("input['%s'] == 'Interpolation'", ns('imputmethod')),
-                                 shiny::selectInput(
-                                   ns("intmethod"),
-                                   'Select the interpolation algorithm',
-                                   choices = c(
-                                     "Linear interpolation" = "linear",
-                                     "Spline interpolation" = "spline",
-                                     "Stineman algorithm interpolation" = "stine"
-                                   )
-                                 ),
+        ###### INTERPOLATION ----------------------------------------------------------------------
+        shiny::conditionalPanel(
+          condition = sprintf("input['%s'] == 'Interpolation'", ns('imputmethod')),
+          shiny::selectInput(
+            inputId = ns("intmethod"),
+            label = 'Select the interpolation algorithm',
+            choices = c(
+              "Linear interpolation"             = "linear",
+              "Spline interpolation"             = "spline",
+              "Stineman algorithm interpolation" = "stine"
+            )
+          ),
         ),
-        # Weighted moving average
+        ###### WEIGHTED MOOVING AVERAGE ----------------------------------------------------------------------
         shiny::conditionalPanel(
           condition = sprintf("input['%s'] == 'Weighted moving average'", ns('imputmethod')),
-          shiny::selectInput( ns("weighting"), 'Select the weighting to be used',
-                              choices = c(
-                                "Exponential Weighted Moving Average (EWMA)" = "exponential",
-                                "Simple Moving Average (SMA)" = "simple",
-                                "Linear Weighted Moving Average (LWMA)" = "linear"
-                              )
+          shiny::selectInput(
+            inputId = ns("weighting"),
+            label = 'Select the weighting to be used',
+            choices = c(
+              "Exponential Weighted Moving Average (EWMA)" = "exponential",
+              "Simple Moving Average (SMA)" = "simple",
+              "Linear Weighted Moving Average (LWMA)" = "linear"
+            )
           ),
           shiny::numericInput(
-            ns("window_width"),
-            'Width of the moving average window',
+            inputId = ns("window_width"),
+            label = 'Width of the moving average window',
             value = 2,
             min = 1,
             max = 10000,
             step = 1,
             width = '100%'
           ),
-        ),
-        # Global constant
+        ), 
+        ###### GLOBAL CONSTANT ----------------------------------------------------------------------
         shiny::conditionalPanel(
           condition = sprintf("input['%s'] == 'Global constant'", ns('imputmethod')),
-          shiny::selectInput( ns("global_function"), 'Select the function to be used for replacement',
-                              choices = c(
-                                "Mean" = "mean",
-                                "Median" = "median",
-                                "Mode" = "mode"
-                              )
-          ),
-        ),
-        # Forward/Backward observation carrying
-        shiny::conditionalPanel(
-          condition = sprintf(
-            "input['%s'] == 'Forward/Backward observation carrying'",
-            ns('imputmethod')
-          ),
-          shiny::selectInput( ns("option"), 'Select the algorithm to be used',
-                              choices = c(
-                                "Last Observation Carried Forward (LOCF)" = "locf",
-                                "Next Observation Carried Backward (NOCB)" = "nocb"
-                              )
-          ),
           shiny::selectInput(
-            ns("na_remaining"),
-            'Select the method to be used for remaining NAs',
+            inputId = ns("global_function"),
+            label = 'Select the function to be used for replacement',
             choices = c(
-              "Perform LOCF/NOCB from the reverse direction" = "rev",
-              "Return the series with NAs" = "keep",
-              "Replace remaining NAs by overall mean" = "mean"
+              "Mean"   = "mean",
+              "Median" = "median",
+              "Mode"   = "mode"
             )
           ),
-        ),
-        # Seasonal decomposition
+        ), 
+        ###### FORWARD/BACKWARD OBSERVATION CARRIED ----------------------------------------------------------------------
+        shiny::conditionalPanel(
+          condition = sprintf( "input['%s'] == 'Forward/Backward observation carrying'", ns('imputmethod')),
+          shiny::selectInput(
+            inputId = ns("option"),
+            label = 'Select the algorithm to be used',
+            choices = c(
+              "Last Observation Carried Forward (LOCF)" = "locf",
+              "Next Observation Carried Backward (NOCB)" = "nocb"
+            )
+          ),
+          shiny::selectInput(
+            inputId = ns("na_remaining"),
+            label = 'Select the method to be used for remaining NAs',
+            choices = c(
+              "Perform LOCF/NOCB from the reverse direction" = "rev",
+              "Return the series with NAs"                   = "keep",
+              "Replace remaining NAs by overall mean"        = "mean"
+            )
+          ),
+        ), 
+        ###### SEASONAL DECOMPOSITION ----------------------------------------------------------------------
         shiny::conditionalPanel(
           condition = sprintf("input['%s'] == 'Seasonal decomposition'", ns('imputmethod')),
           shiny::selectInput(
-            ns("dec_algorithm"),
-            'Select the algorithm to be used after decomposition',
+            inputId = ns("dec_algorithm"),
+            label = 'Select the algorithm to be used after decomposition',
             choices = c(
               "Interpolation" = "interpolation",
               "Forward/Backward observation carrying" = "locf",
@@ -160,44 +186,47 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               "Weighted moving average" = "ma"
             )
           ),
-          # interpolation
+          
+          # SEASONAL DECOMPOSITION -> INTERPOLATION
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'interpolation'", ns('dec_algorithm')),
             shiny::selectInput(
-              ns("intmethod5"),
-              'Select the interpolation algorithm',
+              inputId = ns("intmethod5"),
+              label = 'Select the interpolation algorithm',
               choices = c(
-                "Linear interpolation" = "linear",
-                "Spline interpolation" = "spline",
+                "Linear interpolation"             = "linear",
+                "Spline interpolation"             = "spline",
                 "Stineman algorithm interpolation" = "stine"
               )
             ),
-          ),
+          ), 
+          # SEASONAL DECOMPOSITION -> LOCF
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'locf'", ns('dec_algorithm')),
             shiny::selectInput(
-              ns("option5"),
-              'Select the algorithm to be used',
+              inputId = ns("option5"),
+              label = 'Select the algorithm to be used',
               choices = c(
-                "Last Observation Carried Forward (LOCF)" = "locf",
+                "Last Observation Carried Forward (LOCF)"  = "locf",
                 "Next Observation Carried Backward (NOCB)" = "nocb"
               )
             ),
             shiny::selectInput(
-              ns("na_remaining5"),
-              'Select the method to be used for remaining NAs',
+              inputId = ns("na_remaining5"),
+              label = 'Select the method to be used for remaining NAs',
               choices = c(
                 "Perform LOCF/NOCB from the reverse direction" = "rev",
-                "Return the series with NAs" = "keep",
-                "Replace remaining NAs by overall mean" = "mean"
+                "Return the series with NAs"                   = "keep",
+                "Replace remaining NAs by overall mean"        = "mean"
               )
             ),
           ),
+          # SEASONAL DECOMPOSITION -> MEAN
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'mean'", ns('dec_algorithm')),
             shiny::selectInput(
-              ns("global_function5"),
-              'Select the function to be used for replacement',
+              inputId = ns("global_function5"),
+              label = 'Select the function to be used for replacement',
               choices = c(
                 "Mean" = "mean",
                 "Median" = "median",
@@ -208,17 +237,17 @@ mod_preprocessing_cleaning_ui_input <- function(id){
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'ma'", ns('dec_algorithm')),
             shiny::selectInput(
-              ns("weighting5"),
-              'Select the weighting to be used',
+              inputId = ns("weighting5"),
+              label = 'Select the weighting to be used',
               choices = c(
                 "Exponential Weighted Moving Average (EWMA)" = "exponential",
-                "Simple Moving Average (SMA)" = "simple",
-                "Linear Weighted Moving Average (LWMA)" = "linear"
+                "Simple Moving Average (SMA)"                = "simple",
+                "Linear Weighted Moving Average (LWMA)"      = "linear"
               )
             ),
             shiny::numericInput(
-              ns("window_width5"),
-              'Select the width of the moving average window',
+              inputId = ns("window_width5"),
+              label = 'Select the width of the moving average window',
               value = 2,
               min = 1,
               max = 10000,
@@ -226,13 +255,13 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               width = '100%'
             ),
           ),
-        ),
-        # Seasonal splitting
+        ), 
+        ###### SEASONAL SPLITTING ----------------------------------------------------------------------
         shiny::conditionalPanel(
           condition = sprintf("input['%s'] == 'Seasonal splitting'", ns('imputmethod')),
           shiny::selectInput(
-            ns("split_algorithm"),
-            'Select the algorithm to be used after decomposition',
+            inputId = ns("split_algorithm"),
+            label = 'Select the algorithm to be used after decomposition',
             choices = c(
               "Interpolation" = "interpolation",
               "Forward/Backward observation carrying" = "locf",
@@ -240,10 +269,11 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               "Weighted moving average" = "ma"
             )
           ),
+          # SEASONAL SPLITTING -> INTERPOLATION
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'interpolation'", ns('split_algorithm')),
             shiny::selectInput(
-              ns("intmethod6"),
+              inputId = ns("intmethod6"),
               'Select the interpolation algorithm',
               choices = c(
                 "Linear interpolation" = "linear",
@@ -252,10 +282,11 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               )
             ),
           ),
+          # SEASONAL SPLITTING -> LOCF
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'locf'", ns('split_algorithm')),
             shiny::selectInput(
-              ns("option6"),
+              inputId = ns("option6"),
               'Select the algorithm to be used',
               choices = c(
                 "Last Observation Carried Forward (LOCF)" = "locf",
@@ -263,7 +294,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               )
             ),
             shiny::selectInput(
-              ns("na_remaining6"),
+              inputId = ns("na_remaining6"),
               'Select the method to be used for remaining NAs',
               choices = c(
                 "Perform LOCF/NOCB from the reverse direction" = "rev",
@@ -272,10 +303,11 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               )
             ),
           ),
+          # SEASONAL SPLITTING -> MEAN
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'mean'", ns('split_algorithm')),
             shiny::selectInput(
-              ns("global_function6"),
+              inputId = ns("global_function6"),
               'Select the function to be used for replacement',
               choices = c(
                 "Mean" = "mean",
@@ -284,10 +316,11 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               )
             ),
           ),
+          # SEASONAL SPLITTING -> MA
           shiny::conditionalPanel(
             condition = sprintf("input['%s'] == 'ma'", ns('split_algorithm')),
             shiny::selectInput(
-              ns("weighting6"),
+              inputId = ns("weighting6"),
               'Select the weighting to be used',
               choices = c(
                 "Exponential Weighted Moving Average (EWMA)" = "exponential",
@@ -296,7 +329,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
               )
             ),
             shiny::numericInput(
-              ns("window_width6"),
+              inputId = ns("window_width6"),
               'Select the width of the moving average window',
               value = 2,
               min = 1,
@@ -307,7 +340,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
           ),
         ),
         shiny::numericInput(
-          ns("maxgap"),
+          inputId = ns("maxgap"),
           'Select the maximum number of successive NAs to perform imputation on',
           value = 3,
           min = 1,
@@ -315,26 +348,27 @@ mod_preprocessing_cleaning_ui_input <- function(id){
           step = 1,
           width = '100%'
         ),
-      ),
-      #   Lookup table
+      ), 
+      ###### LOOKUP TABLE ----------------------------------------------------------------------
       shiny::conditionalPanel(
         condition = sprintf("input['%s'] == 'Lookup table'", ns('imputmethod')),
         shiny::selectInput(
-          ns("lookupmethod"),
+          inputId = ns("lookupmethod"),
           'Select the function to apply to construct the lookup table',
           choices = c("Mean", "Median")
         ),
         shiny::selectInput(
-          ns("factor"),
+          inputId = ns("factor"),
           'Select the grouping factor(s)',
           multiple = TRUE,
           choices = NULL
         )
-      ),
+      ), 
+      ###### REGRESSION TREEE ----------------------------------------------------------------------
       shiny::conditionalPanel(
         condition = sprintf("input['%s'] == 'Regression tree'", ns('imputmethod')),
         shiny::sliderInput(
-          ns("maxdepth"),
+          inputId = ns("maxdepth"),
           'Select the maximum tree depth',
           value = 10,
           min = 1,
@@ -342,7 +376,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
           step = 1
         ),
         shiny::sliderInput(
-          ns("minsplit"),
+          inputId = ns("minsplit"),
           'Select the minimum number of observations in a node for further splitting',
           value = 2,
           min = 1,
@@ -350,7 +384,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
           step = 1
         ),
         shiny::sliderInput(
-          ns("minbucket"),
+          inputId = ns("minbucket"),
           'Select the minimum number of observations for terminal nodes',
           value = 2,
           min = 1,
@@ -358,7 +392,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
           step = 1
         ),
         shiny::sliderInput(
-          ns("complpar"),
+          inputId = ns("complpar"),
           'Select the complexity parameter value',
           value = 0.01,
           min = 0,
@@ -366,7 +400,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
           step = 0.001
         ),
         shiny::selectInput(
-          ns("predict"),
+          inputId = ns("predict"),
           'Select the predictor variable(s)',
           multiple = TRUE,
           choices = NULL
@@ -374,17 +408,13 @@ mod_preprocessing_cleaning_ui_input <- function(id){
       ),
       shinyjs::disabled(
         shiny::actionButton(
-          ns("replacement_button"),
+          inputId = ns("replacement_button"),
           label = "Perform NA replacement",
           icon = icon("pencil-alt"),
           class = "btn-success",
           width = "100%"
         )
-      ),
-      br(),
-      br(),
-      div(style = "display:center-align;float:center ;width:100%;text-align: center;", shiny::downloadButton(ns("dataset_download"), "Download dataset"))
-    )
+      ))
   )
 }
 
@@ -394,6 +424,9 @@ mod_preprocessing_cleaning_ui_input <- function(id){
 mod_preprocessing_cleaning_ui_output <- function(id) {
   ns <- NS(id)
   tagList(
+    # this button gives the possibility to modify plot parameters like
+    # - fontsize
+    # - width height of downloaded plot
     shinyWidgets::dropdownButton( size = "sm",
                                   tags$h4("Graphical parameters"),
                                   numericInput(ns('plot_fontsize'),  label = 'Font size:', value = 11, step = 1),
@@ -403,16 +436,19 @@ mod_preprocessing_cleaning_ui_output <- function(id) {
                                   circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
                                   tooltip = shinyWidgets::tooltipOptions(title = "Click to modify plot")
     ),
-    shiny::plotOutput(ns("plot1")) %>% shinycssloaders::withSpinner(),
+    # plot of the whole timeseries
+    shinycssloaders::withSpinner(shiny::plotOutput(ns("plot1"))),
     tabsetPanel(
       id = ns("tabs"),
-      tabPanel( "Main dataset",
-                DT::dataTableOutput(ns("main_dataset"))  %>% shinycssloaders::withSpinner()
+      tabPanel( title = "Main dataset", # table representation of the original dataset
+                br(),
+                shinycssloaders::withSpinner(DT::dataTableOutput(ns("main_dataset")))
       ),
-      tabPanel("NAs Table",   
+      tabPanel(title = "NAs Table",   # table representing the NA identified
+               br(),
                shiny::verbatimTextOutput(ns("na_percent")),
                br(),
-               DT::dataTableOutput(ns("na_table"))  %>% shinycssloaders::withSpinner()
+               shinycssloaders::withSpinner(DT::dataTableOutput(ns("na_table")) )
       )
     )
   )
@@ -429,21 +465,13 @@ mod_preprocessing_cleaning_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
-    # dataset download function
-    output$dataset_download <- shiny::downloadHandler(
-      filename = "download_dataset.csv",
-      content = function(file) {
-        utils::write.csv(rvs_dataset(), file)
-      }
-    )
-  
     ###### UPDATE INPUTS ----------------------------------------------------------------------
     observe({
       req( !is.null(infile())  )
       # activates buttons
       shinyjs::enable("replacement_button")
       shinyjs::enable("plot_preview")
-
+      
       # defines inputs
       variable_choices <- colnames(rvs_dataset())[sapply(rvs_dataset(), is.numeric)]
       graphx_choices   <- colnames(rvs_dataset())[sapply(rvs_dataset(), lubridate::is.POSIXct)]
@@ -470,6 +498,7 @@ mod_preprocessing_cleaning_server <- function(id, infile = NULL, rvs_dataset){
         req(input$main_dataset_rows_all)
         req(input$variable)
         req(input$imputmethod)
+        
         shinyFeedback::hideFeedback("maxgap")
         if (input$maxgap > 3 & (input$imputmethod == "Interpolation" | (input$imputmethod == "Seasonal decomposition" & input$dec_algorithm == "interpolation") | (input$imputmethod == "Seasonal splitting" & input$split_algorithm == "interpolation")) & (input$maxgap >= suppressWarnings(longestNAstretch(rvs_dataset()[input$main_dataset_rows_all,input$variable])))) {
           shinyFeedback::showFeedbackWarning(
@@ -485,17 +514,18 @@ mod_preprocessing_cleaning_server <- function(id, infile = NULL, rvs_dataset){
             )
           }
         }
+        
       })
     
     
     ###### INTERNAL DATASET DEFINITIONS----------------------------------------------------------------------
-
+    
     # show lookup table: if method selected a new tab appears
     observeEvent(input$imputmethod, {
       if (input$imputmethod == "Lookup table") {
         shiny::appendTab(inputId = "tabs",
                          tabPanel( title = "Lookup table",
-                           DT::dataTableOutput(ns("lookuptable")) %>% shinycssloaders::withSpinner()
+                                   DT::dataTableOutput(ns("lookuptable")) %>% shinycssloaders::withSpinner()
                          ))
       }
       else{

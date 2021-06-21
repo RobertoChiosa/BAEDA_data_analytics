@@ -7,6 +7,7 @@
 #' 
 #' @description 
 #' This module permits to identify outliers through different techniques.
+#' The main implemented technique is the interquartile method. Through the user interface ...
 #' 
 #' @param id,input,output,session Internal parameters for {shiny}.
 #' 
@@ -213,12 +214,12 @@ mod_preprocessing_outliers_ui_output <- function(id) {
     ),
     tabsetPanel(
       tabPanel(
-        "Main dataset", # table representation of the original dataset
+        title = "Main dataset", # table representation of the original dataset
         br(),
         shinycssloaders::withSpinner(DT::dataTableOutput(ns("main_dataset")))
       ),
       tabPanel(
-        "Outliers table", # table representing the identified outliers through the selected method
+        title = "Outliers table", # table representing the identified outliers through the selected method
         br(),
         shinycssloaders::withSpinner(shiny::htmlOutput(ns("outl_percent"))),
         br(),

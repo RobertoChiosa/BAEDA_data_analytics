@@ -22,6 +22,7 @@ mod_preprocessing_outliers_server(id, infile = NULL, rvs_dataset)
 }
 \description{
 This module permits to identify outliers through different techniques.
+The main implemented technique is the interquartile method. Through the user interface ...
 }
 \examples{
 \dontrun{
