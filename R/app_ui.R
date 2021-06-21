@@ -37,13 +37,13 @@ app_ui <- function(request) {
                   fluidRow(
                     column(width = 4, style = "padding-left:0px; padding-right:0px;",
                            mod_manage_ui_input("manage_ui_1"),
+                           # transform type
+                           mod_manage_transform_ui(id = "manage_transform_ui_1"),
                            # rename column / variable from a dataset
                            mod_manage_renameColumn_ui("manage_renameColumn_ui_1"),
-                           
                            # add column / variable from a dataset
-                           mod_manage_addColumn_ui("manage_addColumn_ui_1"),
-                           # transform type
-                           mod_manage_transform_ui(id = "manage_transform_ui_1")
+                           mod_manage_addColumn_ui("manage_addColumn_ui_1")
+                          
                     ),
                     column(width = 8, style = "padding-left:0px; padding-right:0px;",
                            box(width = 12,

@@ -229,11 +229,11 @@ mutate_ext <- function(.tbl, .funs, ..., .ext = "", .vars = c()) {
     }
   }
   
-  if (is_empty(.ext)) {
+  if (.ext=="") {
     dplyr::mutate_at(.tbl, .vars = .vars, .funs = .funs) %>%
       set_rownames(rownames(.tbl))
   } else {
-    new <- gsub("^~", "", .vars) %>% paste0(., .ext)
+    new <- gsub("^~", "", .vars) %>% paste0(., "_",.ext)
     .tbl[, new] <- transmute_at(.tbl, .vars = .vars, .funs = .funs) %>%
       set_colnames(new)
     .tbl

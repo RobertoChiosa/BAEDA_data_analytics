@@ -39,6 +39,8 @@ mod_manage_transform_ui <- function(id) {
     shiny::tags$style(".fa-refresh {color:white}"),
     # ui in a collapsible box
     box(
+      solidHeader = T, collapsible = T, collapsed = FALSE, width = 12,
+      title = "Transform", status = "primary",
       # select the column to modify
       shiny::selectInput(
         ns("actual_name"),
@@ -55,9 +57,9 @@ mod_manage_transform_ui <- function(id) {
           "Change Type",
           "Bin",
           "Normalize",
-          "Remove/reorder levels", 
-          "Summarize",
-          "Transform"
+          "Remove/reorder levels"
+          #"Summarize",
+          #"Transform"
         ),
         # all admitted unit # implement with groups
         selected = NULL,
@@ -121,7 +123,7 @@ mod_manage_transform_ui <- function(id) {
       ),
       ###### REMOVE/REORDER LEVELS ----------------------------------------------------------------------
       shiny::conditionalPanel( condition = sprintf("input['%s'] == 'Remove/reorder levels' ", ns('transformation') ),
-                               shiny::selectInput(
+                               shiny::selectizeInput(
                                  inputId = ns("levels"),
                                  label = "Remove/reorder levels:",
                                  choices = NULL, # updated accordind to the variable selected
@@ -138,8 +140,6 @@ mod_manage_transform_ui <- function(id) {
                                
       ),
       
-      
-      
       ###### PREVIEW ----------------------------------------------------------------------
       shiny::verbatimTextOutput(  ns("type_preview_actual") ),
       shiny::verbatimTextOutput(  ns("type_preview_future") ),
@@ -147,20 +147,19 @@ mod_manage_transform_ui <- function(id) {
       column(
         width = 12,
         style = "padding-left:0px; padding-right:0px;",
-        h5("Chose a name for the transformed variable (optional)"),
         shiny::splitLayout(
          
           cellWidths = c("80%", "20%"),
           shiny::textInput(
-            inputId = ns("new_name"),
+            inputId = ns("name_ext"),
             label = NULL,
             value = "",
-            placeholder = "(Optional) New name...",
+            placeholder = "(Optional) Name extension...",
             width = "100%"
           ),
           shinyjs::disabled(
             shiny::actionButton(
-              inputId = ns("new_name_submit"),
+              inputId = ns("name_ext_submit"),
               label = NULL,
               icon = icon("refresh"),
               class = "btn-success",
@@ -168,9 +167,7 @@ mod_manage_transform_ui <- function(id) {
             )
           )
         )
-      ),
-      solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
-      title = "Transform", status = "primary"
+      )
     )
   )
 }
@@ -188,17 +185,17 @@ mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
     # reactive value to evaluate the string name
     # it is true if some special values are found
     # observe this reactive value and show warning live
-    name_val <- reactive({ grepl('[^[:alnum:]]', input$new_name) })
+    name_val <- reactive({ grepl('[^[:alnum:]]', input$name_ext) })
     observe( {
       # validate new name
-      shinyFeedback::feedbackWarning("new_name", name_val(), "Please don't use special characters")
+      shinyFeedback::feedbackWarning("name_ext", name_val(), "Please don't use special characters")
     })
     
     # Update selectInput according to dataset
     observe({
       req( !is.null(infile())  )
       # enambles the button submit
-      shinyjs::enable("new_name_submit")
+      shinyjs::enable("name_ext_submit")
       
 # updates choiches according to the loaded dataset
       choices <- colnames(rvs_dataset())
@@ -212,12 +209,12 @@ mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
     observeEvent(input$actual_name, {
       req( !is.null(infile()), input$actual_name != ""  )
       
-      updateTextInput(session, "new_name", value = input$actual_name)
+      updateTextInput(session, "name_ext", value = "")
       
       if (is.factor(rvs_dataset()[, input$actual_name])) {
-        updateSelectInput(session, "levels", 
-                          choices = levels(rvs_dataset()[, input$actual_name]),
-                          selected = levels(rvs_dataset()[, input$actual_name])
+        updateSelectInput(session, "levels",
+                          choices = levels(rvs_dataset()[, input$actual_name])
+                          #selected = levels(rvs_dataset()[, input$actual_name])
         )
       }
   
@@ -262,22 +259,22 @@ mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
     toReturn <- reactiveValues(dataset = NULL,  trigger = 0)
     
     # (Re)load button
-    observeEvent(input$new_name_submit, {
+    observeEvent(input$name_ext_submit, {
       
       switch (input$transformation,
-              "Change Type"           = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type),
-              "Bin"                   = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), list(~ bins(., n = input$number_bins) )),
-              "Normalize"             = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$normalization_type),
-              "Remove/reorder levels" = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), list(~ refactor(., levs = input$levels) ) ),
-              "Summarize"             = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type), 
-              "Transform"             = toReturn$dataset <- dplyr::mutate_at(rvs_dataset(), .vars = dplyr::vars(input$actual_name), .funs = input$type), 
+              "Change Type"           = toReturn$dataset <- mutate_ext(rvs_dataset(), .vars = input$actual_name, .funs = input$type, .ext = paste(input$name_ext) ),
+              "Bin"                   = toReturn$dataset <- mutate_ext(rvs_dataset(), .vars = input$actual_name, list(~ bins(., n = input$number_bins) ), .ext = paste(input$name_ext)),
+              "Normalize"             = toReturn$dataset <- mutate_ext(rvs_dataset(), .vars = input$actual_name, .funs = input$normalization_type, .ext = paste(input$name_ext)),
+              "Remove/reorder levels" = toReturn$dataset <- mutate_ext(rvs_dataset(), .vars = input$actual_name, list(~ refactor(., levs = input$levels) ), .ext = paste(input$name_ext) ),
+              "Summarize"             = toReturn$dataset <- mutate_ext(rvs_dataset(), .vars = input$actual_name, .funs = input$type, .ext = paste(input$name_ext)), 
+              "Transform"             = toReturn$dataset <- mutate_ext(rvs_dataset(), .vars = input$actual_name, .funs = input$type, .ext = paste(input$name_ext)), 
       )
       
       
-      if (input$new_name != input$actual_name) {
-        toReturn$dataset <-  toReturn$dataset %>%
-          dplyr::rename( !!input$new_name := !!input$actual_name )
-      } 
+      # if (input$name_ext != input$actual_name) {
+      #   toReturn$dataset <-  toReturn$dataset %>%
+      #     dplyr::rename( !!input$name_ext := !!input$actual_name )
+      # } 
       
       toReturn$trigger  <- toReturn$trigger + 1
     })
@@ -294,41 +291,41 @@ mod_manage_transform_server <- function(id, infile = NULL, rvs_dataset) {
 #' devtools::document() to render roxygen comments an preview with ?mod_manage_transform
 #' @noRd
 
-library(shiny)
-library(shinydashboard)
-library(shinyFeedback)
-library(magrittr)
-library(dplyr)
-#source("./R/utils_change_type.R")
-#source("./R/utils_normalize.R")
-
-ui <- dashboardPage(
-  dashboardHeader(disable = TRUE),
-  dashboardSidebar(disable = TRUE),
-  dashboardBody(
-    column(width = 4,
-           mod_manage_transform_ui("manage_transform_ui_1")),
-    column(width = 8,
-           DT::DTOutput("table"))
-  )
-)
-server <- function(input, output, session) {
-  
-  data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
-  
-  output$table <- DT::renderDT({
-    data_rv$df_tot
-  })
-  
-  data_add <-  mod_manage_transform_server("manage_transform_ui_1",
-                                           infile = reactive({TRUE}),
-                                           rvs_dataset = reactive({data_rv$df_tot}))
-  # When applied function (data_mod2$trigger change) :
-  #   - Update data_rv$df_tot with module output "variable"
-  observeEvent(data_add$trigger, {
-    req(data_add$trigger > 0)
-    data_rv$df_tot    <- data_add$dataset
-  })
-}
-
-shinyApp(ui, server)
+# library(shiny)
+# library(shinydashboard)
+# library(shinyFeedback)
+# library(magrittr)
+# library(dplyr)
+# #source("./R/utils_change_type.R")
+# #source("./R/utils_normalize.R")
+# 
+# ui <- dashboardPage(
+#   dashboardHeader(disable = TRUE),
+#   dashboardSidebar(disable = TRUE),
+#   dashboardBody(
+#     column(width = 4,
+#            mod_manage_transform_ui("manage_transform_ui_1")),
+#     column(width = 8,
+#            DT::DTOutput("table"))
+#   )
+# )
+# server <- function(input, output, session) {
+#   
+#   data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
+#   
+#   output$table <- DT::renderDT({
+#     data_rv$df_tot
+#   })
+#   
+#   data_add <-  mod_manage_transform_server("manage_transform_ui_1",
+#                                            infile = reactive({TRUE}),
+#                                            rvs_dataset = reactive({data_rv$df_tot}))
+#   # When applied function (data_mod2$trigger change) :
+#   #   - Update data_rv$df_tot with module output "variable"
+#   observeEvent(data_add$trigger, {
+#     req(data_add$trigger > 0)
+#     data_rv$df_tot    <- data_add$dataset
+#   })
+# }
+# 
+# shinyApp(ui, server)
