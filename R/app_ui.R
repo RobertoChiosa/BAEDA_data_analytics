@@ -119,14 +119,14 @@ app_ui <- function(request) {
                                ),
                            ),
                            box(
-                             conditionalPanel( "input.chart == 'Histogram'",  mod_histogram_ui_input("histogram_ui_1")),
+                             # conditionalPanel( "input.chart == 'Histogram'",  mod_histogram_ui_input("histogram_ui_1")),
                              solidHeader = T, collapsible = T, collapsed = TRUE, width = 12,
                              title = "Plot Parameters", status = "primary"
                            )
                     ),
                     column(width = 8, style = "padding-left:0px; padding-right:0px;",
                            box(width = 12,
-                               conditionalPanel("input.chart == 'Histogram'",mod_histogram_ui_output("histogram_ui_1"))
+                               # conditionalPanel("input.chart == 'Histogram'",mod_histogram_ui_output("histogram_ui_1"))
                            )
                     )
                   ),

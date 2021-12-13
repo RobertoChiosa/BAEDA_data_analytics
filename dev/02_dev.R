@@ -30,11 +30,10 @@ usethis::use_package( "magrittr" )          # pipe operator
 usethis::use_package( "simputation" )       # NA imputation with cart
 usethis::use_package( "imputeTS" )          # NA imputation
 
-usethis::use_package( "dplyr" )
 usethis::use_package( "plyr" )
+usethis::use_package( "dplyr" )
 usethis::use_package( "lubridate" )         # work with dates and time
 usethis::use_package( "tidyr" ) 
-usethis::use_package( "plyr" )
 usethis::use_package( "RColorBrewer" )      # color palette
 usethis::use_package( "utils" )
 usethis::use_package( "ggplot2" )           # make plots

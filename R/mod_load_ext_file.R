@@ -125,7 +125,7 @@ mod_load_ext_file_server <- function(id, toggle_button_input, data_rv, data_rv_r
       data_rv[[nome]] <- switch(input$type, # condition on the file type
                                 csv = read.csv(file = inFile$datapath, header = input$header, sep = input$separator,
                                                dec = input$decomal, stringsAsFactors = input$strAsFact, check.names = FALSE),
-                                rds = readRDS(file = inFile$datapath)
+                                rds = load(file = inFile$datapath)
                                 # xls = read_excel(path = inFile$datapath)
       )
       # saves the selected timezone and timestamp column in the global environment

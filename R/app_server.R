@@ -98,7 +98,7 @@ app_server <- function( input, output, session ) {
   
   ###### 4) "VISUALIZE" TAB ----------------------------------------------------------------------
   # plot modules
-  mod_histogram_server(id = "histogram_ui_1")
+  #mod_histogram_server(id = "histogram_ui_1")
   
   
   ###### 4) "PREPROCESSING" TAB ----------------------------------------------------------------------
