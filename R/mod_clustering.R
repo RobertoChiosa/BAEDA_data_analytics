@@ -208,7 +208,7 @@ mod_clustering_ui_output <- function(id) {
                     numericInput(inputId = ns('out_clustering_fontsize'), label = 'Fontsize:', value = 15),
                     numericInput(inputId = ns('out_clustering_linesize'), label = 'Line size:', value = 0.5),
                     numericInput(inputId = ns('out_clustering_alpha'), label = 'Line alpha:', value = 0.7),
-                    circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                    circle = TRUE, status = "primary", icon = icon("cog"), width = "400px",
                     tooltip = tooltipOptions(title = "Click to modify plot inputs")
     ),
     plotOutput(ns("out_clustering_preview"), height = "600px")

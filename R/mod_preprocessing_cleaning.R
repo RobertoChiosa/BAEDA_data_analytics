@@ -67,7 +67,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
                   ns("plot_preview"),
                   label = "Plot",
                   style = "margin-top: 25px;",
-                  icon = icon("refresh"),
+                  icon = icon("sync"),
                   class = "btn-success",
                   width = "100%"
                 )
@@ -433,7 +433,7 @@ mod_preprocessing_cleaning_ui_output <- function(id) {
                                   numericInput(ns('plot_dl_width'),  label = 'Width of plot to be downloaded (px):', value = 1500, step = 10),
                                   numericInput(ns('plot_dl_height'), label = 'Height of plot to be downloaded (px):', value = 500, step = 10),
                                   div(style="display:left-align;float:left ;width:100%;text-align: left;", shiny::downloadButton(ns("plot_download"),"Download plot")),
-                                  circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                                  circle = TRUE, status = "primary", icon = icon("cog"), width = "400px",
                                   tooltip = shinyWidgets::tooltipOptions(title = "Click to modify plot")
     ),
     # plot of the whole timeseries

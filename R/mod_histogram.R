@@ -70,7 +70,7 @@ mod_histogram_ui_output <- function(id){
     shinyWidgets::dropdownButton( size = "sm",
                                   tags$h3("Graphical parameters"),
                                   shiny::numericInput(ns('width'), label = 'height', value = 400, step = 100),
-                                  circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
+                                  circle = TRUE, status = "primary", icon = icon("cog"), width = "400px",
                                   tooltip = shinyWidgets::tooltipOptions(title = "Click to modify plot")
     ),
     plotOutput(ns("histogram"), height = "500px")

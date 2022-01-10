@@ -198,7 +198,7 @@ mod_preprocessing_outliers_ui_output <- function(id) {
         size = "sm",
         circle = TRUE,
         status = "primary",
-        icon = icon("gear"),
+        icon = icon("cog"),
         width = "400px",
         tooltip = shinyWidgets::tooltipOptions(title = "Click to modify or download plot"),
         tags$h4("Graphical parameters"),
@@ -508,7 +508,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       }
       
       
-      # download plot function in the gear button
+      # download plot function in the cog button
       output$plot_download <- shiny::downloadHandler(
         filename = gsub(" |:|-", "", paste("preprocessing_plot", Sys.time()) ),
         content = function(file) {

@@ -18,7 +18,7 @@ mod_manage_renameColumn_ui <- function(id) {
   
   tagList(
     # sets color of plus in button
-    shiny::tags$style(".fa-refresh {color:white}"),
+    shiny::tags$style(".fa-sync {color:white}"),
     # ui in a collapsible box
     box(
       column(
@@ -81,7 +81,7 @@ mod_manage_renameColumn_server <- function(id, infile = NULL, rvs_dataset) {
           shiny::actionButton(
             ns("new_name_submit"),
             label = NULL,
-            icon = icon("refresh"),
+            icon = icon("sync"),
             class = "btn-success",
             width = "100%"
           )
@@ -90,7 +90,7 @@ mod_manage_renameColumn_server <- function(id, infile = NULL, rvs_dataset) {
         shiny::actionButton(
           ns("new_name_submit"),
           label = NULL,
-          icon = icon("refresh"),
+          icon = icon("sync"),
           class = "btn-success",
           width = "100%"
         )

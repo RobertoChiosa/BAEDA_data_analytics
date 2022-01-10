@@ -36,7 +36,7 @@ mod_manage_transform_ui <- function(id) {
   
   tagList(
     # sets color of plus in button
-    shiny::tags$style(".fa-refresh {color:white}"),
+    shiny::tags$style(".fa-sync {color:white}"),
     # ui in a collapsible box
     box(
       solidHeader = T, collapsible = T, collapsed = FALSE, width = 12,
@@ -161,7 +161,7 @@ mod_manage_transform_ui <- function(id) {
             shiny::actionButton(
               inputId = ns("name_ext_submit"),
               label = NULL,
-              icon = icon("refresh"),
+              icon = icon("sync"),
               class = "btn-success",
               width = "100%"
             )

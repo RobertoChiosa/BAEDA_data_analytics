@@ -13,11 +13,11 @@ sidebar <- shinydashboard::dashboardSidebar(
     shinydashboard::menuItem( "Pre-processing",    tabName = "preprocessing",  icon = icon("cogs") ),  
     shinydashboard::menuItem( "Visualization",     tabName = "visualization",  icon = icon("chart-bar") ),  
     shinydashboard::menuItem( "Classification",    tabName = "classification", icon = icon("sitemap"),              badgeLabel = "advanced", badgeColor = "green"),
-    shinydashboard::menuItem( "Clustering",        tabName = "clustering",     icon = icon("braille"),              badgeLabel = "advanced", badgeColor = "green"),
-    shinydashboard::menuItem( "Neural network",    tabName = "ann",            icon = icon("connectdevelop"),       badgeLabel = "advanced", badgeColor = "green"),
-    shinydashboard::menuItem( "Forecasting",       tabName = "forecasting",    icon = icon("fast-forward"),         badgeLabel = "advanced", badgeColor = "green"),
-    shinydashboard::menuItem( "M&V",               tabName = "mv",             icon = icon("balance-scale"),        badgeLabel = "advanced", badgeColor = "green"),
-    shinydashboard::menuItem( "Anomaly Detection", tabName = "add",            icon = icon("exclamation-triangle"), badgeLabel = "advanced", badgeColor = "green")
-    
+    shinydashboard::menuItem( "Clustering",        tabName = "clustering",     icon = icon("braille"),              badgeLabel = "advanced", badgeColor = "green")
+    # shinydashboard::menuItem( "Neural network",    tabName = "ann",            icon = icon("connectdevelop"),       badgeLabel = "advanced", badgeColor = "green"),
+    # shinydashboard::menuItem( "Forecasting",       tabName = "forecasting",    icon = icon("fast-forward"),         badgeLabel = "advanced", badgeColor = "green"),
+    # shinydashboard::menuItem( "M&V",               tabName = "mv",             icon = icon("balance-scale"),        badgeLabel = "advanced", badgeColor = "green"),
+    # shinydashboard::menuItem( "Anomaly Detection", tabName = "add",            icon = icon("exclamation-triangle"), badgeLabel = "advanced", badgeColor = "green")
+    # 
   )
 )

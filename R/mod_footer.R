@@ -8,11 +8,11 @@
 mod_footer_ui <- function(){
   shiny::absolutePanel(
     shiny::HTML(
-        "© Copyright 2021 |
+        paste("© Copyright ",format(Sys.Date(), "%Y")," |
       <a href='http://www.baeda.polito.it/'>BAEDA Lab</a> | 
       <a href='https://www.denerg.polito.it/'>Dipartimento Energia</a> | 
       <a href='https://www.polito.it/'>Politecnico di Torino</a>
-      "
+      ")
       ),
       bottom = "1%", 
       right = "1%", 
