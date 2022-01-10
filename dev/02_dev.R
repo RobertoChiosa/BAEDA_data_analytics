@@ -23,31 +23,39 @@ usethis::use_package( "shinyWidgets" )
 usethis::use_package( "shinyalert" )
 usethis::use_package( "shinyjs" )
 
-usethis::use_package( "pkgdown" )
+usethis::use_package( "pkgdown" )           # automatic site package documentation
 
-usethis::use_package( "magrittr" )
-usethis::use_package( "dplyr" )
+usethis::use_package( "magrittr" )          # pipe operator
+
+usethis::use_package( "simputation" )       # NA imputation with cart
+usethis::use_package( "imputeTS" )          # NA imputation
+
+usethis::use_package( "plyr" )
+usethis::use_package( "dplyr" )             # data analytics useful functions
+usethis::use_package( "lubridate" )         # work with dates and time
+usethis::use_package( "tidyr" ) 
+usethis::use_package( "RColorBrewer" )      # color palette
 usethis::use_package( "utils" )
-usethis::use_package( "ggplot2" )
-usethis::use_package( "rpart" )# make classification tree
-usethis::use_package( "rpart.plot" )# plot classification tree
-usethis::use_package( "grid" )# plot classification tree
-usethis::use_package( "partykit" )# regression and classification tree plot and tools
-usethis::use_package( "MLmetrics" )# measure regression) classification and ranking performance.
-usethis::use_package( "stats" )# predict evaluation
-usethis::use_package( "knitr" ) # to compile rmarkdown
-usethis::use_package( "rmarkdown" ) # to compile rmarkdown
-usethis::use_package( "ggplot2" ) # to compile rmarkdown
-usethis::use_package( "DT" ) # to compile rmarkdown
-usethis::use_package( "data.table" ) # to compile rmarkdown
-usethis::use_package( "rlang" ) # to compile rmarkdown
+usethis::use_package( "ggplot2" )           # make plots
+usethis::use_package( "rpart" )             # make classification tree
+usethis::use_package( "rpart.plot" )        # plot classification tree
+usethis::use_package( "grid" )              # plot classification tree
+usethis::use_package( "partykit" )          # regression and classification tree plot and tools
+usethis::use_package( "MLmetrics" )         # measure regression) classification and ranking performance.
+usethis::use_package( "stats" )             # predict evaluation
+usethis::use_package( "knitr" )             # to compile rmarkdown
+usethis::use_package( "rmarkdown" )         # to compile rmarkdown
+usethis::use_package( "ggplot2" )           # pretty plots
+usethis::use_package( "DT" )                # table visualizations
+usethis::use_package( "data.table" )        # table processing and visualization
+usethis::use_package( "rlang" )             # to compile rmarkdown
 
 # clustering algorithm
 usethis::use_package( "LICORS" ) 
 usethis::use_package( "amap" ) 
-usethis::use_package( "NbClust" ) 
+usethis::use_package( "NbClust" )           # evaluation of number of clusters
 
-usethis::use_package( "scales" ) 
+usethis::use_package( "scales" )            # plot scales 
 
 ## Add modules ----
 ## Create a module infrastructure in R/

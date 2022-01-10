@@ -11,7 +11,7 @@
 #' as_mdy("2-1-2014") %>% week()
 #' as_mdy("2-1-2014") %>% wday(label = TRUE)
 #' }
-#' @export
+#' @noRd
 as_mdy <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::mdy(x) %>% as.Date()
@@ -23,7 +23,7 @@ as_mdy <- function(x) {
 #' @examples
 #' as_dmy("1-2-2014")
 #'
-#' @export
+#' @noRd
 as_dmy <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::dmy(x) %>% as.Date()
@@ -35,7 +35,7 @@ as_dmy <- function(x) {
 #' @examples
 #' as_ymd("2013-1-1")
 #'
-#' @export
+#' @noRd
 as_ymd <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::ymd(x) %>% as.Date()
@@ -52,7 +52,7 @@ as_ymd <- function(x) {
 #' as_ymd_hms("2014-1-1 12:15:01") %>% month
 #' as_ymd_hms("2014-1-1 12:15:01") %>% hour
 #' }
-#' @export
+#' @noRd
 as_ymd_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::ymd_hms(x)
@@ -63,7 +63,7 @@ as_ymd_hms <- function(x) {
 #' @return Date-time variable of class Date
 #' @examples
 #' as_ymd_hm("2014-1-1 12:15")
-#' @export
+#' @noRd
 as_ymd_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::parse_date_time(x, "%Y%m%d %H%M")
@@ -74,7 +74,7 @@ as_ymd_hm <- function(x) {
 #' @return Date-time variable of class Date
 #' @examples
 #' as_mdy_hms("1-1-2014 12:15:01")
-#' @export
+#' @noRd
 as_mdy_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::parse_date_time(x, "%m%d%Y %H%M%S")
@@ -85,7 +85,7 @@ as_mdy_hms <- function(x) {
 #' @return Date-time variable of class Date
 #' @examples
 #' as_mdy_hm("1-1-2014 12:15")
-#' @export
+#' @noRd
 as_mdy_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::parse_date_time(x, "%m%d%Y %H%M")
@@ -96,7 +96,7 @@ as_mdy_hm <- function(x) {
 #' @return Date-time variable of class Date
 #' @examples
 #' as_mdy_hms("1-1-2014 12:15:01")
-#' @export
+#' @noRd
 as_dmy_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::parse_date_time(x, "%d%m%Y %H%M%S")
@@ -107,7 +107,7 @@ as_dmy_hms <- function(x) {
 #' @return Date-time variable of class Date
 #' @examples
 #' as_mdy_hm("1-1-2014 12:15")
-#' @export
+#' @noRd
 as_dmy_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::parse_date_time(x, "%d%m%Y %H%M")
@@ -122,7 +122,7 @@ as_dmy_hm <- function(x) {
 #' as_hms("12:45:00") %>% hour
 #' as_hms("12:45:00") %>% second
 #' }
-#' @export
+#' @noRd
 as_hms <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::hms(x)
@@ -136,7 +136,7 @@ as_hms <- function(x) {
 #' \dontrun{
 #' as_hm("12:45") %>% minute()
 #' }
-#' @export
+#' @noRd
 as_hm <- function(x) {
   if (is.factor(x)) x <- as.character(x)
   lubridate::hm(x)
@@ -154,7 +154,7 @@ as_hm <- function(x) {
 #' as_integer(c("0","1"))
 #' as_integer(as.factor(c("0","1")))
 #'
-#' @export
+#' @noRd
 as_integer <- function(x) {
   if (is.factor(x)) {
     int <- levels(x) %>% .[x] %>% as.integer()
@@ -179,7 +179,7 @@ as_integer <- function(x) {
 #' as_numeric(c("3","4"))
 #' as_numeric(as.factor(c("3","4")))
 #'
-#' @export
+#' @noRd
 as_numeric <- function(x) {
   if (is.factor(x)) {
     num <- levels(x) %>% .[x] %>% as.numeric()
@@ -195,12 +195,12 @@ as_numeric <- function(x) {
 #' Wrapper for factor with ordered = FALSE
 #' @param x Input vector
 #' @param ordered Order factor levels (TRUE, FALSE)
-#' @export
+#' @noRd
 as_factor <- function(x, ordered = FALSE) factor(x, ordered = ordered)
 
 #' Wrapper for as.character
 #' @param x Input vector
-#' @export
+#' @noRd
 as_character <- function(x) as.character(x)
 
 #' Add transformed variables to a data frame with the option to include a custom variable name extension
@@ -219,7 +219,7 @@ as_character <- function(x) as.character(x)
 #' mutate_ext(mtcars, .funs = log)
 #' mutate_ext(mtcars, .funs = log, .ext = "_ln", .vars = vars(mpg, cyl))
 #'
-#' @export
+#' @noRd
 mutate_ext <- function(.tbl, .funs, ..., .ext = "", .vars = c()) {
   if (length(.vars) == 0) {
     ## from https://stackoverflow.com/a/35317870/1974918
@@ -229,11 +229,11 @@ mutate_ext <- function(.tbl, .funs, ..., .ext = "", .vars = c()) {
     }
   }
   
-  if (is_empty(.ext)) {
+  if (.ext=="") {
     dplyr::mutate_at(.tbl, .vars = .vars, .funs = .funs) %>%
       set_rownames(rownames(.tbl))
   } else {
-    new <- gsub("^~", "", .vars) %>% paste0(., .ext)
+    new <- gsub("^~", "", .vars) %>% paste0(., "_",.ext)
     .tbl[, new] <- transmute_at(.tbl, .vars = .vars, .funs = .funs) %>%
       set_colnames(new)
     .tbl
@@ -251,7 +251,7 @@ mutate_ext <- function(.tbl, .funs, ..., .ext = "", .vars = c()) {
 #'
 #' @seealso See the \code{\link[lubridate]{month}} function in the lubridate package for additional details
 #'
-#' @export
+#' @noRd
 month <- function(x, label = FALSE, abbr = TRUE, ordered = FALSE) {
   x <- lubridate::month(x, label = label, abbr = abbr)
   if (!ordered && label) {
@@ -271,7 +271,7 @@ month <- function(x, label = FALSE, abbr = TRUE, ordered = FALSE) {
 #'
 #' @seealso See the \code{\link[lubridate:day]{lubridate::wday()}} function in the lubridate package for additional details
 #'
-#' @export
+#' @noRd
 wday <- function(x, label = FALSE, abbr = TRUE, ordered = FALSE) {
   x <- lubridate::wday(x, label = label, abbr = abbr)
   if (!ordered && label) {
@@ -280,3 +280,41 @@ wday <- function(x, label = FALSE, abbr = TRUE, ordered = FALSE) {
     x
   }
 }
+
+#' Remove/reorder levels
+#' @details Keep only a specific set of levels in a factor. By removing levels the base for comparison in, e.g., regression analysis, becomes the first level. To relabel the base use, for example, repl = 'other'
+#' @param x Character or Factor
+#' @param levs Set of levels to use
+#' @param repl String (or NA) used to replace missing levels
+#'
+#' @examples
+#' refactor(diamonds$cut, c("Premium","Ideal")) %>% head()
+#' refactor(diamonds$cut, c("Premium","Ideal"), "Other") %>% head()
+#' @importFrom purrr is_empty
+#' @export
+refactor <- function(x, levs = levels(x), repl = NA) {
+  if (is.factor(x)) {
+    lv <- levels(x)
+  } else {
+    lv <- unique(x)
+    if (length(levs) == 0) levs <- lv
+  }
+  
+  if (length(levs) > 0 && length(lv) > length(levs)) {
+    if (!purrr::is_empty(repl)) levs <- unique(c(repl, levs))
+    x <- as_character(x) %>% ifelse(. %in% base::setdiff(lv, levs), repl, .)
+  }
+  
+  factor(x, levels = levs)
+}
+
+#' Convert input in factor of intervals
+bins <- function(x, n) {
+  if (is.numeric(x)) {
+    cut(x,n)
+  } else {
+    x
+  }
+}
+
+

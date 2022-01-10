@@ -168,3 +168,7 @@ up-to-date. `devtools::build_readme()` is handy for this. You could also
 use GitHub Actions to re-render `README.Rmd` every time you push. An
 example workflow can be found here:
 <https://github.com/r-lib/actions/tree/master/examples>.
+
+``` bash
+ssh -i "baeda-demo1.pem" ubuntu@ec2-18-222-204-38.us-east-2.compute.amazonaws.com
+```

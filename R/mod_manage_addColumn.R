@@ -1,21 +1,45 @@
-#' manage_addColumn UI Function
-#'
-#' @description This module permits to modify the column name by adding units of measure as well
-#'
+#' @name manage_addColumn
+#' @aliases mod_manage_addColumn_ui
+#' @aliases mod_manage_addColumn_server
+#' 
+#' @title Add Column Module
+#' 
+#' @description 
+#' This module permits to add new columns to the loaded dataframe. It is a submodule of the manage module.
+#' 
+#' In particular, the user can programmatically add columns by writing down a custom \code{if_else} 
+#' expression or by adding predefined calendar variables (\code{minute}, \code{hour}, \code{day}, \code{month}, 
+#' \code{day_type}, \code{month_day}, \code{year}, \code{date}, \code{datetime})
+#' 
 #' @param id,input,output,session Internal parameters for {shiny}.
-#'
-#' @noRd
-#'
+#' 
+#' @examples \dontrun{
+#' 
+#' # To be copied in the UI
+#' mod_manage_addColumn_ui(id = "manage_addColumn_ui_1")
+#' 
+#' # To be copied in the server
+#' mod_manage_addColumn_server(id = "manage_addColumn_ui_1",
+#'                             infile = rective({ infile }),
+#'                             rvs_dataset = rective({ rvs$data })
+#' )
+#' }
+#' 
 #' @import shiny
 #' @import shinydashboard
 #' @import dplyr magrittr
 #' @importFrom shinyFeedback feedbackWarning hideFeedback
+
+
+#' @rdname manage_addColumn
+#' 
+#' @export
 mod_manage_addColumn_ui <- function(id) {
   ns <- NS(id)
   
   tagList(
     # sets color of plus in button
-    shiny::tags$style(".fa-refresh {color:white}"),
+    shiny::tags$style(".fa-sync {color:white}"),
     # ui in a collapsible box
     box(
       h5("Please compose the expression"),
@@ -56,9 +80,12 @@ mod_manage_addColumn_ui <- function(id) {
   )
 }
 
-#' manage_addColumn Server Functions
-#'
-#' @noRd
+#' @rdname manage_addColumn
+#' 
+#' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
+#' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
+#' 
+#' @export
 mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -70,7 +97,7 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
           shiny::actionButton(
             ns("new_name_submit"),
             label = NULL,
-            icon = icon("refresh"),
+            icon = icon("sync"),
             class = "btn-success",
             width = "100%"
           )
@@ -79,7 +106,7 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
         shiny::actionButton(
           ns("new_name_submit"),
           label = NULL,
-          icon = icon("refresh"),
+          icon = icon("sync"),
           class = "btn-success",
           width = "100%"
         )
@@ -149,7 +176,7 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
       )
       
       toReturn$dataset    <- dplyr::mutate( rvs_dataset(), 
-                                             !!input$new_name := as.factor( eval(parse(text = expression_toeval))) )
+                                            !!input$new_name := as.factor( eval(parse(text = expression_toeval))) )
       toReturn$trigger    <- toReturn$trigger + 1
     })
     
@@ -158,8 +185,11 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
   })
 }
 
-# 
-# # test module
+#' Shiny app snippet to offline test the functionality of the modules.
+#' Comment and uncomment when necesssary.
+#' devtools::document() to render roxygen comments an preview with ?mod_manage_addColumn
+#' @noRd
+
 # library(shiny)
 # library(shinydashboard)
 # library(shinyFeedback)
@@ -176,19 +206,18 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
 #   )
 # )
 # server <- function(input, output, session) {
-# 
+#   
 #   data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
-# 
+#   
 #   output$table <- DT::renderDT({
 #     data_rv$df_tot
 #   })
-# 
-#   data_add <-  mod_manage_addColumn_server("manage_addColumn_ui_1", 
-#   infile = reactive({TRUE}),
-#   rvs_dataset = data_rv$df_tot)
+#   
+#   data_add <-  mod_manage_addColumn_server("manage_addColumn_ui_1",
+#                                            infile = reactive({TRUE}),
+#                                            rvs_dataset = reactive({data_rv$df_tot}))
 #   # When applied function (data_mod2$trigger change) :
-#   #   - Update rv$variable with module output "variable"
-#   #   - Update rv$fun_history with module output "fun"
+#   #   - Update data_rv$df_tot with module output "variable"
 #   observeEvent(data_add$trigger, {
 #     req(data_add$trigger > 0)
 #     data_rv$df_tot    <- data_add$dataset
@@ -196,9 +225,3 @@ mod_manage_addColumn_server <- function(id, infile = NULL, rvs_dataset) {
 # }
 # 
 # shinyApp(ui, server)
-
-## To be copied in the UI
-# mod_manage_addColumn_ui("manage_addColumn_ui_1")
-
-## To be copied in the server
-# mod_manage_addColumn_server("manage_addColumn_ui_1", rvs_dataset = reactiveValues())

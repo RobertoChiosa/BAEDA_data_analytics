@@ -1,13 +1,21 @@
 ## code to prepare `data` dataset goes here
 
-data <- readRDS("./data-raw/data_raw.rda")
+# load data raw
+data <-
+  read.csv(
+    file.path("data-raw", "data.csv"),
+    sep = ";",
+    dec = ",",
+    stringsAsFactors = T
+  )
 
-data <- readRDS("./data_raw.rda")
+# convert to posixct
+data$DateTime <-
+  as.POSIXct(data$DateTime, format = "%Y-%m-%d %H:%M", tz = "Europe/Rome")
 
+# change column name
 colnames(data)[1] <- "Date_Time"
 
-save(data, "data.csv")
-
-summary(data)
+save(data, file = file.path("data-raw", "data.RData"))
 
 usethis::use_data(data, overwrite = TRUE)

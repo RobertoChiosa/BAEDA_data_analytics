@@ -4,68 +4,66 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
 #' @import shiny
-#' @importFrom shinyWidgets searchInput pickerInput updatePickerInput 
-mod_manage_ui_input <- function(id){
+#' @importFrom shinyWidgets searchInput pickerInput updatePickerInput
+mod_manage_ui_input <- function(id) {
   ns <- NS(id)
-  tagList(
-    box(width = 12,
-        title = shiny::HTML(
-          "Data Wrangling options
-                                         <a
-                                         id=\"button_wrangling\"
-                                         data-toggle=\"tooltip\"
-                                         title=\" Data Handling options.\"
-                                         class=\"dropdown\">
-                                         <i class=\"fa fa-info-circle\"></i>
-                                         </a>"
-        ),
-        p("This section permits to perform data wrangling on the loaded dataset."),
-        # mod_manage_ui_input("manage_ui_1"),
-        # shinyWidgets::pickerInput(
-        #   ns("keepColumnName"),
-        #   label = "Select column to keep:",
-        #   choices = NULL,
-        #   # all available columns in the original dataframe
-        #   selected = NULL,
-        #   # by default all selected
-        #   options = list(`actions-box` = TRUE),
-        #   multiple = T
-        # )
-    )
-  )
+  tagList(box(
+    width = 12,
+    title = shiny::HTML(
+      "Data Wrangling options
+       <a
+         id=\"button_wrangling\"
+         data-toggle=\"tooltip\"
+         title=\" Data Handling options.\"
+         class=\"dropdown\">
+         <i class=\"fa fa-info-circle\"></i>
+       </a>"
+    ),
+    p(
+      "This section permits to perform data wrangling on the loaded dataset."
+    ),
+    # mod_manage_ui_input("manage_ui_1"),
+    # shinyWidgets::pickerInput(
+    #   ns("keepColumnName"),
+    #   label = "Select column to keep:",
+    #   choices = NULL,
+    #   # all available columns in the original dataframe
+    #   selected = NULL,
+    #   # by default all selected
+    #   options = list(`actions-box` = TRUE),
+    #   multiple = T
+    # )
+  ))
   
 }
 
 #' manage UI output
 #'
-#' @noRd 
+#' @noRd
 mod_manage_ui_output <- function(id) {
   ns <- NS(id)
   
   # 2.5) Display datatable ----------------------------------------------------------------------
   # displays through datatable function the actual selected dataframe
-  tagList(
-    # fluidRow(
+  tagList(# fluidRow(
     #   # 2.3.1) number of rows in the current dataframe value box
     #   # valueBoxOutput(ns("valueBox_rows"), width = 6),
     #   # 2.3.2) number of columns in the current dataframe value box
     #   # valueBoxOutput(ns("valueBox_columns"), width = 6)
     # ),
     
-    wellPanel(DT::DTOutput(ns("table")))
-    
-  )
+    wellPanel(DT::DTOutput(outputId = ns("table"))))
 }
 
 
 #' manage Server Functions
 #'
-#' @noRd 
-mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
-  moduleServer( id, function(input, output, session){
+#' @noRd
+mod_manage_server <- function(id,  infile = NULL, rvs_dataset) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
     # # Update selectInput according to dataset
@@ -73,7 +71,7 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
     #   req( !is.null(infile())  )
     #   # gets rvs_dataset_dataset as reactive value to solve update inputs
     #   choices <- colnames(rvs_dataset())
-    #   # choices <- variable_list_with_class(rvs_dataset_dataset()) 
+    #   # choices <- variable_list_with_class(rvs_dataset_dataset())
     #   updatePickerInput(session, "keepColumnName", choices = choices, selected = choices)
     # })
     
@@ -89,11 +87,11 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
     #     color = "orange"
     #   )
     # })
-    # 
+    #
     # # 2.3.2) number of columns in the current dataframe value box
     # output$valueBox_columns <- renderValueBox({
     #   req( !is.null(infile())  )
-    #   
+    #
     #   valueBox(
     #     length(input$keepColumnName),
     #     "Number of columns",
@@ -105,14 +103,15 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
     # 2.5) Display datatable ----------------------------------------------------------------------
     # displays through datatable function the actual selected dataframe
     output$table <- DT::renderDT({
-      req( !is.null(infile())  )
+      req(!is.null(infile()))
       DT::datatable(
-       # rvs_dataset()[,input$keepColumnName],
+        # rvs_dataset()[,input$keepColumnName],
         rvs_dataset(),
         selection = "none",
         rownames = FALSE,
         style = "bootstrap",
-        filter = "top", #fbox
+        filter = "top",
+        #fbox
         escape = FALSE,
         ## must use fillContainer = FALSE to address
         ## see https://github.com/rstudio/DT/issues/367
@@ -129,8 +128,10 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
           # fixedColumns = list(leftColumns = 2),
           # fixedHeader = TRUE
           keys = TRUE,
-          autoWidth = FALSE, # permits to adapt the columns to the width of the box
-          scrollX = 500, # permits to scroll along x
+          autoWidth = FALSE,
+          # permits to adapt the columns to the width of the box
+          scrollX = 500,
+          # permits to scroll along x
           search = list(regex = TRUE),
           columnDefs = list(
             list(
@@ -141,13 +142,13 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
           ),
           processing = FALSE,
           pageLength = 10,
-          lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
+          lengthMenu = list(c(5, 10, 25, 50, -1), c("5", "10", "25", "50", "All"))
         )
       )
       
       # isInt <- sapply(rvs_dataset(), is.integer)
       # isDbl <- sapply(rvs_dataset(), is.double)
-      # 
+      #
       # ## rounding as needed
       # if (sum(isDbl) > 0)
       #   dt_table <- DT::formatRound(dt_table, colnames(rvs_dataset())[isDbl], digits = 2)
@@ -158,14 +159,14 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
     
   })
 }
-# 
+#
 # # test module
 # library(shiny)
 # library(shinydashboard)
 # library(shinyWidgets)
 # library(magrittr)
 # library(dplyr)
-# 
+#
 # ui <- dashboardPage(
 #   dashboardHeader(disable = TRUE),
 #   dashboardSidebar(disable = TRUE),
@@ -177,9 +178,9 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
 #   )
 # )
 # server <- function(input, output, session) {
-#   
+#
 #   data_rv <- reactiveValues( df_tot = eDASH::data[,c(1:4)])                 # reactive value to store the loaded dataframes
-#   
+#
 #   mod_manage_server("mm",
 #                     infile = reactive({TRUE}),
 #                     rvs_dataset = reactive({ data_rv$df_tot })
@@ -192,7 +193,7 @@ mod_manage_server <- function(id,  infile = NULL, rvs_dataset){
 #   #   data_rv$df_tot    <- data_add$dataset
 #   # })
 # }
-# 
+#
 # shinyApp(ui, server)
 
 ## To be copied in the UI
