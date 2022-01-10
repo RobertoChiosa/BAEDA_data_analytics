@@ -54,7 +54,7 @@ The eDASH can be accessed in many different way depending on the user. We provid
 ### shinyapps.io (Online)
 From this [link](https://roberto-chiosa.shinyapps.io/BAEDA_DASHBOARD_STUDENTS/) it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [shinyapps.io](https://www.shinyapps.io/) the whole application is hosted online and accessible without any requirements other than an internet connection.
 
-> :warning: **Warning**: Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. If this limit is exceded the app will not be available untill the next month cycle. Therefore, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
+> :exclamation-triangle: **Warning**: Since the online hosting is performed through the free account, a limit of 25 active hours is set from the server. If this limit is exceded the app will not be available untill the next month cycle. Therefore, we suggest to exploit the dashboard functionalities by cloning the repository on your local machines as explained in the following.
 
 ### AWS (Online)
 From this [link](https://roberto-chiosa.shinyapps.io/BAEDA_DASHBOARD_STUDENTS/) it is possible to access and use the dashboard online without having R or Rstudio installed on your computer. Thanks to [Amazon Web Services](https://aws.amazon.com/it/) the whole application is hosted on a virtual machine (EC2) accessible without any requirements other than an internet connection.

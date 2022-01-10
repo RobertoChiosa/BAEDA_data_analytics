@@ -17,7 +17,7 @@ app_server <- function( input, output, session ) {
   
   
   
-  #  2) DATA LOADING DOWNLOADING ------------------------------------
+  # 2) DATA LOADING DOWNLOADING ------------------------------------
   # Data set download function
   # when the download button is pressed a csv is downloaded
   observeEvent(input$download, {
@@ -103,7 +103,7 @@ app_server <- function( input, output, session ) {
   #mod_histogram_server(id = "histogram_ui_1")
   
   
-  # 4) "PREPROCESSING" TAB ------------------------------------
+  # 5) "PREPROCESSING" TAB ------------------------------------
   # outliers detection
   data_detection <-  mod_preprocessing_outliers_server(id = "preprocessing_outliers_ui_1",
     infile = reactive({data_rv_results$infile}), 
@@ -128,7 +128,7 @@ app_server <- function( input, output, session ) {
     data_rv[[input$dataframe]] <- data_cleaning$dataset
   })
   
-  # 2) "CLASSIFICATION" TAB ------------------------------------
+  # 6) "CLASSIFICATION" TAB ------------------------------------
   data_cart <-   mod_cart_server(id = "cart_ui_1", 
     infile = reactive({data_rv_results$infile}), 
     rvs_dataset = reactive({data_rv[[input$dataframe]]})  
@@ -140,7 +140,7 @@ app_server <- function( input, output, session ) {
   #   data_rv[[input$dataframe]] <- data_cart$dataset
   # })
   
-  # 2) "CLUSTERING" TAB ------------------------------------
+  # 7) "CLUSTERING" TAB ------------------------------------
   data_cluster <-   mod_clustering_server(id = "clustering_ui_1", 
     infile = reactive({data_rv_results$infile}), 
     rvs_dataset = reactive({data_rv[[input$dataframe]]})  
@@ -153,6 +153,6 @@ app_server <- function( input, output, session ) {
   # })
   
   
-  # 2) "LEARNING" MODALS ------------------------------------
+  # 8) "LEARNING" MODALS ------------------------------------
   
 }

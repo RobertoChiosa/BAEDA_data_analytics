@@ -1,9 +1,9 @@
 Package: eDASH
-Title: eDASH
+Title: Energy Data Analytics Dashboard - Student Version
 Version: 0.0.0.9000
 Authors@R: person('Roberto', 'Chiosa', email = 'roberto.chiosa@polito.it', role = c('cre', 'aut'))
-Description: This packages provides the skeleton to build a production ready dashboard. This project is built on top of golem infrastructure. 
-License: What license is it under?
+Description: A data analytics dashboard concieved for building energy data. This project is built on top of golem infrastructure and distributed as package. 
+License: MIT + file LICENSE
 Imports: 
     config (>= 0.3),
     golem (>= 0.3.0),
@@ -44,7 +44,11 @@ Imports:
     tidyr,
     plyr,
     RColorBrewer,
-    simputation
+    simputation,
+    imputeTS,
+    shinycssloaders,
+    purrr,
+    grDevices
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

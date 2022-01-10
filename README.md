@@ -66,7 +66,7 @@ Rstudio installed on your computer. Thanks to
 hosted online and accessible without any requirements other than an
 internet connection.
 
-> :warning: **Warning**: Since the online hosting is performed through
+> :exclamation-triangle: **Warning**: Since the online hosting is performed through
 > the free account, a limit of 25 active hours is set from the server.
 > If this limit is exceded the app will not be available untill the next
 > month cycle. Therefore, we suggest to exploit the dashboard

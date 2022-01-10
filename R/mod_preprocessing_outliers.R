@@ -540,7 +540,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         shiny::HTML("<strong style='color:red;' >WARNING: </strong> after replacing outliers with NAs, the current dataset will be overwritten. Continue?"),
         footer = tagList(
           modalButton("Dismiss"), # default button for modal
-          actionButton(ns("yes"),"Confirm", class = "btn btn-danger", icon = icon("warning"))
+          actionButton(ns("yes"),"Confirm", class = "btn btn-danger", icon = icon("exclamation-triangle"))
         )
       )
     }

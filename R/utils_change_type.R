@@ -287,9 +287,6 @@ wday <- function(x, label = FALSE, abbr = TRUE, ordered = FALSE) {
 #' @param levs Set of levels to use
 #' @param repl String (or NA) used to replace missing levels
 #'
-#' @examples
-#' refactor(diamonds$cut, c("Premium","Ideal")) %>% head()
-#' refactor(diamonds$cut, c("Premium","Ideal"), "Other") %>% head()
 #' @importFrom purrr is_empty
 #' @export
 refactor <- function(x, levs = levels(x), repl = NA) {

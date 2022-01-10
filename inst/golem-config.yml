@@ -5,4 +5,4 @@ default:
 production:
   app_prod: yes
 dev:
-  golem_wd: /Users/robi/Desktop/dashboard-student
+  golem_wd: !expr here::here()
