@@ -3,7 +3,6 @@
 .RData
 .Ruserdata
 packrat/lib*/
-docs
 
 # pkgdown gitignore
 .Rproj.user
@@ -13,7 +12,6 @@ inst/doc
 *.orig
 .env
 *.tex
-docs
 
 # History files
 .Rhistory
