@@ -58,8 +58,8 @@ mod_preprocessing_outliers_ui_input <- function(id) {
       shiny::selectInput(
         ns("outldet_method"),
         'Select outlier detection method',
-        choices = c("Inter-quartile method" = "Boxplot"
-                    # "Method2",
+        choices = c("Inter-quartile method" = "Boxplot",
+                    "Treshold method" = "Method2"
                     # "Method3",
                     # "Majority Voting 2/3"
         )
@@ -339,42 +339,74 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     
     ###### OUTPUTS ----------------------------------------------------------------------
     # this list provides the datatable options used, just modify this list to modify all visualizations
-    DT_table_options_list <- list(selection = "none",
-                                  rownames = FALSE,
-                                  style = "bootstrap",
-                                  filter = "top", #fbox
-                                  escape = FALSE,
-                                  ## must use fillContainer = FALSE to address
-                                  ## see https://github.com/rstudio/DT/issues/367
-                                  ## https://github.com/rstudio/DT/issues/379
-                                  fillContainer = FALSE,
-                                  ## works with client-side processing
-                                  extensions = "KeyTable",
-                                  options = list(
-                                    keys = TRUE,
-                                    autoWidth = FALSE, # permits to adapt the columns to the width of the box
-                                    scrollX = 500, # permits to scroll along x
-                                    search = list(regex = TRUE),
-                                    columnDefs = list(
-                                      list(
-                                        orderSequence = c("desc", "asc"),
-                                        targets = "_all"
-                                      ),
-                                      list(className = "dt-center", targets = "_all")
-                                    ),
-                                    processing = FALSE,
-                                    pageLength = 10,
-                                    lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
-                                  )
+    DT_table_options_list <- list(
+      selection = "none",
+      rownames = FALSE,
+      style = "bootstrap",
+      filter = "top", #fbox
+      escape = FALSE,
+      ## must use fillContainer = FALSE to address
+      ## see https://github.com/rstudio/DT/issues/367
+      ## https://github.com/rstudio/DT/issues/379
+      fillContainer = FALSE,
+      ## works with client-side processing
+      extensions = "KeyTable",
+      options = list(
+        keys = TRUE,
+        autoWidth = FALSE, # permits to adapt the columns to the width of the box
+        scrollX = 500, # permits to scroll along x
+        search = list(regex = TRUE),
+        columnDefs = list(
+          list(
+            orderSequence = c("desc", "asc"),
+            targets = "_all"
+          ),
+          list(className = "dt-center", targets = "_all")
+        ),
+        processing = FALSE,
+        pageLength = 10,
+        lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
+    )
     )
     
+      
+      
+      
     
     output$main_dataset <- DT::renderDT({
       # validation: if no variable selected, no table to be displayed
       validate(need(input$variable, "Please provide a valid dataset."))
       req(input$variable)
       # table of the original dataset
-      DT::datatable(rvs_dataset(), DT_table_options_list )
+      DT::datatable(rvs_dataset(),
+        selection = "none",
+        rownames = FALSE,
+        style = "bootstrap",
+        filter = "top", #fbox
+        escape = FALSE,
+        ## must use fillContainer = FALSE to address
+        ## see https://github.com/rstudio/DT/issues/367
+        ## https://github.com/rstudio/DT/issues/379
+        fillContainer = FALSE,
+        ## works with client-side processing
+        extensions = "KeyTable",
+        options = list(
+          keys = TRUE,
+          autoWidth = FALSE, # permits to adapt the columns to the width of the box
+          scrollX = 500, # permits to scroll along x
+          search = list(regex = TRUE),
+          columnDefs = list(
+            list(
+              orderSequence = c("desc", "asc"),
+              targets = "_all"
+            ),
+            list(className = "dt-center", targets = "_all")
+          ),
+          processing = FALSE,
+          pageLength = 10,
+          lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
+        )
+        )
     })
     
    
@@ -395,7 +427,33 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         else{
           dplyr::filter(data_set_filtrato_intermedio_norownumbers(), (outlier1 == TRUE & outlier2 == TRUE) | (outlier2 == TRUE & outlier3 == TRUE) | (outlier1 == TRUE & outlier3 == TRUE))
         },
-        DT_table_options_list 
+        selection = "none",
+        rownames = FALSE,
+        style = "bootstrap",
+        filter = "top", #fbox
+        escape = FALSE,
+        ## must use fillContainer = FALSE to address
+        ## see https://github.com/rstudio/DT/issues/367
+        ## https://github.com/rstudio/DT/issues/379
+        fillContainer = FALSE,
+        ## works with client-side processing
+        extensions = "KeyTable",
+        options = list(
+          keys = TRUE,
+          autoWidth = FALSE, # permits to adapt the columns to the width of the box
+          scrollX = 500, # permits to scroll along x
+          search = list(regex = TRUE),
+          columnDefs = list(
+            list(
+              orderSequence = c("desc", "asc"),
+              targets = "_all"
+            ),
+            list(className = "dt-center", targets = "_all")
+          ),
+          processing = FALSE,
+          pageLength = 10,
+          lengthMenu = list(c(5, 10, 25, 50,-1), c("5", "10", "25", "50", "All"))
+        ) 
       )
     })
     

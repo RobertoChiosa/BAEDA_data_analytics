@@ -4,7 +4,7 @@
 \alias{manage_transform}
 \alias{mod_manage_transform_ui}
 \alias{mod_manage_transform_server}
-\title{Column  Transformation Module}
+\title{Column Transformation Module}
 \usage{
 mod_manage_transform_ui(id)
 
@@ -13,7 +13,7 @@ mod_manage_transform_server(id, infile = NULL, rvs_dataset)
 \arguments{
 \item{id, input, output, session}{Internal parameters for {shiny}.}
 
-\item{infile}{A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.}
+\item{infile}{A reactive Boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.}
 
 \item{rvs_dataset}{A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.}
 }
