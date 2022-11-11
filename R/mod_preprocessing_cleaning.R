@@ -36,7 +36,7 @@
 #' 
 #' @rdname mod_preprocessing_cleaning
 #' 
-#' @export
+#' @noRd
 mod_preprocessing_cleaning_ui_input <- function(id){
   ns <- NS(id)
   tagList(
@@ -420,7 +420,7 @@ mod_preprocessing_cleaning_ui_input <- function(id){
 
 #' @rdname mod_preprocessing_cleaning
 #' 
-#' @export
+#' @noRd
 mod_preprocessing_cleaning_ui_output <- function(id) {
   ns <- NS(id)
   tagList(
@@ -433,7 +433,7 @@ mod_preprocessing_cleaning_ui_output <- function(id) {
                                   numericInput(ns('plot_dl_width'),  label = 'Width of plot to be downloaded (px):', value = 1500, step = 10),
                                   numericInput(ns('plot_dl_height'), label = 'Height of plot to be downloaded (px):', value = 500, step = 10),
                                   div(style="display:left-align;float:left ;width:100%;text-align: left;", shiny::downloadButton(ns("plot_download"),"Download plot")),
-                                  circle = TRUE, status = "primary", icon = icon("cog"), width = "400px",
+                                  circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
                                   tooltip = shinyWidgets::tooltipOptions(title = "Click to modify plot")
     ),
     # plot of the whole timeseries
@@ -460,7 +460,7 @@ mod_preprocessing_cleaning_ui_output <- function(id) {
 #' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
 #' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
 #' 
-#' @export
+#' @noRd
 mod_preprocessing_cleaning_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns

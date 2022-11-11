@@ -1,8 +1,16 @@
-#' Normalizes with z score
+#' @name zscore
+#' @title Z score normalization
+#'
+#' @description Normalizes with z score
 #' @param x Input variable
 #' @param na.rm If TRUE missing values are removed before calculation
 #' @return If x is a numeric variable return (x - mean(x)) / sd(x)
-#' @noRd
+#' @examples \dontrun{
+#' x <- data$Total_Power
+#' x_zscore <- zscore(x)
+#' x
+#' }
+#' @export
 zscore <- function(x, na.rm = TRUE) {
   if (is.numeric(x)) {
     x_sd <- sd(x, na.rm = na.rm)
@@ -16,7 +24,6 @@ zscore <- function(x, na.rm = TRUE) {
     x
   }
 }
-
 #' Normalizes with min-max
 #' @param x Input variable
 #' @param na.rm If TRUE missing values are removed before calculation

@@ -39,7 +39,7 @@
 
 #' @rdname mod_cart
 #' 
-#' @export
+#' @noRd
 mod_cart_ui_input <- function(id){
   ns <- NS(id)
   
@@ -164,7 +164,7 @@ mod_cart_ui_input <- function(id){
 #' @param type a parameter describing the type of output to be displayed. The available options are:
 #' \code{tree}, \code{cp}, \code{cm}
 #' 
-#' @export
+#' @noRd
 mod_cart_ui_output<- function(id, type){
   ns <- NS(id)
   
@@ -174,7 +174,7 @@ mod_cart_ui_output<- function(id, type){
                                     tags$h3("Graphical parameters"),
                                     numericInput(ns('out_cart_tree_fontsize'), label = 'Fontsize:', value = 11, step = 1),
                                     numericInput(ns('out_cart_tree_tnex'), label = 'Terminal nodes extension:', value = 2.5, step = 0.5),
-                                    circle = TRUE, status = "primary", icon = icon("cog"), width = "400px",
+                                    circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
                                     tooltip = shinyWidgets::tooltipOptions(title = "Click to modify plot")
       ),
       plotOutput(ns("out_cart_tree"), height = "400px") # %>% withSpinner(color = loadingGifColor)
@@ -186,7 +186,7 @@ mod_cart_ui_output<- function(id, type){
                                     selectInput(ns("out_cart_cp_color"), "Line color",choices = c("red", "green", "blue")),
                                     selectInput(ns("out_cart_cp_upper"), "Upper",choices = c("size", "splits", "none")),
                                     numericInput(ns('out_cart_cp_lty'), label = 'Line Type:', value = 2),
-                                    circle = TRUE, status = "primary", icon = icon("cog"), width = "400px",
+                                    circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
                                     tooltip = shinyWidgets::tooltipOptions(title = "Click to modify plot")
       ),
       plotOutput(ns("out_cart_cp"), height = "400px"),   #%>% withSpinner(color = loadingGifColor),
@@ -205,7 +205,7 @@ mod_cart_ui_output<- function(id, type){
 #' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
 #' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
 #' 
-#' @export
+#' @noRd
 mod_cart_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns

@@ -54,7 +54,7 @@ usethis::use_package("data.table")        # table processing and visualization
 usethis::use_package("rlang")             # to compile rmarkdown
 
 # clustering algorithm
-usethis::use_package("LICORS")
+# usethis::use_package("LICORS")
 usethis::use_package("amap")
 usethis::use_package("NbClust")           # evaluation of number of clusters
 

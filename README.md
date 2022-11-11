@@ -3,6 +3,7 @@
 
 <!-- PROJECT LOGO -->
 
+
 <center>
 
 ![](man/figures/BAEDA-logo-dashboard.png)
@@ -66,22 +67,13 @@ Rstudio installed on your computer. Thanks to
 hosted online and accessible without any requirements other than an
 internet connection.
 
-> :exclamation-triangle: **Warning**: Since the online hosting is performed through
+> **Warning**: Since the online hosting is performed through
 > the free account, a limit of 25 active hours is set from the server.
 > If this limit is exceded the app will not be available untill the next
 > month cycle. Therefore, we suggest to exploit the dashboard
 > functionalities by cloning the repository on your local machines as
 > explained in the following.
 
-### AWS (Online)
-
-From this
-[link](https://roberto-chiosa.shinyapps.io/BAEDA_DASHBOARD_STUDENTS/) it
-is possible to access and use the dashboard online without having R or
-Rstudio installed on your computer. Thanks to [Amazon Web
-Services](https://aws.amazon.com/it/) the whole application is hosted on
-a virtual machine (EC2) accessible without any requirements other than
-an internet connection.
 
 ### Package Version (Local)
 
@@ -146,13 +138,13 @@ please follow it. The main branch is called `main` and is the online
 branch. If you want to contribute on one module for example the
 `clustering` module, please call the branch.
 
-![](man/figures/git.svg)
-
 <!-- AUTHORS AND CONTRIBUTORS -->
 
-## Author
+## Contributors
 
-  - [Roberto Chiosa]()
+  - [Roberto Chiosa](), creator and maintainer
+  - [Giacomo Buscemi](), contributor and maintainer
+  - [Rocco Giudice](), contributor and maintainer
 
 <!-- ACKNOWLEDGEMENTS -->
 
@@ -162,13 +154,3 @@ branch. If you want to contribute on one module for example the
   - [Shiny](https://shiny.rstudio.com/)
   - [shinyapps.io](https://www.shinyapps.io/)
   - [Shinydashboard](https://rstudio.github.io/shinydashboard/)
-
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this. You could also
-use GitHub Actions to re-render `README.Rmd` every time you push. An
-example workflow can be found here:
-<https://github.com/r-lib/actions/tree/master/examples>.
-
-``` bash
-ssh -i "baeda-demo1.pem" ubuntu@ec2-18-222-204-38.us-east-2.compute.amazonaws.com
-```

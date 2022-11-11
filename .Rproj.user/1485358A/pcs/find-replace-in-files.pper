@@ -1,13 +1,13 @@
 {
     "dialog-state": {
-        "query": "boxplot",
-        "path": "",
+        "query": "@export",
+        "path": "/R",
         "regex": false,
-        "caseSensitive": true,
+        "caseSensitive": false,
         "wholeWord": false,
         "filePatterns": [],
         "excludeFilePatterns": [],
-        "resultsCount": 14,
+        "resultsCount": 20,
         "errorCount": 0,
         "replaceErrors": "",
         "projectRelative": true

@@ -288,7 +288,7 @@ wday <- function(x, label = FALSE, abbr = TRUE, ordered = FALSE) {
 #' @param repl String (or NA) used to replace missing levels
 #'
 #' @importFrom purrr is_empty
-#' @export
+#' @noRd
 refactor <- function(x, levs = levels(x), repl = NA) {
   if (is.factor(x)) {
     lv <- levels(x)

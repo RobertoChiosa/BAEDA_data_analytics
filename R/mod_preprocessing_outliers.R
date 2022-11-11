@@ -35,10 +35,11 @@
 #' @importFrom stats median
 #' @importFrom utils write.csv
 #' @importFrom shinyjs disable enable runjs
+#' @importFrom grDevices png
 #' 
 #' @rdname mod_preprocessing_outliers
 #' 
-#' @export
+#' @noRd
 mod_preprocessing_outliers_ui_input <- function(id) {
   ns <- NS(id)
   
@@ -185,7 +186,7 @@ mod_preprocessing_outliers_ui_input <- function(id) {
 
 #' @rdname mod_preprocessing_outliers
 #' 
-#' @export
+#' @noRd
 mod_preprocessing_outliers_ui_output <- function(id) {
   ns <- NS(id)
   tagList(
@@ -198,7 +199,7 @@ mod_preprocessing_outliers_ui_output <- function(id) {
         size = "sm",
         circle = TRUE,
         status = "primary",
-        icon = icon("cog"),
+        icon = icon("gear"),
         width = "400px",
         tooltip = shinyWidgets::tooltipOptions(title = "Click to modify or download plot"),
         tags$h4("Graphical parameters"),
@@ -234,7 +235,7 @@ mod_preprocessing_outliers_ui_output <- function(id) {
 #' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
 #' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
 #' 
-#' @export
+#' @noRd
 mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
@@ -566,7 +567,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
       }
       
       
-      # download plot function in the cog button
+      # download plot function in the gear button
       output$plot_download <- shiny::downloadHandler(
         filename = gsub(" |:|-", "", paste("preprocessing_plot", Sys.time()) ),
         content = function(file) {
@@ -598,7 +599,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
         shiny::HTML("<strong style='color:red;' >WARNING: </strong> after replacing outliers with NAs, the current dataset will be overwritten. Continue?"),
         footer = tagList(
           modalButton("Dismiss"), # default button for modal
-          actionButton(ns("yes"),"Confirm", class = "btn btn-danger", icon = icon("exclamation-triangle"))
+          actionButton(ns("yes"),"Confirm", class = "btn btn-danger", icon = icon("triangle-exclamation"))
         )
       )
     }

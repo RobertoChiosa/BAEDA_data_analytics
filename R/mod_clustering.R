@@ -29,7 +29,6 @@
 #' @importFrom tidyr pivot_wider
 #' @importFrom dplyr select mutate distinct
 #' @importFrom stats na.omit cutree hclust
-#' @importFrom LICORS kmeanspp
 #' @importFrom amap Kmeans
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom NbClust NbClust
@@ -41,7 +40,7 @@
 
 #' @rdname mod_clustering
 #' 
-#' @export
+#' @noRd
 mod_clustering_ui_input <- function(id) {
   ns <- NS(id)
   tagList(
@@ -199,7 +198,7 @@ mod_clustering_ui_input <- function(id) {
 
 #' @rdname mod_clustering
 #' 
-#' @export
+#' @noRd
 mod_clustering_ui_output <- function(id) {
   ns <- NS(id)
   tagList(
@@ -208,7 +207,7 @@ mod_clustering_ui_output <- function(id) {
                     numericInput(inputId = ns('out_clustering_fontsize'), label = 'Fontsize:', value = 15),
                     numericInput(inputId = ns('out_clustering_linesize'), label = 'Line size:', value = 0.5),
                     numericInput(inputId = ns('out_clustering_alpha'), label = 'Line alpha:', value = 0.7),
-                    circle = TRUE, status = "primary", icon = icon("cog"), width = "400px",
+                    circle = TRUE, status = "primary", icon = icon("gear"), width = "400px",
                     tooltip = tooltipOptions(title = "Click to modify plot inputs")
     ),
     plotOutput(ns("out_clustering_preview"), height = "600px")
@@ -221,7 +220,7 @@ mod_clustering_ui_output <- function(id) {
 #' @param infile A reactive boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
 #' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
 #' 
-#' @export
+#' @noRd
 mod_clustering_server <- function(id, infile = NULL, rvs_dataset) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -337,7 +336,7 @@ mod_clustering_server <- function(id, infile = NULL, rvs_dataset) {
         clust_res <- amap::Kmeans(df3, input$cluster_number, method = input$cluster_distance) # perform clustering
         df2$Cluster <- clust_res$cluster                                                # add labels to dataframe
       } else if (input$cluster_method == "kmeans++") {
-        clust_res <- LICORS::kmeanspp(df3, input$cluster_number)                                # perform clustering
+        #clust_res <- LICORS::kmeanspp(df3, input$cluster_number)                                # perform clustering
         df2$Cluster <- clust_res$cluster                                                # add labels to dataframe
       } else { # hierarchical
         diss_matrix <- dist(df3, input$cluster_distance)                                # calculate distance matrix

@@ -30,7 +30,7 @@
 
 #' @rdname manage_transform
 #'
-#' @export
+#' @noRd
 mod_manage_transform_ui <- function(id) {
   ns <- NS(id)
   
@@ -190,7 +190,7 @@ mod_manage_transform_ui <- function(id) {
 #' @param infile A reactive Boolean used to understand if a dataset has been loaded on client side. It is used to disable buttons and avoids incorrect user inputs. Pass as \code{reactive({...})}.
 #' @param rvs_dataset A reactive values dataset created from \code{reactiveValues()} and passed to the module from the external environment. Pass as \code{reactive({...})}.
 #' 
-#' @export
+#' @noRd
 mod_manage_transform_server <-
   function(id, infile = NULL, rvs_dataset) {
     moduleServer(id, function(input, output, session) {

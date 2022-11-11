@@ -49,7 +49,7 @@ header <-
         status = "success"),
       shinydashboard::notificationItem(
         text = "Server load at 86%",
-        icon = shiny::icon("exclamation-triangle"),
+        icon = shiny::icon("triangle-exclamation"),
         status = "warning"
       )
     ),
