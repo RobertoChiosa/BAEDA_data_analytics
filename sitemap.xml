@@ -28,13 +28,16 @@
     <loc>https://baeda-polito.github.io/student-energy-dashboard/news/index.html</loc>
   </url>
   <url>
-    <loc>https://baeda-polito.github.io/student-energy-dashboard/reference/bins.html</loc>
-  </url>
-  <url>
     <loc>https://baeda-polito.github.io/student-energy-dashboard/reference/data.html</loc>
   </url>
   <url>
     <loc>https://baeda-polito.github.io/student-energy-dashboard/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://baeda-polito.github.io/student-energy-dashboard/reference/max_scaling.html</loc>
+  </url>
+  <url>
+    <loc>https://baeda-polito.github.io/student-energy-dashboard/reference/minmax_scaling.html</loc>
   </url>
   <url>
     <loc>https://baeda-polito.github.io/student-energy-dashboard/reference/run_app.html</loc>
