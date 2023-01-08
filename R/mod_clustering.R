@@ -30,6 +30,7 @@
 #' @importFrom dplyr select mutate distinct
 #' @importFrom stats na.omit cutree hclust
 #' @importFrom amap Kmeans
+#' @importFrom stats dist sd
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom NbClust NbClust
 #' @importFrom lubridate date round_date

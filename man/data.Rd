@@ -8,6 +8,8 @@
 A data frame with 69687 rows and 15 variables:
 \describe{
   \item{Date_Time}{Central European Time yyyy-mm-dd HH:MM:SS, character}
+  \item{Weekday}{Day of the week, factor}
+  \item{Month}{Month of the year, factor}
   \item{ToU}{Time of Use (F1/F2/F3), factor}
   \item{Total_Power}{Average Electrical Power (kW)  of the substation, numeric}
   \item{Chiller}{Average Electrical Power (kW)  of the mechanical room, numeric}

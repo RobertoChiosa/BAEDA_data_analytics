@@ -1,15 +1,11 @@
-#' @name zscore
-#' @title Z score normalization
-#'
-#' @description Normalizes with z score
+#' Normalizes with z score
 #' @param x Input variable
 #' @param na.rm If TRUE missing values are removed before calculation
 #' @return If x is a numeric variable return (x - mean(x)) / sd(x)
-#' @examples \dontrun{
+#' @examples 
 #' x <- data$Total_Power
 #' x_zscore <- zscore(x)
-#' x
-#' }
+#' head(x)
 #' @export
 zscore <- function(x, na.rm = TRUE) {
   if (is.numeric(x)) {
@@ -28,7 +24,11 @@ zscore <- function(x, na.rm = TRUE) {
 #' @param x Input variable
 #' @param na.rm If TRUE missing values are removed before calculation
 #' @return If x is a numeric variable return (x - min(x)) / (max(x) - min(x))
-#' @noRd
+#' @examples 
+#' x <- data$Total_Power
+#' x_minmax <- minmax_scaling(x)
+#' head(x)
+#' @export
 minmax_scaling <- function(x, na.rm = TRUE) {
   if (is.numeric(x)) {
     (x- min(x, na.rm = na.rm))/(max(x, na.rm = na.rm) - min(x, na.rm = na.rm))
@@ -42,7 +42,11 @@ minmax_scaling <- function(x, na.rm = TRUE) {
 #' @param x Input variable
 #' @param na.rm If TRUE missing values are removed before calculation
 #' @return If x is a numeric variable return x/max(x)
-#' @noRd
+#' @examples 
+#' x <- data$Total_Power
+#' x_max <- max_scaling(x)
+#' head(x)
+#' @export
 max_scaling <- function(x, na.rm = TRUE) {
   if (is.numeric(x)) {
     x/max(x, na.rm = na.rm)

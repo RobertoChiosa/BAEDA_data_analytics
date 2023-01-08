@@ -305,7 +305,13 @@ refactor <- function(x, levs = levels(x), repl = NA) {
   factor(x, levels = levs)
 }
 
-#' Convert input in factor of intervals
+#' Remove/reorder levels
+#' @details Convert input in factor of intervals
+#' @param x numerical variable
+#' @param n number of bins
+#'
+#' @importFrom purrr is_empty
+#' @noRd
 bins <- function(x, n) {
   if (is.numeric(x)) {
     cut(x,n)

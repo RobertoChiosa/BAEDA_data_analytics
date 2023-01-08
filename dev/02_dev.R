@@ -24,14 +24,10 @@ usethis::use_package("shinyWidgets")
 usethis::use_package("shinyalert")
 usethis::use_package("shinyjs")
 usethis::use_package("grDevices")
-
 usethis::use_package("pkgdown")           # automatic site package documentation
-
 usethis::use_package("magrittr")          # pipe operator
-
 usethis::use_package("simputation")       # NA imputation with cart
 usethis::use_package("imputeTS")          # NA imputation
-
 usethis::use_package("plyr")
 usethis::use_package("purrr")
 usethis::use_package("dplyr")             # data analytics useful functions
@@ -52,12 +48,10 @@ usethis::use_package("ggplot2")           # pretty plots
 usethis::use_package("DT")                # table visualizations
 usethis::use_package("data.table")        # table processing and visualization
 usethis::use_package("rlang")             # to compile rmarkdown
-
 # clustering algorithm
 # usethis::use_package("LICORS")
 usethis::use_package("amap")
 usethis::use_package("NbClust")           # evaluation of number of clusters
-
 usethis::use_package("scales")            # plot scales
 
 ## Add modules ----
@@ -88,8 +82,8 @@ usethis::use_data_raw(name = "data", open = FALSE)
 
 ## Vignette ----
 usethis::use_vignette("preprocessing")
-usethis::use_vignette("clustering")
-usethis::use_vignette("classification")
+# usethis::use_vignette("clustering")
+# usethis::use_vignette("classification")
 devtools::build_vignettes()
 
 ## Code Coverage----
