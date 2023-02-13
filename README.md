@@ -141,7 +141,7 @@ branch. If you want to contribute on one module for example the
 <!-- AUTHORS AND CONTRIBUTORS -->
 
 ## Contributors
-
+  - [Alfonso Capozzoli] (), coordinator
   - [Roberto Chiosa](), creator and maintainer
   - [Giacomo Buscemi](), contributor and maintainer
   - [Rocco Giudice](), contributor and maintainer
