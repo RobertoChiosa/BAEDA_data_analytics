@@ -141,10 +141,10 @@ branch. If you want to contribute on one module for example the
 <!-- AUTHORS AND CONTRIBUTORS -->
 
 ## Contributors
-  - [Alfonso Capozzoli] (), coordinator
-  - [Roberto Chiosa](), creator and maintainer
-  - [Giacomo Buscemi](), contributor and maintainer
-  - [Rocco Giudice](), contributor and maintainer
+* Prof. [Alfonso Capozzoli](mailto:alfonso.capozzoli@polito.it), Coordinator of [BAEDA Lab](http://www.baeda.polito.it/)
+  , Politecnico di Torino;
+* Ing. [Roberto Chiosa](mailto:roberto.chiosa@polito.it), PhD Student at [BAEDA Lab](http://www.baeda.polito.it/),
+  Politecnico di Torino;
 
 <!-- ACKNOWLEDGEMENTS -->
 
