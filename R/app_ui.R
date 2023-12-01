@@ -27,7 +27,8 @@ app_ui <- function(request) {
         # change calendar icon color
         # shiny::tags$style(".fa-backspace {color:red}"),
         # change backspace icon color
-        
+        tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
+
         # modal opens as soon as the session starts
         mod_load_ext_file_ui_modal("load_ext_file_ui_1"),
         

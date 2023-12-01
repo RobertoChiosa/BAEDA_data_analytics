@@ -299,7 +299,7 @@ mod_preprocessing_outliers_server <- function(id, infile = NULL, rvs_dataset){
     data_set_filtrato_iniziale <- reactive({
       rvs_dataset() %>%
         dplyr::mutate(rownumber=row_number()) %>%
-        dplyr::group_by_(input$facetwrap) 
+        dplyr::group_by(input$facetwrap)
     })
     
     data_set_filtrato_intermedio <- reactive({
